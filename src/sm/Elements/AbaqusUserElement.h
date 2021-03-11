@@ -222,6 +222,10 @@ protected:
         OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
     }
 
+    void computeBmatrixAt(int, FloatMatrix &, int = 1, int = ALL_STRAINS) override {
+        OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
+    }
+
     int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep) override {
         OOFEM_ERROR("Function not defined for AbaqusUserElement and should never be called. This is a bug.");
         return 0;

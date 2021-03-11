@@ -157,7 +157,11 @@ NLStructuralElement :: giveInternalForcesVector(FloatArray &answer, TimeStep *tS
 
     // zero answer will resize accordingly when adding first contribution
     answer.clear();
-
+    /*
+    for (int i = 1; i <= 4; i++) {
+        this->computeBmatrixAt(i, B);
+    }*/
+    
     for ( auto &gp : *this->giveDefaultIntegrationRulePtr() ) {
         StructuralMaterialStatus *matStat = static_cast< StructuralMaterialStatus * >( gp->giveMaterialStatus() );
 
@@ -226,7 +230,8 @@ NLStructuralElement :: giveInternalForcesVector(FloatArray &answer, TimeStep *tS
             }
         }
     }
-
+    
+    
     // If inactive: update fields but do not give any contribution to the internal forces
     if ( !this->isActivated(tStep) ) {
         answer.zero();

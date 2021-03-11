@@ -143,6 +143,8 @@ public:
      */
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
 
+    virtual void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override = 0;
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) = 0;
 
     /**
      * Computes the initial stiffness matrix of receiver. This method is used only if mode = UL

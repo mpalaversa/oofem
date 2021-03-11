@@ -225,9 +225,6 @@ Structural2DElement :: computeLoadLEToLRotationMatrix(FloatMatrix &answer, int i
 }
 
 
-
-
-
 // Plane stress
 
 PlaneStressElement :: PlaneStressElement(int n, Domain *aDomain) :
@@ -255,6 +252,24 @@ PlaneStressElement :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int 
     }
 }
 
+void
+PlaneStressElement::computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx, int upperIndx)
+{
+    FEInterpolation* interp = this->giveInterpolation();
+    FloatMatrix dNdx;
+    interp->evaldNdx(dNdx, elementVertex, *this->giveCellGeometryWrapper());
+
+    answer.resize(3, dNdx.giveNumberOfRows() * 2);
+    answer.zero();
+
+    for (int i = 1; i <= dNdx.giveNumberOfRows(); i++) {
+        answer.at(1, i * 2 - 1) = dNdx.at(i, 1);
+        answer.at(2, i * 2 - 0) = dNdx.at(i, 2);
+
+        answer.at(3, 2 * i - 1) = dNdx.at(i, 2);
+        answer.at(3, 2 * i - 0) = dNdx.at(i, 1);
+    }
+}
 
 void
 PlaneStressElement :: computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer)
@@ -323,7 +338,6 @@ PlaneStressElement :: computeConstitutiveMatrixAt(FloatMatrix &answer, MatRespon
         answer.rotatedWith(Q, 't');
     }
 }
-
 
 
 
@@ -498,7 +512,6 @@ AxisymElement :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, i
         answer.at(6, 2 * i - 0) = dNdx.at(i, 1);
     }
 }
-
 
 void
 AxisymElement :: computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer)

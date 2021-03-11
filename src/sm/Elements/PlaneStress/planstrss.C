@@ -91,15 +91,19 @@ PlaneStress2d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, i
     answer.zero();
 
     for ( int i = 1; i <= 4; i++ ) {
+        // Assembles terms in B matrix related to normal strains.
         answer.at(1, 2 * i - 1) = dnx.at(i, 1);
         answer.at(2, 2 * i - 0) = dnx.at(i, 2);
     }
 
 #ifdef  PlaneStress2d_reducedShearIntegration
+    // In case of reduced integration of shear terms, the shape function derivatives
+    // are evaluated at the element's centre.
     this->interpolation.evaldNdx( dnx, {0., 0.}, *this->giveCellGeometryWrapper() );
 #endif
 
     for ( int i = 1; i <= 4; i++ ) {
+        // Assembles terms in B matrix related to shear strains.
         answer.at(3, 2 * i - 1) = dnx.at(i, 2);
         answer.at(3, 2 * i - 0) = dnx.at(i, 1);
     }

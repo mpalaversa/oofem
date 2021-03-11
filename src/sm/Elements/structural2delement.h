@@ -89,6 +89,7 @@ public:
 
 protected:
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override = 0;
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override = 0;
     void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override = 0;
     void computeGaussPoints() override;
 
@@ -113,6 +114,7 @@ public:
 
 protected:
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBmatrixAt(int elementVertex, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS);
     void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
 };
 
@@ -128,6 +130,10 @@ public:
 
 protected:
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override
+    {
+        OOFEM_ERROR("not implemented");
+    };
     void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
 };
 
@@ -146,6 +152,10 @@ public:
 
 protected:
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override
+    {
+        OOFEM_ERROR("not implemented");
+    };
     void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
     void computeGaussPoints() override;
     double computeEdgeVolumeAround(GaussPoint *gp, int iEdge) override;

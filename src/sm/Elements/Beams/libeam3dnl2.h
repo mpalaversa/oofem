@@ -115,6 +115,10 @@ protected:
     void initForNewStep() override;
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int, int) override
     { OOFEM_ERROR("not implemented"); }
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override
+    {
+        OOFEM_ERROR("not implemented");
+    };
     //int computeGtoLRotationMatrix(FloatMatrix& answer);
 
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override;

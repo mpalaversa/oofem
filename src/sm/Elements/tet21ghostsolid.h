@@ -105,6 +105,7 @@ protected:
     static FEI3dTetLin interpolation_lin;
 
     void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override;
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override { answer.clear(); };
     void computeBHmatrixAt(GaussPoint *, FloatMatrix &) override;
     void computeGaussPoints() override;
 

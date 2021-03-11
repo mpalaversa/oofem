@@ -479,7 +479,7 @@ public:
      */
     virtual void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer,
                                   int lowerIndx = 1, int upperIndx = ALL_STRAINS) = 0;
-
+    
     /**
      * Computes interpolation matrix for element unknowns.
      * The order and meaning of unknowns is element dependent.

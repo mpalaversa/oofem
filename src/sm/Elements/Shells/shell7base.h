@@ -261,6 +261,7 @@ protected:
 
     // N and B matrices
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li = 1, int ui = ALL_STRAINS) override { answer.clear(); }
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override { answer.clear(); };
 
     virtual void computeBmatrixAt(const FloatArray &lCoords, FloatMatrix &answer, int li = 1, int ui = ALL_STRAINS);
     void computeNmatrixAt(const FloatArray &iLocCoords, FloatMatrix &answer) override;

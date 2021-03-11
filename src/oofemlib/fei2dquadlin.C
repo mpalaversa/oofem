@@ -86,7 +86,8 @@ FEI2dQuadLin :: evaldNdx(const FloatArrayF<2> &lcoords, const FEICellGeometry &c
     for ( std::size_t i = 0; i < dndu.cols(); i++ ) {
         double x = cellgeo.giveVertexCoordinates(i+1).at(xind);
         double y = cellgeo.giveVertexCoordinates(i+1).at(yind);
-
+        // Form the Jacobian by multiplying derivatives of shape function by natural coordinates
+        // by position (coordinates) of element's vertices.
         jacT(0, 0) += dndu(0, i) * x;
         jacT(0, 1) += dndu(0, i) * y;
         jacT(1, 0) += dndu(1, i) * x;
@@ -98,6 +99,18 @@ FEI2dQuadLin :: evaldNdx(const FloatArrayF<2> &lcoords, const FEICellGeometry &c
 double
 FEI2dQuadLin :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo)
 {
+    auto tmp = evaldNdx(lcoords, cellgeo);
+    answer = transpose(tmp.second);
+    return tmp.first;
+}
+
+double
+FEI2dQuadLin::evaldNdx(FloatMatrix& answer, int elementVertex, const FEICellGeometry& cellgeo)
+{
+    FloatArrayF<2> lcoords;
+    lcoords[0] = cellgeo.giveVertexCoordinates(elementVertex).at(xind);
+    lcoords[1] = cellgeo.giveVertexCoordinates(elementVertex).at(yind);
+    
     auto tmp = evaldNdx(lcoords, cellgeo);
     answer = transpose(tmp.second);
     return tmp.first;
@@ -343,6 +356,7 @@ bool FEI2dQuadLin :: inside(const FloatArray &lcoords) const
 }
 
 FloatMatrixF<2,4> FEI2dQuadLin :: evaldNdxi(const FloatArrayF<2> &lcoords)
+// Evaluates derivatives of shape function by natural (parametric) coordinates at lcoords.
 {
     const double &ksi = lcoords[0];
     const double &eta = lcoords[1];
