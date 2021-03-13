@@ -72,6 +72,9 @@ public:
     NodalSpringElement(int n, Domain * d);
     virtual ~NodalSpringElement() { }
 
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override
     { computeLumpedMassMatrix(answer, tStep); }

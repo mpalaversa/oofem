@@ -176,6 +176,10 @@ public:
     const FloatArray *giveKnotValues(int dim) override { return & this->knotValues [ dim - 1 ]; }
     void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
     double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
+    double evaldNdx(FloatMatrix& answer, const int elementVertex, const FEICellGeometry& cellgeo) override {
+        OOFEM_ERROR("Not implemented for this class.");
+        return 0;
+    }
     void local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
     int global2local(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override {
         OOFEM_ERROR("Not yet implemented.");

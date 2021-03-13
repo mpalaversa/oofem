@@ -71,6 +71,9 @@ public:
     virtual ~CohesiveSurface3d() { }
 
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui) override;
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
     double computeVolumeAround(GaussPoint *gp) override;
     int computeNumberOfDofs() override { return 6 * giveNumberOfNodes(); }
     void giveDofManDofIDMask(int inode, IntArray &answer) const override;

@@ -175,6 +175,7 @@ public:
      * @return Determinant of the Jacobian.
      */
     virtual double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) = 0;
+    virtual double evaldNdx(FloatMatrix& answer, const int elementVertex, const FEICellGeometry& cellgeo) = 0;
     /**
      * Evaluates the matrix of second derivatives of interpolation functions (shape functions) at given point.
      * These derivatives are in global coordinate system (where the nodal coordinates are defined)

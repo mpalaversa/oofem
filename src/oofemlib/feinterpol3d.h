@@ -69,6 +69,11 @@ public:
     { this->surfaceLocal2global(answer, isurf, lcoords, cellgeo); }
     double boundarySurfaceGiveTransformationJacobian(int isurf, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override
     { return this->surfaceGiveTransformationJacobian(isurf, lcoords, cellgeo); }
+    
+    double evaldNdx(FloatMatrix& answer, const int elementVertex, const FEICellGeometry& cellgeo) override {
+        OOFEM_ERROR("Not implemented for this class.");
+        return 0;
+    }
 
     IntArray boundaryGiveNodes(int boundary) const override;
     void boundaryEvalN(FloatArray &answer, int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;

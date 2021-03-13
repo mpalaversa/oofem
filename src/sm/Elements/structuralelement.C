@@ -706,8 +706,8 @@ StructuralElement :: computeStrainVector(FloatArray &answer, GaussPoint *gp, Tim
         answer.zero();
         return;
     }
-
-    this->computeBmatrixAt(gp, b);
+    
+    this->computeBmatrixAt(gp->giveNumber(), b);
     this->computeVectorOf(VM_Total, tStep, u);
 
     // subtract initial displacements, if defined

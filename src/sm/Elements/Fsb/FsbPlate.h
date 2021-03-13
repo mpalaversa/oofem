@@ -25,6 +25,9 @@ protected:
 
     virtual MaterialMode giveMaterialMode() { return _2dPlate; }
     virtual void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li = 1, int ui = ALL_STRAINS);
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
     virtual void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer);
 
 public:

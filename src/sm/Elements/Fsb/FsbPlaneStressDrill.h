@@ -45,6 +45,10 @@ public:
     virtual void updateLocalNumbering(EntityRenumberingFunctor &f);
     virtual bool computeGtoLRotationMatrix(FloatMatrix &answer);
     virtual int computeLoadGToLRotationMtrx(FloatMatrix &answer);
+
+    void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
 };
 
 } // end namespace oofem

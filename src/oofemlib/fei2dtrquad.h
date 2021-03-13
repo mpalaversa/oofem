@@ -59,6 +59,10 @@ public:
 
     void evalN(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
     double evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
+    double evaldNdx(FloatMatrix& answer, const int elementVertex, const FEICellGeometry& cellgeo) override {
+        OOFEM_ERROR("Not implemented for this class.");
+        return 0;
+    }
     void evald2Ndx2(FloatMatrix &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
     void local2global(FloatArray &answer, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
     double giveArea(const FEICellGeometry &cellgeo) const override;

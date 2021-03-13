@@ -59,6 +59,10 @@ public:
 
     void printOutputAt(FILE *file, TimeStep *tStep) override;
 
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
+
     /**
      * Returns the cross-sectional area of the lattice element.
      * @return Cross-section area.
