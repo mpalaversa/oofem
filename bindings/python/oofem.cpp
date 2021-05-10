@@ -550,6 +550,8 @@ PYBIND11_MODULE(oofempy, m) {
                 a.append("}>");
                 return a;
         })
+        .def("isEmpty", &oofem::FloatArray::isEmpty )
+        .def("giveSize", &oofem::FloatArray::giveSize )
         .def("resize", &oofem::FloatArray::resize)
         .def("assemble", &oofem::FloatArray::assemble)
         .def("distance", (double (oofem::FloatArray::*)(const oofem::FloatArray &) const) &oofem::FloatArray::distance)
@@ -651,6 +653,7 @@ PYBIND11_MODULE(oofempy, m) {
         .def("followedBy", (void (oofem::IntArray::*)(int , int)) &oofem::IntArray::followedBy, "Appends number to receiver")
         .def("followedBy", (void (oofem::IntArray::*)(const oofem::IntArray& , int)) &oofem::IntArray::followedBy, "Appends array to receiver")
         .def("isEmpty", &oofem::IntArray::isEmpty)
+        .def( "giveSize", &oofem::IntArray::giveSize )
         .def("containsOnlyZeroes", &oofem::IntArray::containsOnlyZeroes)
         .def("containsSorted", &oofem::IntArray::containsSorted)
         .def("insertSorted", &oofem::IntArray::insertSorted)
@@ -824,6 +827,7 @@ PYBIND11_MODULE(oofempy, m) {
         .def("giveFunction", &oofem::Domain::giveFunction, py::return_value_policy::reference)
         .def("giveMaterial", &oofem::Domain::giveMaterial, py::return_value_policy::reference)
         .def("giveCrossSection", &oofem::Domain::giveCrossSection, py::return_value_policy::reference)
+        .def("giveSet", &oofem::Domain::giveSet, py::return_value_policy::reference )
         .def("resizeDofManagers", &oofem::Domain::resizeDofManagers)
         .def("setDofManager", &oofem::Domain::py_setDofManager, py::keep_alive<0, 2>())
         .def("resizeElements", &oofem::Domain::resizeElements)
@@ -954,7 +958,7 @@ PYBIND11_MODULE(oofempy, m) {
         // trampoline (need one for each virtual method)
         double evaluateAtTime(double t) override {
             PYBIND11_OVERLOAD (
-                double, // return type
+                double, // return typeget
                 oofem::Function, // parent class
                 evaluateAtTime, // name of method in c++ (must match python name)
                 t // argument(s)
@@ -1035,6 +1039,7 @@ PYBIND11_MODULE(oofempy, m) {
     ;
 
     py::class_<oofem::Set, oofem::FEMComponent>(m, "Set")
+        .def( "giveElementList", &oofem::Set::giveElementList )
     ;
 
     
@@ -1356,6 +1361,9 @@ PYBIND11_MODULE(oofempy, m) {
       .value("IST_CrackSlip", oofem::InternalStateType::IST_CrackSlip)
       .value("IST_EquivalentTime", oofem::InternalStateType::IST_EquivalentTime)
       .value("IST_IncrementCreepModulus", oofem::InternalStateType::IST_IncrementCreepModulus)
+      .value("IST_Shell_Stress_Top", oofem::InternalStateType::IST_Shell_Stress_Top)
+      .value("IST_Shell_Stress_Bottom", oofem::InternalStateType::IST_Shell_Stress_Bottom)
+      .value("IST_Shell_Stress_Mid", oofem::InternalStateType::IST_Shell_Stress_Mid)
       ;
 
     py::register_exception<oofem::InputException>(m, "InputException");

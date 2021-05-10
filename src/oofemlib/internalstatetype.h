@@ -187,7 +187,10 @@ namespace oofem {
     ENUM_ITEM_WITH_VALUE(IST_NormalStress, 137) \
     ENUM_ITEM_WITH_VALUE(IST_LatticeStrain, 138) \
     ENUM_ITEM_WITH_VALUE(IST_LatticeStress, 139) \
-    ENUM_ITEM_WITH_VALUE(IST_PlasticLatticeStrain, 140)
+    ENUM_ITEM_WITH_VALUE(IST_PlasticLatticeStrain, 140)\
+    ENUM_ITEM_WITH_VALUE(IST_Shell_Stress_Top, 200)\
+    ENUM_ITEM_WITH_VALUE(IST_Shell_Stress_Bottom, 201 )\
+    ENUM_ITEM_WITH_VALUE(IST_Shell_Stress_Mid, 202 ) // pp hack - added 200 and 201
 
 /**
  * Type  representing the physical meaning of element or constitutive model internal variable.

@@ -1828,6 +1828,11 @@ VTKXMLExportModule::getCellVariableFromIS(FloatArray &answer, Element *el, Inter
 {
     InternalStateValueType valType = giveInternalStateValueType(type);
     int ncomponents = giveInternalStateTypeSize(valType);
+    // pp, based on the bp: hack for BeamForceMomentTensor
+    if ( type == IST_BeamForceMomentTensor ) { //AS: to make the hack work
+        ncomponents = 6;
+    }
+    // end of pp correction
 
     answer.resize(ncomponents);
 
@@ -1964,13 +1969,45 @@ VTKXMLExportModule::computeIPAverage(FloatArray &answer, IntegrationRule *iRule,
     answer.clear();
     FloatArray temp;
     if ( iRule ) {
-        for ( IntegrationPoint *ip : * iRule ) {
-            elem->giveIPValue(temp, ip, isType, tStep);
-            gptot += ip->giveWeight();
-            answer.add(ip->giveWeight(), temp);
+        // pp hack for Shell Stress (valid for mitc4 element)
+        if ( isType == IST_Shell_Stress_Top ) {
+            for ( IntegrationPoint *ip : *iRule ) {
+                if ( ip->giveNaturalCoordinates()[2] > 0.0 ) {
+                    elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
+                    gptot += ip->giveWeight();
+                    answer.add( ip->giveWeight(), temp );
+                }
+            }
+            answer.times( 1. / gptot );
+        } 
+        else if ( isType == IST_Shell_Stress_Bottom ) {
+            for ( IntegrationPoint *ip : *iRule ) {
+                if ( ip->giveNaturalCoordinates()[2] < 0.0 ) {
+                    elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
+                    gptot += ip->giveWeight();
+                    answer.add( ip->giveWeight(), temp );
+                }
+            }
+            answer.times( 1. / gptot );
+        } 
+        else if ( isType == IST_Shell_Stress_Mid ) {
+            for ( IntegrationPoint *ip : *iRule ) {
+                elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
+                gptot += ip->giveWeight();
+                answer.add( ip->giveWeight(), temp );
+            }
+            answer.times( 1. / gptot );
+        }
+        // end of pp hack for Top Bottom Shell Stress
+        else {
+            for ( IntegrationPoint *ip : *iRule ) {
+                elem->giveIPValue( temp, ip, isType, tStep );
+                gptot += ip->giveWeight();
+                answer.add( ip->giveWeight(), temp );
+            }
+            answer.times( 1. / gptot );
         }
 
-        answer.times(1. / gptot);
     }
 }
 
