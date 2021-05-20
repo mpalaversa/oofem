@@ -89,6 +89,9 @@ public:
 
     void giveCharacteristicVector(FloatArray &answer, CharType mtrx, ValueModeType mode, TimeStep *tStep) override;
     void giveCharacteristicMatrix(FloatMatrix &answer, CharType mtrx, TimeStep *tStep) override;
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
     double computeVolumeAround(GaussPoint *gp) override;
     bool giveRotationMatrix(FloatMatrix &answer) override;
 

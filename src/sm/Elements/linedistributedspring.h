@@ -79,6 +79,10 @@ public:
     int computeNumberOfDofs() override { return this->dofs.giveSize(); }
     void giveDofManDofIDMask(int inode, IntArray &) const override;
 
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
+    
     double computeVolumeAround(GaussPoint *gp) override;
 
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;

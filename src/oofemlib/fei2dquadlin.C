@@ -105,7 +105,7 @@ FEI2dQuadLin :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const F
 }
 
 double
-FEI2dQuadLin::evaldNdx(FloatMatrix& answer, int elementVertex, const FEICellGeometry& cellgeo)
+FEI2dQuadLin :: evaldNdx(FloatMatrix& answer, const int elementVertex, const FEICellGeometry& cellgeo)
 {
     FloatArrayF<2> lcoords;
     lcoords[0] = cellgeo.giveVertexCoordinates(elementVertex).at(xind);

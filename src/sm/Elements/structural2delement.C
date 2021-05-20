@@ -257,7 +257,29 @@ PlaneStressElement::computeBmatrixAt(int elementVertex, FloatMatrix& answer, int
 {
     FEInterpolation* interp = this->giveInterpolation();
     FloatMatrix dNdx;
-    interp->evaldNdx(dNdx, elementVertex, *this->giveCellGeometryWrapper());
+    FloatArrayF<2> lcoords;
+    switch (elementVertex)
+    {
+    case 1:
+        lcoords[0] = -1.0;
+        lcoords[1] = -1.0;
+        break;
+    case 2:
+        lcoords[0] = 1.0;
+        lcoords[1] = -1.0;
+        break;
+    case 3:
+        lcoords[0] = 1.0;
+        lcoords[1] = 1.0;
+        break;
+    case 4:
+        lcoords[0] = -1.0;
+        lcoords[1] = 1.0;
+        break;
+    default:
+        break;
+    }
+    interp->evaldNdx(dNdx, lcoords, *this->giveCellGeometryWrapper());
 
     answer.resize(3, dNdx.giveNumberOfRows() * 2);
     answer.zero();

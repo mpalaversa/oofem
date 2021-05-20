@@ -55,6 +55,10 @@ public:
     double boundaryEvalNormal(FloatArray &answer, int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
     double boundaryGiveTransformationJacobian(int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
     void boundaryLocal2Global(FloatArray &answer, int boundary, const FloatArray &lcoords, const FEICellGeometry &cellgeo) override;
+    double evaldNdx(FloatMatrix& answer, const int elementVertex, const FEICellGeometry& cellgeo) override {
+        OOFEM_ERROR("Not implemented for this class.");
+        return 0;
+    }
 
     /**@name Surface interpolation services */
     //@{

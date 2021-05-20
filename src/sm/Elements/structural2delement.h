@@ -114,7 +114,7 @@ public:
 
 protected:
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
-    void computeBmatrixAt(int elementVertex, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS);
+    void computeBmatrixAt(int elementVertex, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
     void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
 };
 

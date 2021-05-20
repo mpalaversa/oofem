@@ -83,7 +83,9 @@ public:
 
     double giveCharacteristicLength(const FloatArray &normalToCrackPlane) override;
     double computeVolumeAround(GaussPoint *gp) override;
-
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override
     { computeLumpedMassMatrix(answer, tStep); }

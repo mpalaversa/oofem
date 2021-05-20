@@ -67,6 +67,9 @@ public:
 
 protected:
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int, int) override { }
+    virtual void computeBmatrixAt(int elementVertex, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override {
+        OOFEM_ERROR("Not implemented for this class.");
+    }
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override { }
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
     double computeVolumeAroundSide(GaussPoint *gp, int elemSideNumber);

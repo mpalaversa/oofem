@@ -157,14 +157,9 @@ NLStructuralElement :: giveInternalForcesVector(FloatArray &answer, TimeStep *tS
 
     // zero answer will resize accordingly when adding first contribution
     answer.clear();
-    /*
-    for (int i = 1; i <= 4; i++) {
-        this->computeBmatrixAt(i, B);
-    }*/
-    
+
     for ( auto &gp : *this->giveDefaultIntegrationRulePtr() ) {
         StructuralMaterialStatus *matStat = static_cast< StructuralMaterialStatus * >( gp->giveMaterialStatus() );
-
         // Engineering (small strain) stress
         if ( nlGeometry == 0 ) {
             this->computeBmatrixAt(gp, B);
