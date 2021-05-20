@@ -57,11 +57,6 @@ class LinQuad3DPlaneStress : public PlaneStress2d
 protected:
     /// Local vertex coordinates
     std :: vector< FloatArray > lc; 
-    /**
-     * Transformation Matrix form GtoL(3,3) is stored
-     * at the element level for computation efficiency
-     */
-    FloatMatrix *GtoLRotationMatrix;
 
     enum CharTensor {
         LocalStrainTensor,
@@ -76,6 +71,12 @@ protected:
     };
 
 public:
+    /**
+     * Transformation Matrix form GtoL(3,3) is stored
+     * at the element level for computation efficiency
+     */
+    FloatMatrix* GtoLRotationMatrix;
+
     LinQuad3DPlaneStress(int n, Domain * d);
     virtual ~LinQuad3DPlaneStress();
 

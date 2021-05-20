@@ -56,6 +56,7 @@ set (sm_element
     Elements/Shells/shell7basexfem.C
     Elements/Shells/tr2shell7xfem.C
     Elements/Shells/mitc4.C
+	Elements/Shells/shellqd41.C
     Elements/Axisymmetry/q4axisymm.C
     Elements/Axisymmetry/axisymm3d.C 
     Elements/Axisymmetry/l4axisymm.C
