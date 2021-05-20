@@ -62,6 +62,8 @@ public:
     int computeNumberOfDofs() override { return 24; }
     void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
     void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) { answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep); }
+    void computeStressVectorTop(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) { answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep); }
+    void computeStressVectorBottom(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) { answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep); }
     double computeVolumeAround(GaussPoint* gp) override;
     const char* giveClassName() const override { return "ShellQd41"; }
     int giveDefaultIntegrationRule() const override { return plate->giveDefaultIntegrationRule(); }
