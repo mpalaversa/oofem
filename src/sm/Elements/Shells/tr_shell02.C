@@ -410,6 +410,40 @@ TR_SHELL02 :: SpatialLocalizerI_giveBBox(FloatArray &bb0, FloatArray &bb1)
         bb1.beMaxOf(bb1, _c);
     }
 }
+// Surface load
+void TR_SHELL02 ::computeSurfaceNMatrix( FloatMatrix &answer, int boundaryID, const FloatArray &lcoords )
+{
+    FloatArray n_vec;
+    this->giveInterpolation()->boundarySurfaceEvalN( n_vec, boundaryID, lcoords, FEIElementGeometryWrapper( this ) );
+    answer.beNMatrixOf( n_vec, 6 );
+}
+// this method is not called!?
+void TR_SHELL02 ::computeSurfaceNMatrixAt( FloatMatrix &answer, int iSurf, GaussPoint *sgp )
+{
+    plate->computeSurfaceNMatrixAt( answer, iSurf,sgp );
+}
+
+void TR_SHELL02 ::giveSurfaceDofMapping( IntArray &answer, int iSurf ) const
+{
+    if ( iSurf == 1 ) {
+        answer.enumerate( 18 );
+    } else {
+        OOFEM_ERROR( "wrong surface number" );
+    }
+}
+
+
+double
+TR_SHELL02 ::computeSurfaceVolumeAround( GaussPoint *gp, int iSurf )
+{
+    return plate->computeSurfaceVolumeAround( gp, iSurf);
+}
+
+
+int TR_SHELL02 ::computeLoadLSToLRotationMatrix( FloatMatrix &answer, int isurf, GaussPoint *gp )
+{
+    return plate->computeLoadLSToLRotationMatrix( answer, isurf, gp );
+}
 
 //
 // io routines

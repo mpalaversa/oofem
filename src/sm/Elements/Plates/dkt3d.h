@@ -102,6 +102,7 @@ protected:
      * @name Surface load support
      */
     //@{
+public:
     void computeSurfaceNMatrixAt(FloatMatrix &answer, int iSurf, GaussPoint *gp);
     void giveSurfaceDofMapping(IntArray &answer, int iSurf) const override;
     double computeSurfaceVolumeAround(GaussPoint *gp, int iSurf) override;

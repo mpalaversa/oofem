@@ -133,6 +133,19 @@ public:
     }
 
 protected:
+    //@}
+    /**
+     * @name Surface load support
+     */
+    //@{
+    void computeSurfaceNMatrix( FloatMatrix &answer, int boundaryID, const FloatArray &lcoords );
+    void computeSurfaceNMatrixAt( FloatMatrix &answer, int iSurf, GaussPoint *gp );// this method is not called!?
+    void giveSurfaceDofMapping( IntArray &answer, int iSurf ) const override;
+    double computeSurfaceVolumeAround( GaussPoint *gp, int iSurf ) override;
+    int computeLoadLSToLRotationMatrix( FloatMatrix &answer, int iSurf, GaussPoint *gp ) override;
+    //@}
+
+protected:
     void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override
     { OOFEM_ERROR("calling of this function is not allowed"); }
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &) override

@@ -63,7 +63,13 @@ void Set :: initializeFrom(InputRecord &ir)
     }
 
     if ( ir.hasField(_IFT_Set_allElements) ) { // generate a list with all the element numbers
-        this->elements.enumerate(this->giveDomain()->giveNumberOfElements());
+        //this->elements.enumerate(this->giveDomain()->giveNumberOfElements());
+        this->elements.resize( this->giveDomain()->giveNumberOfElements() );
+        int i = 0;
+        for ( auto &element : this->giveDomain()->elementList ) {
+            this->elements[i] = element->giveGlobalNumber();
+            i++;
+        }
         mElementListIsSorted = false;
     } else {
         IntArray inputElements;
