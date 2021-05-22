@@ -85,7 +85,7 @@ protected:
 
     int computeLoadGToLRotationMtrx(FloatMatrix &answer) override;
     void computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeStep *tStep, ValueModeType mode) override;
-
+    friend class TR_SHELL02;
 public:
     // definition & identification
     const char *giveInputRecordName() const override { return _IFT_TrPlanestressRotAllman3d_Name; }

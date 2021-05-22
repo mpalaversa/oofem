@@ -211,7 +211,16 @@ TR_SHELL02 :: computeVolumeAround(GaussPoint *gp)
 void
 TR_SHELL02 :: computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeStep *tStep, ValueModeType mode)
 {
-        OOFEM_ERROR("This function is not implemented yet.");
+    FloatArray aux;
+
+    answer.resize( 18 );
+    answer.zero();
+
+    plate->computeBodyLoadVectorAt( aux, forLoad, tStep, mode );
+    if ( !aux.isEmpty() ) answer.assemble( aux, loc_plate );
+
+    membrane->computeBodyLoadVectorAt( aux, forLoad, tStep, mode );
+    if ( !aux.isEmpty() ) answer.assemble( aux, loc_membrane );
 }
 
 int

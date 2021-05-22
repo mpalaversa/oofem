@@ -89,7 +89,7 @@ protected:
     void giveCharacteristicTensor(FloatMatrix &answer, CharTensor type, GaussPoint *gp, TimeStep *tStep);
     int computeLoadGToLRotationMtrx(FloatMatrix &answer) override;
     void computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeStep *tStep, ValueModeType mode) override;
-
+    friend class TR_SHELL02;
     /**
      * @name Edge load support
      */
@@ -102,7 +102,6 @@ protected:
      * @name Surface load support
      */
     //@{
-public:
     void computeSurfaceNMatrixAt(FloatMatrix &answer, int iSurf, GaussPoint *gp);
     void giveSurfaceDofMapping(IntArray &answer, int iSurf) const override;
     double computeSurfaceVolumeAround(GaussPoint *gp, int iSurf) override;
