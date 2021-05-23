@@ -110,7 +110,7 @@ if (USE_PETSC)
     list (APPEND core_nm petscsolver.C petscsparsemtrx.C)
 endif ()
 
-if (USE_INTEL_MKL_PARDISO)
+if (USE_INTEL_MKLPARDISO)
     list (APPEND core_nm mklpardisosolver.C)
 endif ()
 
