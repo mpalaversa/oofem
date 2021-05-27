@@ -262,9 +262,12 @@ VTKXMLLatticeExportModule::setupVTKPieceCross(VTKPiece &vtkPieceCross, TimeStep 
     for ( int ie = 1; ie <= numberOfElements; ie++ ) {
         if (  dynamic_cast< LatticeStructuralElement * >( domain->giveElement(elements.at(ie) ) ) ) {
             numberOfCrossSectionNodes = ( static_cast< LatticeStructuralElement * >( domain->giveElement(elements.at(ie) ) ) )->giveNumberOfCrossSectionNodes();
-        } else if ( dynamic_cast< LatticeTransportElement * >( domain->giveElement(elements.at(ie) ) ) ) {
+        }
+#ifdef __FM_MODULE
+        else if ( dynamic_cast< LatticeTransportElement * >( domain->giveElement(elements.at(ie) ) ) ) {
             numberOfCrossSectionNodes = ( static_cast< LatticeTransportElement * >( domain->giveElement(elements.at(ie) ) ) )->giveNumberOfCrossSectionNodes();
         }
+#endif
         crossSectionTable.at(ie) = numberOfCrossSectionNodes;
         numberOfNodes += numberOfCrossSectionNodes;
     }
@@ -281,10 +284,13 @@ VTKXMLLatticeExportModule::setupVTKPieceCross(VTKPiece &vtkPieceCross, TimeStep 
         if (  dynamic_cast< LatticeStructuralElement * >( domain->giveElement(elements.at(ie) ) ) ) {
             numberOfCrossSectionNodes =  ( static_cast< LatticeStructuralElement * >( domain->giveElement(elements.at(ie) ) ) )->giveNumberOfCrossSectionNodes();
             ( static_cast< LatticeStructuralElement * >( domain->giveElement(elements.at(ie) ) ) )->giveCrossSectionCoordinates(crossSectionCoordinates);
-        } else if ( dynamic_cast< LatticeTransportElement * >( domain->giveElement(elements.at(ie) ) ) ) {
+        }
+#ifdef __FM_MODULE
+        else if ( dynamic_cast< LatticeTransportElement * >( domain->giveElement(elements.at(ie) ) ) ) {
             numberOfCrossSectionNodes = ( static_cast< LatticeTransportElement * >( domain->giveElement(elements.at(ie) ) ) )->giveNumberOfCrossSectionNodes();
             ( static_cast< LatticeTransportElement * >( domain->giveElement(elements.at(ie) ) ) )->giveCrossSectionCoordinates(crossSectionCoordinates);
         }
+#endif
 
         for ( int is = 0; is < numberOfCrossSectionNodes; is++ ) {
             nodeCounter++;
