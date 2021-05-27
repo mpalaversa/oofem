@@ -56,6 +56,7 @@ set (sm_element
     Elements/Shells/shell7basexfem.C
     Elements/Shells/tr2shell7xfem.C
     Elements/Shells/mitc4.C
+	Elements/Shells/shellqd41.C
     Elements/Axisymmetry/q4axisymm.C
     Elements/Axisymmetry/axisymm3d.C 
     Elements/Axisymmetry/l4axisymm.C
@@ -78,6 +79,22 @@ set (sm_element
     Elements/PlaneStress/basicelement.C
     Elements/PlaneStress/trplanestressrotallman3d.C
     Elements/PlaneStress/linquad3d_planestress.C
+	Elements/Fsb/FsbLinearStatic.C
+    Elements/Fsb/FsbLinearStatic2D.C
+    Elements/Fsb/FsbPlaneStress.C
+    Elements/Fsb/FsbPlaneStressDrill.C
+    Elements/Fsb/FsbInterpolatorPlaneStress.C
+    Elements/Fsb/FsbInterpolatorPlate.C
+    Elements/Fsb/FsbPlate.C
+    Elements/Perleta/acm_plate.C
+    Elements/Perleta/basiclsr.C
+    Elements/Perleta/basiclsr3d.C
+    Elements/Perleta/basiclsrk3d.C
+    Elements/Perleta/cssrk3d.C
+    Elements/Perleta/mplate.C
+    Elements/Perleta/pplate.C
+    Elements/Perleta/qcshell.C
+    Elements/Perleta/qshell.C
     Elements/AbaqusUserElement.C
     Elements/htselement.C
     Elements/lumpedmasselement.C
