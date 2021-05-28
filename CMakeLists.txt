@@ -101,15 +101,16 @@ option (USE_VTK "Enable VTK (for exporting binary VTU-files)" OFF)
 #option (USE_CGAL "CGAL" OFF)
 # Internal modules
 option (USE_SM "Enable structural mechanics module" ON)
-option (USE_FM "Enable fluid mechanics module" ON)
+option (USE_FM "Enable fluid mechanics module" OFF)
 option (USE_PFEM "Enable PFEM module" OFF)
-option (USE_TM "Enable heat/mass transfer module" ON)
+option (USE_TM "Enable heat/mass transfer module" OFF)
 option (USE_CEMHYD "Enable CemHyd support" OFF)
 option (USE_T3D "Enable T3D support" OFF)
 option (USE_BOOSTPYTHON_BINDINGS "Rather obsolete, use USE_PYBIND_BINDINGS. Enable Python bidings using boost (OOFEM callable from Python)." OFF)
-option (USE_PYBIND_BINDINGS "Enable Python Pybind11 bindings (OOFEM callable from Python and vice versa)." OFF)
+option (USE_PYBIND_BINDINGS "Enable Python Pybind11 bindings (OOFEM callable from Python and vice versa)." ON)
 option (USE_PYTHON_EXTENSION "Enable Python extension for exposing C++ code to python. Uses Python.h library." OFF)
 option (USE_HDF5 "HDF5 support" OFF)
+option (USE_FSB_OPTIONS "Use FSB configuration options" ON)
 
 if (USE_PARALLEL)
     add_definitions (-D__PARALLEL_MODE)
@@ -224,6 +225,13 @@ if (USE_OOFEG)
 endif ()
 
 #######################################################################
+######################## MSVC ONLY ################################
+#######################################################################
+if(MSVC)
+    add_compile_options(/MP)
+endif()
+
+#######################################################################
 ######################## External libraries ###########################
 #######################################################################
 
@@ -329,17 +337,30 @@ endif ()
 if (USE_INTEL_MKLPARDISO)
     message (STATUS "USED MKL_PARDISO!")
     # Find the actual libraries:
-    #list(APPEND MKL_LIBS "mkl_core" "mkl_gf_lp64" "mkl_gnu_thread" "pthread")
-    list(APPEND MKL_LIBS "mkl_core" "mkl_intel_lp64" "mkl_intel_thread")
+    if(WIN32)
+        list(APPEND MKL_LIBS "mkl_core" "mkl_intel_lp64" "mkl_intel_thread")
+    else()
+        list(APPEND MKL_LIBS "mkl_core" "mkl_gf_lp64" "mkl_gnu_thread" "pthread")
+    endif()
+    #
+    
     foreach (f ${MKL_LIBS})
         if (INTEL_MKL_PARDISO_DIR)
-            #find_library (${f}_LIB ${f} PATH "${INTEL_MKL_PARDISO_DIR}/mkl/lib/intel64/" DOC "MKLPARDISO (library)")
-            #include_directories ("${INTEL_MKL_PARDISO_DIR}/mkl/include")
-            find_library (${f}_LIB ${f} PATH "${INTEL_MKL_PARDISO_DIR}/lib/intel64/" DOC "MKLPARDISO (library)")
-            include_directories ("${INTEL_MKL_PARDISO_DIR}/include")
+            if(WIN32)
+                find_library (${f}_LIB ${f} PATH "${INTEL_MKL_PARDISO_DIR}/lib/intel64/" DOC "MKLPARDISO (library)")
+                include_directories ("${INTEL_MKL_PARDISO_DIR}/include")
+            else()
+                find_library (${f}_LIB ${f} PATH "${INTEL_MKL_PARDISO_DIR}/mkl/lib/intel64/" DOC "MKLPARDISO (library)")
+                include_directories ("${INTEL_MKL_PARDISO_DIR}/mkl/include")
+            endif()
         else ()
-            find_library (${f}_LIB ${f} HINTS "/opt/intel/composerxe/mkl/lib/intel64/" DOC "MKLPARDISO (library)")
-            include_directories ("/opt/intel/composerxe/mkl/include")
+            if(WIN32)
+                find_library (${f}_LIB ${f} HINTS "c:/Program Files (x86)/Intel/oneAPI/mkl/latest/lib/intel64" DOC "MKLPARDISO (library)")
+                include_directories ("c:/Program Files (x86)/Intel/oneAPI/mkl/latest/include")
+            else()
+                #find_library (${f}_LIB ${f} HINTS "/opt/intel/composerxe/mkl/lib/intel64/" DOC "MKLPARDISO (library)")
+                #include_directories ("/opt/intel/composerxe/mkl/include")
+            endif()
         endif ()
         if (${${f}_LIB} STREQUAL "${f}_LIB-NOTFOUND")
             message (FATAL_ERROR "MKLPARDISO library not found")
@@ -482,7 +503,6 @@ if (USE_SPOOLES)
     list (APPEND EXT_LIBS ${SPOOLES_LIB})
     list (APPEND MODULE_LIST "SPOOLES")
 endif ()
-
 if (USE_PYTHON_EXTENSION OR USE_BOOSTPYTHON_BINDINGS)
     # PythonLibs in cmake is bugged, have to try and rely on PythonInterp to get the suitable major and minor versions.
     #set (CMAKE_LIBRARY_DIR ${PYTHON_DIR})
@@ -508,7 +528,6 @@ if (USE_PYTHON_EXTENSION OR USE_BOOSTPYTHON_BINDINGS)
      endif ()   
 endif ()
 
-
 if(WIN32)
     set(PYTHON_MODULE_EXTENSION ".pyd")
 else()
@@ -518,15 +537,41 @@ endif()
 
 if (USE_PYBIND_BINDINGS)
     #build pybind11 bindings
-    find_package(PythonInterp 3.0 REQUIRED)
-    find_package(pybind11 REQUIRED CONFIG)
+    if (USE_FSB_OPTIONS)
+        set(pybind11_FINDPYTHON OFF)
+        find_package(pybind11 REQUIRED CONFIG HINTS "D:/Development/oofem/remake_python/env/Lib/site-packages/pybind11/share/cmake/pybind11")
+    else()
+        find_package(pybind11 REQUIRED CONFIG) 
+    endif()
+    
+    if (${pybind11_FOUND})
+        set(PYBIND_DIR "${pybind11_INCLUDE_DIR}")
+    endif()
     if (PYBIND_DIR)
-        message(STATUS "PYBIND_DIR = ${PYBIND_DIR}")
         include_directories (${PYBIND_DIR})#Need also to manually set it up since it can be anywhere
     endif ()
     pybind11_add_module(oofempy THIN_LTO ${oofem_SOURCE_DIR}/bindings/python/oofem.cpp ${PYBIND11_HEADERS})
     target_link_libraries(oofempy PRIVATE liboofem)
     set_target_properties (oofempy PROPERTIES SUFFIX "${PYTHON_MODULE_EXTENSION}")
+
+     if (USE_FSB_OPTIONS)
+        set(Python3_ROOT_DIR "D:/Development/oofem/remake_python/env")
+        find_package (Python3 COMPONENTS Interpreter Development)
+    else()
+        find_package (Python3 COMPONENTS Interpreter Development)
+    endif()
+
+    if (${Python3_FOUND})
+        include_directories (${Python3_INCLUDE_DIRS})
+        list (APPEND EXT_LIBS ${Python3_LIBRARIES})
+        list (APPEND MODULE_LIST "Python")
+    else()
+        message(STATUS "Python3 pytest_not_found found!")
+    endif()
+
+
+
+
 
     # Make sure pytest is found or produce a fatal error
     if(NOT PYTEST_FOUND)
@@ -541,6 +586,8 @@ if (USE_PYBIND_BINDINGS)
     endif()
     set (USE_SHARED_LIB ON)
 endif()
+
+
 
 #######################################################################
 ######################## Configuration ################################
@@ -909,4 +956,12 @@ set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}+sid1")
 
 include (CPack)
+
+if (USE_FSB_OPTIONS)
+    set_target_properties(liboofem_benchmark PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(beam2d_1 PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(hexgrid PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(dream3d_analysis PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif ()
 
