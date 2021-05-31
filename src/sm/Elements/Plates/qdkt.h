@@ -83,6 +83,16 @@ public:
     void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int = 1, int = ALL_STRAINS) override;
     void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
 
+    /**
+     * @name Surface load support
+     */
+     //@{
+    double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override;
+    void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
+    void computeSurfaceNMatrixAt(FloatMatrix& answer, int iSurf, GaussPoint* gp);
+    void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
+    int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override;
+    //@}
 protected:
     void computeGaussPoints() override;
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override;
@@ -96,16 +106,6 @@ protected:
 
     void computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeStep *tStep, ValueModeType mode) override;
 
-    /**
-     * @name Surface load support
-     */
-    //@{
-    void computeSurfaceNMatrix(FloatMatrix &answer, int boundaryID, const FloatArray& lcoords) override;
-    void computeSurfaceNMatrixAt(FloatMatrix &answer, int iSurf, GaussPoint *gp);
-    void giveSurfaceDofMapping(IntArray &answer, int iSurf) const override;
-    double computeSurfaceVolumeAround(GaussPoint *gp, int iSurf) override;
-    int computeLoadLSToLRotationMatrix(FloatMatrix &answer, int iSurf, GaussPoint *gp) override;
-    //@}
     /**
      * @name Edge load support
      */

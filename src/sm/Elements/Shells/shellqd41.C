@@ -591,9 +591,33 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
         OOFEM_ERROR("It is not allowed to define more than 1 integration rule for this element.");
 }
 
+void ShellQd41::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
+{
+    if (iSurf == 1 || iSurf == 2) {
+        answer.enumerate(24);
+    }
+    else {
+        OOFEM_ERROR("wrong surface number");
+    }
+}
+
+void
+ShellQd41::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords)
+{
+    FloatArray n_vec;
+    this->giveInterpolation()->boundarySurfaceEvalN(n_vec, boundaryID, lcoords, FEIElementGeometryWrapper(this));
+    answer.beNMatrixOf(n_vec, 6);
+}
+
 std::vector< FloatArray >
 ShellQd41::giveNodeCoordinates()
 {
+    IntArray newDofMans(this->dofManArray.giveSize());
+    for (int i = 1; i <= this->dofManArray.giveSize(); i++)
+        newDofMans.at(i) = this->dofManArray.at(i);
+    
+    membrane->setDofManagers(newDofMans);
+
     std::vector< FloatArray > c;
     membrane->computeLocalNodalCoordinates(c);
     return c;
