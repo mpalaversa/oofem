@@ -253,10 +253,10 @@ void Set :: updateLocalElementNumbering(EntityRenumberingFunctor &f)
         elements.at(i) = f(elements.at(i), ERS_Element);
     }
     ///@todo Check order of element number and boundary number (same for edges)
-    for ( int i = 1; i <= elementBoundaries.giveSize(); i += 2 ) {
+    for ( int i = 2; i <= elementBoundaries.giveSize(); i += 2 ) {
         elementBoundaries.at(i) = f(elementBoundaries.at(i), ERS_Element);
     }
-    for ( int i = 1; i <= elementEdges.giveSize(); i += 2 ) {
+    for ( int i = 2; i <= elementEdges.giveSize(); i += 2 ) {
         elementEdges.at(i) = f(elementEdges.at(i), ERS_Element);
     }
 

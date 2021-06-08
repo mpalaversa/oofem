@@ -48,6 +48,7 @@ namespace oofem {
     ENUM_ITEM(_PlaneStress) \
     ENUM_ITEM(_PlaneStrain) \
     ENUM_ITEM(_2dPlate) \
+    ENUM_ITEM(_KirchhoffPlate) /* Plates based on Kirchhoff plate theory (components are the same as for _PlaneStress) */ \
     ENUM_ITEM(_2dPlateSubSoil) /* Subsoil mode for plates */ \
     ENUM_ITEM(_1dMat) \
     ENUM_ITEM(_2dBeam) \

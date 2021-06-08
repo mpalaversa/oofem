@@ -83,6 +83,29 @@ SimpleCrossSection :: giveRealStress_PlaneStress(const FloatArrayF<3> &strain, G
     return mat->giveRealStressVector_PlaneStress(strain, gp, tStep);
 }
 
+FloatArrayF<3>
+SimpleCrossSection::giveRealStress_KirchhoffPlate(const FloatArrayF<3>& strain, GaussPoint* gp, TimeStep* tStep, double z) const
+{
+    FloatArrayF<5> tempStrain;
+    for (int i = 1; i <= 3; i++)
+        tempStrain.at(i) = strain.at(i);
+
+    FloatArrayF<5> tempCurvatures;
+    tempCurvatures = giveGeneralizedStress_Plate(tempStrain, gp, tStep);
+    FloatArrayF<3> curvatures;
+    for (int i = 1; i <= 3; i++)
+        curvatures.at(i) = z*tempCurvatures.at(i);
+
+    FloatArrayF<3> stress;
+    auto mat = dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp));
+    stress = mat->giveRealStressVector_KirchhoffPlate(curvatures, gp, tStep, giveKirchhoffPlateStiffMtrx(ElasticStiffness, gp, tStep));
+
+    auto status = static_cast<StructuralMaterialStatus*>(mat->giveStatus(gp));
+    status->letTempStrainVectorBe(strain);
+    status->letTempStressVectorBe(stress);
+    
+    return stress;
+}
 
 FloatArrayF<1>
 SimpleCrossSection :: giveRealStress_1d(const FloatArrayF<1> &strain, GaussPoint *gp, TimeStep *tStep) const
@@ -297,8 +320,10 @@ SimpleCrossSection :: giveCharMaterialStiffnessMatrix(FloatMatrix &answer, MatRe
         answer = this->give2dBeamStiffMtrx(rMode, gp, tStep);
     } else if ( mode == _3dBeam ) {
         answer = this->give3dBeamStiffMtrx(rMode, gp, tStep);
-    } else if ( mode == _2dPlate ) {
+    } else if (mode == _2dPlate) {
         answer = this->give2dPlateStiffMtrx(rMode, gp, tStep);
+    } else if (mode == _KirchhoffPlate) {
+        answer = this->giveKirchhoffPlateStiffMtrx(rMode, gp, tStep);
     } else if ( mode == _3dShell ) {
         answer = this->give3dShellStiffMtrx(rMode, gp, tStep);
     } else if ( mode == _3dDegeneratedShell ) {
@@ -380,17 +405,37 @@ SimpleCrossSection :: give2dPlateStiffMtrx(MatResponseMode rMode, GaussPoint *gp
     double thickness = this->give(CS_Thickness, gp);
     double thickness3 = thickness * thickness * thickness;
 
+    FloatMatrixF<3,3> kirchhPlateStiffMat = giveKirchhoffPlateStiffMtrx(rMode, gp, tStep);
+    
     FloatMatrixF<5, 5> answer;
 
-    for ( int i = 1; i <= 2; i++ ) {
-        for ( int j = 1; j <= 2; j++ ) {
+    for ( int i = 1; i <= 3; i++ )
+        for ( int j = 1; j <= 3; j++ )
+            answer.at(i, j) = kirchhPlateStiffMat.at(i, j);
+
+    answer.at(4, 4) = mat2d.at(3, 3) * thickness * ( 5. / 6. );
+    answer.at(5, 5) = answer.at(4, 4);
+    return answer;
+}
+
+FloatMatrixF<3, 3>
+SimpleCrossSection::giveKirchhoffPlateStiffMtrx(MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) const
+{
+    auto mat = dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp));
+
+    auto mat2d = mat->givePlaneStressStiffMtrx(rMode, gp, tStep);
+    double thickness = this->give(CS_Thickness, gp);
+    double thickness3 = thickness * thickness * thickness;
+
+    FloatMatrixF<3, 3> answer;
+
+    for (int i = 1; i <= 2; i++) {
+        for (int j = 1; j <= 2; j++) {
             answer.at(i, j) = mat2d.at(i, j) * thickness3 / 12.;
         }
     }
 
     answer.at(3, 3) = mat2d.at(3, 3) * thickness3 / 12.;
-    answer.at(4, 4) = mat2d.at(3, 3) * thickness * ( 5. / 6. );
-    answer.at(5, 5) = answer.at(4, 4);
     return answer;
 }
 

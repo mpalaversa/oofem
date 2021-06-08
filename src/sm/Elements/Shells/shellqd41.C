@@ -49,7 +49,7 @@ ShellQd41 ::ShellQd41(int n, Domain* aDomain) : NLStructuralElement(n, aDomain)
     membrane = new LinQuad3DPlaneStress(n, aDomain);
     plate = new QDKTPlate(n, aDomain);
 }
-
+/*
 void
 ShellQd41::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int li, int ui)
 {
@@ -117,6 +117,37 @@ ShellQd41::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int li, int ui)
     answer.at(3, 21) = BMatrixPlate(2, 9);
     answer.at(3, 22) = BMatrixPlate(2, 10);
     answer.at(3, 23) = BMatrixPlate(2, 11);
+}
+*/
+
+void
+ShellQd41::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int li, int ui)
+{
+    FloatMatrix BMatrixMembrane;
+    membrane->computeBmatrixAt(gp, BMatrixMembrane, li, ui);
+
+    // Sets order of matrix B for ShellQd41 and all terms to 0.
+    answer.resize(3, 24);
+    answer.zero();
+    // Set values for terms in the first row.
+    answer.at(1, 1) = BMatrixMembrane(0, 0);
+    answer.at(1, 7) = BMatrixMembrane(0, 2);
+    answer.at(1, 13) = BMatrixMembrane(0, 4);
+    answer.at(1, 19) = BMatrixMembrane(0, 6);
+    // Set values for terms in the second row.
+    answer.at(2, 2) = BMatrixMembrane(1, 1);
+    answer.at(2, 8) = BMatrixMembrane(1, 3);
+    answer.at(2, 14) = BMatrixMembrane(1, 5);
+    answer.at(2, 20) = BMatrixMembrane(1, 7);
+    // Set values for terms in the third row.
+    answer.at(3, 1) = BMatrixMembrane(2, 0);
+    answer.at(3, 2) = BMatrixMembrane(2, 1);
+    answer.at(3, 7) = BMatrixMembrane(2, 2);
+    answer.at(3, 8) = BMatrixMembrane(2, 3);
+    answer.at(3, 13) = BMatrixMembrane(2, 4);
+    answer.at(3, 14) = BMatrixMembrane(2, 5);
+    answer.at(3, 19) = BMatrixMembrane(2, 6);
+    answer.at(3, 20) = BMatrixMembrane(2, 7);
 }
 
 void
@@ -366,10 +397,54 @@ ShellQd41::giveDofManDofIDMask(int inode, IntArray& answer) const
 void
 ShellQd41::initializeFrom(InputRecord& ir)
 {
-    // proc tady neni return = this...   ??? termitovo
     StructuralElement::initializeFrom(ir);
     plate->initializeFrom(ir);
     membrane->initializeFrom(ir);
+
+    int outputAtXYTemp, outputTypeTemp, outputAtZTemp, outputCategoryTemp;
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd41_outputAtXY);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputTypeTemp, _IFT_ShellQd41_outputType);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtZ, _IFT_ShellQd41_outputAtZ);
+    switch (outputAtXYTemp) {
+    case 2:
+        outputAtXY = OutputLocationXY::Centroid;
+        break;
+    case 3:
+        outputAtXY = OutputLocationXY::Corners;
+        break;
+    case 4:
+        outputAtXY = OutputLocationXY::All;
+        break;
+    default:
+        break;
+    }
+    switch (outputCategoryTemp) {
+    case 1:
+        outputCategory = OutputCategory::Membrane;
+        break;
+    case 2:
+        outputCategory = OutputCategory::Plate;
+        break;
+    case 4:
+        outputCategory = OutputCategory::All;
+        break;
+    default:
+        break;
+    }
+    switch (outputTypeTemp) {
+    case 2:
+        outputType = OutputType::Principal;
+        break;
+    case 3:
+        outputType = OutputType::VM;
+        break;
+    case 4:
+        outputType = OutputType::All;
+        break;
+    default:
+        break;
+    }
 }
 
 void
@@ -420,19 +495,19 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
                 BMatrixPlate.beSubMatrixOf(temp, 1, 3, 1, 12);
                 membrane->computeBmatrixAt(gp, BMatrixMembrane);
 
-                DMatrixPlate.beSubMatrixOf(cs->give2dPlateStiffMtrx(rMode, gp, tStep), 1, 3, 1, 3);
+                DMatrixPlate = cs->giveKirchhoffPlateStiffMtrx(rMode, gp, tStep);
                 DMatrixMembrane = cs->giveStiffnessMatrix_PlaneStress(rMode, gp, tStep);
             }
             else if (nlGeometry == 1)
                 OOFEM_ERROR("Only linear geometry is allowed for this element.");
 
-            double dV = computeVolumeAround(gp);
-
             DBPlate.beProductOf(DMatrixPlate, BMatrixPlate);
             DBMembrane.beProductOf(DMatrixMembrane, BMatrixMembrane);
 
+            double dV = computeVolumeAround(gp);
+
             if (matStiffSymmFlag) {
-                stiffMatPlate.plusProductSymmUpper(BMatrixPlate, DBPlate, dV);
+                stiffMatPlate.plusProductSymmUpper(BMatrixPlate, DBPlate, plate->computeVolumeAround(gp));
                 stiffMatMembrane.plusProductSymmUpper(BMatrixMembrane, DBMembrane, dV);
             }
             else {
@@ -591,7 +666,132 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
         OOFEM_ERROR("It is not allowed to define more than 1 integration rule for this element.");
 }
 
-void ShellQd41::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
+void
+ShellQd41::computeMembraneStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) {
+    FloatMatrix b;
+    FloatArray u;
+    
+    FloatArray uMemb;
+    int j = 1;
+    switch (outputType) {
+    case OutputType::Standard:
+        this->computeVectorOf(VM_Total, tStep, u);
+        /* This is to be uncommented once adapted for ShellQd41 (if necessary).
+        if (initialDisplacements) {
+            u.subtract(*initialDisplacements);
+        }*/
+        uMemb.resize(8);
+        for (int i = 1; i <= 8; i += 2) {
+            uMemb.at(i) = u.at(j);
+            uMemb.at(i + 1) = u.at(j + 1);
+            j += 6;
+        }
+        membrane->computeBmatrixAt(gp, b);
+        answer.beProductOf(b, uMemb);
+        break;
+    case OutputType::Principal:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::VM:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::All:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+ShellQd41::computePlateStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) {
+    FloatMatrix b;
+    FloatArray u;
+
+    FloatArray uPlate;
+    FloatMatrix temp;
+    int j = 3;
+    switch (outputType) {
+    case OutputType::Standard:
+        this->computeVectorOf(VM_Total, tStep, u);
+        /* This is to be uncommented once adapted for ShellQd41 (if necessary).
+        if (initialDisplacements) {
+            u.subtract(*initialDisplacements);
+        }*/
+        uPlate.resize(12);
+        for (int i = 1; i <= 12; i += 3) {
+            uPlate.at(i) = u.at(j);
+            uPlate.at(i + 1) = u.at(j + 1);
+            uPlate.at(i + 2) = u.at(j + 2);
+            j += 6;
+        }
+        computeBmatrixPlateAt(gp, temp);
+        b.beSubMatrixOf(temp, 1, 3, 1, 12);
+        answer.beProductOf(b, uPlate);
+        break;
+    case OutputType::Principal:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::VM:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::All:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+ShellQd41::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep)
+// Computes the vector containing the strains at the Gauss point gp of
+// the receiver, at time step tStep.
+{
+    if (!this->isActivated(tStep)) {
+        answer.resize(StructuralMaterial::giveSizeOfVoigtSymVector(gp->giveMaterialMode()));
+        answer.zero();
+        return;
+    }
+
+    switch (outputCategory) {
+    case OutputCategory::Membrane:
+        computeMembraneStrainVector(answer, gp, tStep);
+        break;
+    case OutputCategory::Plate:
+        computePlateStrainVector(answer, gp, tStep);
+        break;
+    case OutputCategory::Combined:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) {
+    switch (outputCategory) {
+    case OutputCategory::Membrane:
+        answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep);
+        break;
+    case OutputCategory::Plate:
+        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep, outputAtZ);
+        break;
+    case OutputCategory::Combined:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+ShellQd41::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
 {
     if (iSurf == 1 || iSurf == 2) {
         answer.enumerate(24);
@@ -621,5 +821,37 @@ ShellQd41::giveNodeCoordinates()
     std::vector< FloatArray > c;
     membrane->computeLocalNodalCoordinates(c);
     return c;
+}
+
+void
+ShellQd41::updateInternalState(TimeStep* tStep)
+// Updates receiver at the end of the step.
+{
+    FloatArray stress, strain;
+
+    // force updating strains & stresses
+    switch (outputAtXY) {
+    case OutputLocationXY::GaussPoints:
+        for (auto& iRule : integrationRulesArray) {
+            for (GaussPoint* gp : *iRule) {
+                this->computeStrainVector(strain, gp, tStep);
+                this->computeStressVector(stress, strain, gp, tStep);
+            }
+        }
+        break;
+    case OutputLocationXY::Centroid:
+        this->computeStrainVectorAtCentroid(strain, tStep);
+        this->computeStressVectorAtCentroid(stress, strain, tStep);
+        break;
+    case OutputLocationXY::Corners:
+        OOFEM_ERROR("Not implemented for this element");
+        break;
+    case OutputLocationXY::All:
+        OOFEM_ERROR("Not implemented for this element");
+        break;
+    deafult:
+        OOFEM_ERROR("Something went wrong. Output requested at an unknown location in x-y plane of element %d.", giveGlobalNumber());
+        break;
+    }
 }
 }
