@@ -241,6 +241,18 @@ StructuralMaterial :: giveRealStressVector_PlaneStress(const FloatArrayF< 3 > &r
     return this->giveRealStressVector_StressControl(reducedStrain, strainControl, gp, tStep);
 }
 
+FloatArrayF< 3 >
+StructuralMaterial::giveRealStressVector_KirchhoffPlate(const FloatArrayF< 3 >& reducedStrain, GaussPoint* gp, TimeStep* tStep, const FloatMatrixF<3, 3> plateStiffMat) const
+{
+    /*IntArray strainControl;
+    StructuralMaterial::giveVoigtSymVectorMask(strainControl, _KirchhoffPlate);*/
+
+    FloatArrayF<3> stresses;
+    stresses = dot(plateStiffMat, reducedStrain);
+
+    return stresses;
+}
+
 
 FloatArrayF< 1 >
 StructuralMaterial :: giveRealStressVector_1d(const FloatArrayF< 1 > &reducedStrain, GaussPoint *gp, TimeStep *tStep) const
@@ -820,6 +832,12 @@ StructuralMaterial :: giveVoigtSymVectorMask(IntArray &answer, MaterialMode mmod
         };
         return 6;
 
+    case _KirchhoffPlate:
+        answer = {
+            1, 2, 6
+        };
+        return 6;
+    
     case _2dPlate:
         answer = {
             4, 5, 6, 7, 8

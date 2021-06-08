@@ -104,6 +104,7 @@ public:
     virtual FloatArrayF<3> giveRealStress_PlaneStress(const FloatArrayF<3> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<1> giveRealStress_1d(const FloatArrayF<1> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<2> giveRealStress_Warping(const FloatArrayF<2> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
+    virtual FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep, double z) const = 0;
     //@}
 
     /**
@@ -254,6 +255,14 @@ public:
      * @param tStep Time step (most models are able to respond only when tStep is current time step).
      */
     virtual FloatMatrixF<5,5> give2dPlateStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const = 0;
+    /**
+     * Method for computing Kirchhoff plate stiffness matrix.
+     * @param answer Stiffness matrix.
+     * @param mode Material response mode.
+     * @param gp Integration point, which load history is used.
+     * @param tStep Time step (most models are able to respond only when tStep is current time step).
+     */
+    virtual FloatMatrixF<3, 3> giveKirchhoffPlateStiffMtrx(MatResponseMode mode, GaussPoint* gp, TimeStep* tStep) const = 0;
     /**
      * Method for computing 3d shell stiffness matrix.
      * @param answer Stiffness matrix.

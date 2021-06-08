@@ -181,6 +181,8 @@ public:
     /// Default implementation relies on giveRealStressVector_StressControl
     virtual FloatArrayF< 3 >giveRealStressVector_PlaneStress(const FloatArrayF< 3 > &reducedE, GaussPoint *gp, TimeStep *tStep) const;
     /// Default implementation relies on giveRealStressVector_StressControl
+    virtual FloatArrayF< 3 >giveRealStressVector_KirchhoffPlate(const FloatArrayF< 3 >& reducedE, GaussPoint* gp, TimeStep* tStep, FloatMatrixF<3, 3> plateStiffMat) const;
+    /// Default implementation relies on giveRealStressVector_StressControl
     virtual FloatArrayF< 1 >giveRealStressVector_1d(const FloatArrayF< 1 > &reducedE, GaussPoint *gp, TimeStep *tStep) const;
 
     /// Default implementation relies on giveRealStressVector_StressControl
