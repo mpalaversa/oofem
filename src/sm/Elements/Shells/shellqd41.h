@@ -78,6 +78,7 @@ public:
     virtual ~ShellQd41() { }
 
     void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBmatrixPlateAt(double ksi, double eta, FloatMatrix& answer);
     void computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer);
     void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
     void computeGaussPoints() override;
@@ -85,11 +86,14 @@ public:
     int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
     int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return plate->computeLoadLSToLRotationMatrix(answer, iSurf, gp); }
     void computeMembraneStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep);
+    void computePlateCurvatures(FloatArray& answer, GaussPoint* gp, TimeStep* tStep);
     void computePlateStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep);
+    void computeMembraneStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep) { };
     int computeNumberOfDofs() override { return 24; }
+    void computePlateStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep) { };
     void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
     void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
-    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep) { };
+    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep);
     void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
     void computeStressVectorAtCentroid(FloatArray& answer, const FloatArray& strain, TimeStep* tStep) { };
     void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
