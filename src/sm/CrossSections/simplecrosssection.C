@@ -99,7 +99,7 @@ SimpleCrossSection::giveRealStress_KirchhoffPlate(const FloatArrayF<3>& strain, 
     FloatArrayF<3> stress;
     auto mat = dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp));
     //stress = mat->giveRealStressVector_KirchhoffPlate(curvatures, gp, tStep, giveKirchhoffPlateStiffMtrx(ElasticStiffness, gp, tStep));
-    stress = mat->giveRealStressVector_KirchhoffPlate(strain, gp, tStep, giveKirchhoffPlateStiffMtrx(ElasticStiffness, gp, tStep));
+    stress = mat->giveRealStressVector_KirchhoffPlate(strain, gp, tStep, dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp))->givePlaneStressStiffMtrx(ElasticStiffness, gp, tStep));
 
     auto status = static_cast<StructuralMaterialStatus*>(mat->giveStatus(gp));
     status->letTempStrainVectorBe(strain);
