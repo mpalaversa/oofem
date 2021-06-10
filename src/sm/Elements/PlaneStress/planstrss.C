@@ -76,21 +76,19 @@ PlaneStress2d :: ~PlaneStress2d()
 FEInterpolation *PlaneStress2d :: giveInterpolation() const { return & interpolation; }
 
 void
-PlaneStress2d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui)
-//
-// Returns the [3x8] strain-displacement matrix {B} of the receiver,
-// evaluated at gp.
-// (epsilon_x,epsilon_y,gamma_xy) = B . r
-// r = ( u1,v1,u2,v2,u3,v3,u4,v4)
-{
+PlaneStress2d::computeBmatrixAt(double xi, double eta, FloatMatrix& answer) {
+    FloatArray naturalCoordinates;
+    naturalCoordinates.resize(2);
+    naturalCoordinates.at(1) = xi;
+    naturalCoordinates.at(2) = eta;
+    
     FloatMatrix dnx;
-
-    this->interpolation.evaldNdx( dnx, gp->giveNaturalCoordinates(), *this->giveCellGeometryWrapper() );
+    this->interpolation.evaldNdx(dnx, naturalCoordinates, *this->giveCellGeometryWrapper());
 
     answer.resize(3, 8);
     answer.zero();
 
-    for ( int i = 1; i <= 4; i++ ) {
+    for (int i = 1; i <= 4; i++) {
         // Assembles terms in B matrix related to normal strains.
         answer.at(1, 2 * i - 1) = dnx.at(i, 1);
         answer.at(2, 2 * i - 0) = dnx.at(i, 2);
@@ -99,14 +97,24 @@ PlaneStress2d :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, i
 #ifdef  PlaneStress2d_reducedShearIntegration
     // In case of reduced integration of shear terms, the shape function derivatives
     // are evaluated at the element's centre.
-    this->interpolation.evaldNdx( dnx, {0., 0.}, *this->giveCellGeometryWrapper() );
+    this->interpolation.evaldNdx(dnx, { 0., 0. }, *this->giveCellGeometryWrapper());
 #endif
 
-    for ( int i = 1; i <= 4; i++ ) {
+    for (int i = 1; i <= 4; i++) {
         // Assembles terms in B matrix related to shear strains.
         answer.at(3, 2 * i - 1) = dnx.at(i, 2);
         answer.at(3, 2 * i - 0) = dnx.at(i, 1);
     }
+}
+
+void
+PlaneStress2d::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int li, int ui){
+//
+// Returns the [3x8] strain-displacement matrix {B} of the receiver,
+// evaluated at gp.
+// (epsilon_x,epsilon_y,gamma_xy) = B . r
+// r = ( u1,v1,u2,v2,u3,v3,u4,v4)
+    computeBmatrixAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), answer);
 }
 
 
