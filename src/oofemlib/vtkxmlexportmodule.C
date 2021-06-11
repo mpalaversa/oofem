@@ -1978,6 +1978,44 @@ VTKXMLExportModule::computeIPAverage(FloatArray &answer, IntegrationRule *iRule,
     FloatArray temp;
     if ( iRule ) {
         // pp hack for Shell Stress (valid for mitc4 element)
+        if ( isType == IST_Shell_SxSyTxy_Top_Bottom ) {
+            if ( elem->giveInputRecordName() == "shellqd41" || elem->giveInputRecordName() == "tr_shell02" ) {
+            }
+            else {
+            }
+            for ( IntegrationPoint *ip : *iRule ) {
+                if ( ip->giveNaturalCoordinates().giveSize() < 3 || ip->giveNaturalCoordinates()[2] > 0.0 ) {
+                    elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
+                    gptot += ip->giveWeight();
+                    answer.add( ip->giveWeight(), temp );
+                }
+            }
+            answer.times( 1. / gptot );
+        } 
+        else if ( isType == IST_Beam_FxMyMz_Start_End ) {
+            if ( elem->giveInputRecordName() == "beam3d") {
+            } else {
+            }
+            for ( IntegrationPoint *ip : *iRule ) {
+                if ( ip->giveNaturalCoordinates().giveSize() < 3 || ip->giveNaturalCoordinates()[2] < 0.0 ) {
+                    elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
+                    gptot += ip->giveWeight();
+                    answer.add( ip->giveWeight(), temp );
+                }
+            }
+            answer.times( 1. / gptot );
+        }
+        // end of pp hack for Top Bottom Shell Stress
+        else {
+            for ( IntegrationPoint *ip : *iRule ) {
+                elem->giveIPValue( temp, ip, isType, tStep );
+                gptot += ip->giveWeight();
+                answer.add( ip->giveWeight(), temp );
+            }
+            answer.times( 1. / gptot );
+        }
+
+
         if ( isType == IST_Shell_Stress_Top ) {
             for ( IntegrationPoint *ip : *iRule ) {
                 if ( ip->giveNaturalCoordinates().giveSize() < 3 || ip->giveNaturalCoordinates()[2] > 0.0 ) {
