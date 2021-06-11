@@ -118,6 +118,7 @@ public:
     void initializeFrom(InputRecord& ir) override;
     void setCrossSection(int csIndx) override;
     void updateInternalState(TimeStep* tStep) override;
+    void updateLocalNumbering(EntityRenumberingFunctor& f) override;
 
     //IntegrationRule* giveDefaultIntegrationRulePtr() override { return plate->giveDefaultIntegrationRulePtr(); }
     //Element_Geometry_Type giveGeometryType() const override { return EGT_quad_1; }

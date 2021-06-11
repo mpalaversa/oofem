@@ -838,16 +838,28 @@ ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, co
         answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     case OutputCategory::Plate:
-        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
+        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
+        answer.resize(6);
+        for (int i = 1; i <= 6; i++) {
+            if (i < 4)
+                answer.at(i) = plateStresses.at(i);
+            else
+                answer.at(i) = -plateStresses.at(i - 3);
+        }
         break;
     case OutputCategory::Combined:
         computeMembraneStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
         membraneStresses = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);;
         computePlateStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
         plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ);
-        membraneStresses.add(plateStresses);
-        answer.resize(3);
-        answer = membraneStresses;
+
+        answer.resize(6);
+        for (int i = 1; i <= 6; i++) {
+            if (i < 4)
+                answer.at(i) = plateStresses.at(i) + membraneStresses.at(i);
+            else
+                answer.at(i) = -plateStresses.at(i - 3) + membraneStresses.at(i - 3);
+        }
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
@@ -862,14 +874,7 @@ ShellQd41::getStressesTopBottom(FloatArray& answer, TimeStep* tStep) {
     outputCategory = OutputCategory::Combined;
     outputType = OutputType::Standard;
 
-    FloatArray tempStresses;
-    computeStressVectorAtCentroid(tempStresses, tStep);
-
-    answer.resize(6);
-    answer.zero();
-    for (int i = 1; i <= 6; i++)
-        if (i <= 3)
-            answer.at(i) = tempStresses.at(i);
+    computeStressVectorAtCentroid(answer, tStep);
 }
 
 void
@@ -935,5 +940,16 @@ ShellQd41::updateInternalState(TimeStep* tStep)
         OOFEM_ERROR("Something went wrong. Output requested at an unknown location in x-y plane of element %d.", giveGlobalNumber());
         break;
     }
+}
+
+void
+ShellQd41::updateLocalNumbering(EntityRenumberingFunctor& f)
+{
+    // Update numbering of the related DOFs for the membrane and plate part.
+    membrane->updateLocalNumbering(f);
+    plate->updateLocalNumbering(f);
+    // Update numbering of the related DOFs for ShellQd41.
+    for (auto& dnum : dofManArray)
+        dnum = f(dnum, ERS_DofManager);
 }
 }
