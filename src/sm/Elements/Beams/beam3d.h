@@ -196,6 +196,11 @@ public:
     void drawRawGeometry(oofegGraphicContext &gc, TimeStep *tStep) override;
     void drawDeformedGeometry(oofegGraphicContext & gc, TimeStep * tStep, UnknownType) override;
 #endif
+    void giveCharacteristicOutput( FloatArray &answer, TimeStep *tStep ) override
+    {
+        this->getFxMyMzStartEnd( answer, tStep );
+    }
+    void getFxMyMzStartEnd( FloatArray &answer, TimeStep *tStep );
 
 protected:
     void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int edge, CharType type, ValueModeType mode, TimeStep *tStep, bool global=true) override;

@@ -90,9 +90,6 @@ InternalStateValueType giveInternalStateValueType(InternalStateType type)
     case IST_CurvatureTensorTemp:
     case IST_EigenStrainTensor:
     case IST_CrackStrainTensor:
-    case IST_Shell_Stress_Top:
-    case IST_Shell_Stress_Bottom:
-    case IST_Shell_Stress_Mid:
         return ISVT_TENSOR_S3E;
 
     case IST_StressTensor:

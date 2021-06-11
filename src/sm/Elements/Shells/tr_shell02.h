@@ -131,6 +131,8 @@ public:
     bool computeLocalCoordinates(FloatArray &answer, const FloatArray &gcoords) override {
         return this->plate->computeLocalCoordinates(answer, gcoords);
     }
+    void giveCharacteristicOutput( FloatArray &answer, TimeStep *tStep ) override { this->getStressesTopBottom( answer, tStep ); }
+    void getStressesTopBottom( FloatArray &answer, TimeStep *tStep ) {} // pp temporary
 
 protected:
     //@}
