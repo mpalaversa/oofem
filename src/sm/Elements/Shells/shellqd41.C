@@ -818,7 +818,7 @@ ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, Gau
         answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep);
         break;
     case OutputCategory::Plate:
-        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
+        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep);
         break;
     case OutputCategory::Combined:
         OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
@@ -838,7 +838,7 @@ ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, co
         answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     case OutputCategory::Plate:
-        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
+        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         answer.resize(6);
         for (int i = 1; i <= 6; i++) {
             if (i < 4)
@@ -851,7 +851,7 @@ ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, co
         computeMembraneStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
         membraneStresses = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);;
         computePlateStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
-        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ);
+        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
 
         answer.resize(6);
         for (int i = 1; i <= 6; i++) {

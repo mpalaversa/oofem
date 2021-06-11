@@ -104,7 +104,7 @@ public:
     virtual FloatArrayF<3> giveRealStress_PlaneStress(const FloatArrayF<3> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<1> giveRealStress_1d(const FloatArrayF<1> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<2> giveRealStress_Warping(const FloatArrayF<2> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
-    virtual FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep, double z) const = 0;
+    virtual FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep) const = 0;
     //@}
 
     /**

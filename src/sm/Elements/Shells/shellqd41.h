@@ -109,7 +109,7 @@ public:
     integrationDomain giveIntegrationDomain() const override { return _Square; }
     IntegrationRule* giveIntegrationRule(int i) override { return plate->giveIntegrationRule(i); }
     // giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-    void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.zero(); }
+    void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(24); answer.zero(); }
     FEInterpolation* giveInterpolation() const override { return plate->giveInterpolation(); }
     MaterialMode giveMaterialMode() override { return _PlaneStress; }
     std::vector< FloatArray > giveNodeCoordinates();

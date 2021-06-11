@@ -103,7 +103,7 @@ public:
     FloatArrayF<3> giveRealStress_PlaneStress(const FloatArrayF<3> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const override;
     FloatArrayF<1> giveRealStress_1d(const FloatArrayF<1> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const override;
     FloatArrayF<2> giveRealStress_Warping(const FloatArrayF<2> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const override;
-    FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep, double z) const override;
+    FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep) const override;
 
     FloatMatrixF<6,6> giveStiffnessMatrix_3d(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;
     FloatMatrixF<3,3> giveStiffnessMatrix_PlaneStress(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;
