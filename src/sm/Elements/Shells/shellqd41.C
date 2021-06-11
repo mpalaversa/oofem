@@ -151,17 +151,13 @@ ShellQd41::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int li, int ui)
 }
 
 void
-ShellQd41::computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer)
+ShellQd41::computeBmatrixPlateAt(double ksi, double eta, FloatMatrix& answer)
 // Returns the [5x12] strain-displacement matrix {B} of the receiver,
 // evaluated at gp.
 {
     // get node coordinates
     std::vector< FloatArray > locCoords = giveNodeCoordinates();
     double x1 = locCoords.at(0)[0], x2 = locCoords.at(1)[0], x3 = locCoords.at(2)[0], x4 = locCoords.at(3)[0], y1 = locCoords.at(0)[1], y2 = locCoords.at(1)[1], y3 = locCoords.at(2)[1], y4 = locCoords.at(3)[1], z1 = locCoords.at(0)[2], z2 = locCoords.at(1)[2], z3 = locCoords.at(2)[2], z4 = locCoords.at(3)[2];
-
-    // get gp coordinates
-    double ksi = gp->giveNaturalCoordinate(1);
-    double eta = gp->giveNaturalCoordinate(2);
 
     // geometrical characteristics of element sides
     double dx4 = x2 - x1;
@@ -342,6 +338,11 @@ ShellQd41::computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer)
 }
 
 void
+ShellQd41::computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer) {
+    computeBmatrixPlateAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), answer);
+}
+
+void
 ShellQd41::computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep)
 {   
     answer.add(this->giveStructuralCrossSection()->giveStiffnessMatrix_PlaneStress(rMode, gp, tStep));
@@ -463,7 +464,12 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
     auto tempDrillCoeff = cs->give(CS_RelDrillingStiffness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0));
     if (tempDrillCoeff != 0.0)
         drillCoeff = tempDrillCoeff;
-
+    /*
+    IntArray membDofManArray = membrane->giveDofManArray();
+    for (int i = 0; i <= dofManArray.giveSize(); i++) {
+        membDofManArray[i] = dofManArray.at(i);
+    }*/
+    
     FloatMatrix BMatrixPlate;
     FloatMatrix BMatrixMembrane;
 
@@ -667,7 +673,7 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
 }
 
 void
-ShellQd41::computeMembraneStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) {
+ShellQd41::computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
     FloatMatrix b;
     FloatArray u;
     
@@ -686,7 +692,7 @@ ShellQd41::computeMembraneStrainVector(FloatArray& answer, GaussPoint* gp, TimeS
             uMemb.at(i + 1) = u.at(j + 1);
             j += 6;
         }
-        membrane->computeBmatrixAt(gp, b);
+        membrane->computeBmatrixAt(xi, eta, b);
         answer.beProductOf(b, uMemb);
         break;
     case OutputType::Principal:
@@ -704,31 +710,40 @@ ShellQd41::computeMembraneStrainVector(FloatArray& answer, GaussPoint* gp, TimeS
     }
 }
 
+
 void
-ShellQd41::computePlateStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) {
-    FloatMatrix b;
+ShellQd41::computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
     FloatArray u;
+    this->computeVectorOf(VM_Total, tStep, u);
+    /* This is to be uncommented once adapted for ShellQd41 (if necessary).
+    if (initialDisplacements) {
+        u.subtract(*initialDisplacements);
+    }*/
 
     FloatArray uPlate;
-    FloatMatrix temp;
+    uPlate.resize(12);
     int j = 3;
+    for (int i = 1; i <= 12; i += 3) {
+        uPlate.at(i) = u.at(j);
+        uPlate.at(i + 1) = u.at(j + 1);
+        uPlate.at(i + 2) = u.at(j + 2);
+        j += 6;
+    }
+
+    FloatMatrix temp;
+    computeBmatrixPlateAt(xi, eta, temp);
+    FloatMatrix b;
+    b.beSubMatrixOf(temp, 1, 3, 1, 12);
+    answer.beProductOf(b, uPlate);
+}
+
+void
+ShellQd41::computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
+    FloatArray curvatures;
     switch (outputType) {
     case OutputType::Standard:
-        this->computeVectorOf(VM_Total, tStep, u);
-        /* This is to be uncommented once adapted for ShellQd41 (if necessary).
-        if (initialDisplacements) {
-            u.subtract(*initialDisplacements);
-        }*/
-        uPlate.resize(12);
-        for (int i = 1; i <= 12; i += 3) {
-            uPlate.at(i) = u.at(j);
-            uPlate.at(i + 1) = u.at(j + 1);
-            uPlate.at(i + 2) = u.at(j + 2);
-            j += 6;
-        }
-        computeBmatrixPlateAt(gp, temp);
-        b.beSubMatrixOf(temp, 1, 3, 1, 12);
-        answer.beProductOf(b, uPlate);
+        computePlateCurvaturesAt(curvatures, xi, eta, tStep);
+        answer.beScaled(outputAtZ, curvatures);
         break;
     case OutputType::Principal:
         OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
@@ -758,13 +773,37 @@ ShellQd41::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tSt
 
     switch (outputCategory) {
     case OutputCategory::Membrane:
-        computeMembraneStrainVector(answer, gp, tStep);
+        computeMembraneStrainVectorAt(answer, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
         break;
     case OutputCategory::Plate:
-        computePlateStrainVector(answer, gp, tStep);
+        computePlateStrainVectorAt(answer, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
         break;
     case OutputCategory::Combined:
         OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+ShellQd41::computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep) {
+    FloatArray membraneStrains, plateStrains;
+    
+    switch (outputCategory) {
+    case OutputCategory::Membrane:
+        computeMembraneStrainVectorAt(answer, 0.0, 0.0, tStep);
+        break;
+    case OutputCategory::Plate:
+        computePlateStrainVectorAt(answer, 0.0, 0.0, tStep);
+        break;
+    case OutputCategory::Combined:
+        computeMembraneStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
+        computePlateStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
+        membraneStrains.add(plateStrains);
+        answer.resize(3);
+        answer = membraneStrains;
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
@@ -779,7 +818,7 @@ ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, Gau
         answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep);
         break;
     case OutputCategory::Plate:
-        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep, outputAtZ);
+        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
         break;
     case OutputCategory::Combined:
         OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
@@ -788,6 +827,49 @@ ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, Gau
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
         break;
     }
+}
+
+void
+ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
+    FloatArray membraneStrains, plateStrains, membraneStresses, plateStresses;
+    
+    switch (outputCategory) {
+    case OutputCategory::Membrane:
+        answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        break;
+    case OutputCategory::Plate:
+        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
+        break;
+    case OutputCategory::Combined:
+        computeMembraneStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
+        membraneStresses = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);;
+        computePlateStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
+        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ);
+        membraneStresses.add(plateStresses);
+        answer.resize(3);
+        answer = membraneStresses;
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+ShellQd41::getStressesTopBottom(FloatArray& answer, TimeStep* tStep) {
+    outputAtXY = OutputLocationXY::Centroid;
+    outputAtZ = this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0))/2;
+    outputCategory = OutputCategory::Combined;
+    outputType = OutputType::Standard;
+
+    FloatArray tempStresses;
+    computeStressVectorAtCentroid(tempStresses, tStep);
+
+    answer.resize(6);
+    answer.zero();
+    for (int i = 1; i <= 6; i++)
+        if (i <= 3)
+            answer.at(i) = tempStresses.at(i);
 }
 
 void
@@ -841,7 +923,7 @@ ShellQd41::updateInternalState(TimeStep* tStep)
         break;
     case OutputLocationXY::Centroid:
         this->computeStrainVectorAtCentroid(strain, tStep);
-        this->computeStressVectorAtCentroid(stress, strain, tStep);
+        this->computeStressVectorAtCentroid(stress, tStep, strain);
         break;
     case OutputLocationXY::Corners:
         OOFEM_ERROR("Not implemented for this element");

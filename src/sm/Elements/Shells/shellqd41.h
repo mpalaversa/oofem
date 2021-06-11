@@ -78,20 +78,23 @@ public:
     virtual ~ShellQd41() { }
 
     void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    // Computes B matrix for the plate part of the element at natural coordinates (xi, eta).
+    void computeBmatrixPlateAt(double xi, double eta, FloatMatrix& answer);
     void computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer);
     void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
     void computeGaussPoints() override;
     bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
     int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
     int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return plate->computeLoadLSToLRotationMatrix(answer, iSurf, gp); }
-    void computeMembraneStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep);
-    void computePlateStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep);
+    void computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
+    void computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
+    void computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
     int computeNumberOfDofs() override { return 24; }
     void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
     void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
-    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep) { };
+    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep);
     void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
-    void computeStressVectorAtCentroid(FloatArray& answer, const FloatArray& strain, TimeStep* tStep) { };
+    void computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0);
     void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
     double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override { return membrane->computeVolumeAround(gp); }
     double computeVolumeAround(GaussPoint* gp) override;
@@ -110,6 +113,7 @@ public:
     FEInterpolation* giveInterpolation() const override { return plate->giveInterpolation(); }
     MaterialMode giveMaterialMode() override { return _PlaneStress; }
     std::vector< FloatArray > giveNodeCoordinates();
+    void getStressesTopBottom(FloatArray& answer, TimeStep* tStep);
     void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
     void initializeFrom(InputRecord& ir) override;
     void setCrossSection(int csIndx) override;
