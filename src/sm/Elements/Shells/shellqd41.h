@@ -81,11 +81,12 @@ public:
     // Computes B matrix for the plate part of the element at natural coordinates (xi, eta).
     void computeBmatrixPlateAt(double xi, double eta, FloatMatrix& answer);
     void computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer);
+    void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
     void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
     void computeGaussPoints() override;
     bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
     int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
-    int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return plate->computeLoadLSToLRotationMatrix(answer, iSurf, gp); }
+    int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return membrane->computeLoadGToLRotationMtrx(answer); }
     void computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
     void computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
     void computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
@@ -96,7 +97,7 @@ public:
     void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
     void computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0);
     void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
-    double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override { return membrane->computeVolumeAround(gp); }
+    double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override { return plate->computeVolumeAround(gp); }
     double computeVolumeAround(GaussPoint* gp) override;
     OutputCategory getOutputCategory() { return outputCategory; }
     OutputLocationXY getOutputLocationInXYPlane() { return outputAtXY; }
@@ -119,9 +120,6 @@ public:
     void setCrossSection(int csIndx) override;
     void updateInternalState(TimeStep* tStep) override;
     void updateLocalNumbering(EntityRenumberingFunctor& f) override;
-
-    //IntegrationRule* giveDefaultIntegrationRulePtr() override { return plate->giveDefaultIntegrationRulePtr(); }
-    //Element_Geometry_Type giveGeometryType() const override { return EGT_quad_1; }
 
 private:
     OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;

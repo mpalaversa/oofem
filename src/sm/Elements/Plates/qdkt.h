@@ -92,6 +92,7 @@ public:
     void computeSurfaceNMatrixAt(FloatMatrix& answer, int iSurf, GaussPoint* gp);
     void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
     int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override;
+    void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
     //@}
 protected:
     void computeGaussPoints() override;
@@ -103,8 +104,6 @@ protected:
     virtual void giveNodeCoordinates(double &x1, double &x2, double &x3, double &x4,
                                      double &y1, double &y2, double &y3, double &y4,
                                      double &z1, double &z2, double &z3, double &z4);
-
-    void computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeStep *tStep, ValueModeType mode) override;
 
     /**
      * @name Edge load support
