@@ -155,6 +155,8 @@ InternalStateValueType giveInternalStateValueType(InternalStateType type)
     case IST_PrincStressVector1:
     case IST_PrincStressVector2:
     case IST_PrincStressVector3:
+    case IST_Beam_FxMyMz_Start_End:
+    case IST_Shell_SxSyTxy_Top_Bottom:
         return ISVT_VECTOR;
 
     case IST_MaxEquivalentStrainLevel:

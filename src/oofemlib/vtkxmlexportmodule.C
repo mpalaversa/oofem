@@ -1891,8 +1891,10 @@ VTKXMLExportModule::getCellVariableFromIS(FloatArray &answer, Element *el, Inter
     //Output for ship structures
     case IST_Shell_SxSyTxy_Top_Bottom:
     case IST_Beam_FxMyMz_Start_End:
-        answer.resize(6);
+        ncomponents = 6;
+        answer.resize(ncomponents);
         el->giveCharacteristicOutput( answer, tStep );
+        break;
 
     // Export cell data as average from ip's as default
     default:

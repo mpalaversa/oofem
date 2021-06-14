@@ -125,7 +125,7 @@ public:
     //Element_Geometry_Type giveGeometryType() const override { return EGT_quad_1; }
 
 private:
-    OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;
+    OutputLocationXY outputAtXY = OutputLocationXY::Centroid;
     OutputCategory outputCategory = OutputCategory::Combined;
     OutputType outputType = OutputType::Standard;
     double outputAtZ = 0.0;
