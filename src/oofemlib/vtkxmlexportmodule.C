@@ -50,6 +50,7 @@
 #include "xfem/xfemmanager.h"
 #include "xfem/enrichmentitem.h"
 
+
 #ifdef __PFEM_MODULE
  #include "pfem/pfemparticle.h"
 #endif
@@ -1832,10 +1833,6 @@ VTKXMLExportModule::getCellVariableFromIS(FloatArray &answer, Element *el, Inter
     if ( type == IST_BeamForceMomentTensor ) { //AS: to make the hack work
         ncomponents = 6;
     }
-    if ( type == IST_Shell_Stress_Top || type == IST_Shell_Stress_Mid ||type == IST_Shell_Stress_Bottom ) { //AS: to make the hack work
-        ncomponents = 6;
-    }
-    // end of pp correction
 
     answer.resize(ncomponents);
 
@@ -1891,6 +1888,13 @@ VTKXMLExportModule::getCellVariableFromIS(FloatArray &answer, Element *el, Inter
         answer.beColumnOf(rotMat, col);
         break;
     }
+    //Output for ship structures
+    case IST_Shell_SxSyTxy_Top_Bottom:
+    case IST_Beam_FxMyMz_Start_End:
+        ncomponents = 6;
+        answer.resize(ncomponents);
+        el->giveCharacteristicOutput( answer, tStep );
+        break;
 
     // Export cell data as average from ip's as default
     default:
@@ -1901,12 +1905,7 @@ VTKXMLExportModule::getCellVariableFromIS(FloatArray &answer, Element *el, Inter
         // Reshape the Voigt vectors to include all components (duplicated if necessary, VTK insists on 9 components for tensors.)
         /// @todo Is this part necessary now when giveIPValue returns full form? Only need to symmetrize in case of 6 components /JB
         /// @todo Some material models aren't exporting values correctly (yet) / Mikael
-        if ( type == IST_Shell_Stress_Top || type == IST_Shell_Stress_Mid || type == IST_Shell_Stress_Bottom ) {
-            if ( ncomponents != answer.giveSize() ) { // Trying to gracefully handle bad cases, just output zeros.
-                answer.resizeWithValues( ncomponents );
-            }
-        }
-        else if ( valType == ISVT_TENSOR_S3 || valType == ISVT_TENSOR_S3E || valType == ISVT_TENSOR_G ) {
+        if ( valType == ISVT_TENSOR_S3 || valType == ISVT_TENSOR_S3E || valType == ISVT_TENSOR_G ) {
             FloatArray temp = answer;
             this->makeFullTensorForm(answer, temp, valType);
         } else if ( valType == ISVT_VECTOR && answer.giveSize() < 3 ) {
@@ -1977,45 +1976,12 @@ VTKXMLExportModule::computeIPAverage(FloatArray &answer, IntegrationRule *iRule,
     answer.clear();
     FloatArray temp;
     if ( iRule ) {
-        // pp hack for Shell Stress (valid for mitc4 element)
-        if ( isType == IST_Shell_Stress_Top ) {
-            for ( IntegrationPoint *ip : *iRule ) {
-                if ( ip->giveNaturalCoordinates().giveSize() < 3 || ip->giveNaturalCoordinates()[2] > 0.0 ) {
-                    elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
-                    gptot += ip->giveWeight();
-                    answer.add( ip->giveWeight(), temp );
-                }
-            }
-            answer.times( 1. / gptot );
-        } 
-        else if ( isType == IST_Shell_Stress_Bottom ) {
-            for ( IntegrationPoint *ip : *iRule ) {
-                if ( ip->giveNaturalCoordinates().giveSize() < 3 || ip->giveNaturalCoordinates()[2] < 0.0 ) {
-                    elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
-                    gptot += ip->giveWeight();
-                    answer.add( ip->giveWeight(), temp );
-                }
-            }
-            answer.times( 1. / gptot );
-        } 
-        else if ( isType == IST_Shell_Stress_Mid ) {
-            for ( IntegrationPoint *ip : *iRule ) {
-                elem->giveIPValue( temp, ip, IST_StressTensor, tStep );
-                gptot += ip->giveWeight();
-                answer.add( ip->giveWeight(), temp );
-            }
-            answer.times( 1. / gptot );
+        for ( IntegrationPoint *ip : *iRule ) {
+            elem->giveIPValue( temp, ip, isType, tStep );
+            gptot += ip->giveWeight();
+            answer.add( ip->giveWeight(), temp );
         }
-        // end of pp hack for Top Bottom Shell Stress
-        else {
-            for ( IntegrationPoint *ip : *iRule ) {
-                elem->giveIPValue( temp, ip, isType, tStep );
-                gptot += ip->giveWeight();
-                answer.add( ip->giveWeight(), temp );
-            }
-            answer.times( 1. / gptot );
-        }
-
+        answer.times( 1. / gptot );
     }
 }
 

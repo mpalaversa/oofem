@@ -1361,9 +1361,8 @@ PYBIND11_MODULE(oofempy, m) {
       .value("IST_CrackSlip", oofem::InternalStateType::IST_CrackSlip)
       .value("IST_EquivalentTime", oofem::InternalStateType::IST_EquivalentTime)
       .value("IST_IncrementCreepModulus", oofem::InternalStateType::IST_IncrementCreepModulus)
-      .value("IST_Shell_Stress_Top", oofem::InternalStateType::IST_Shell_Stress_Top)
-      .value("IST_Shell_Stress_Bottom", oofem::InternalStateType::IST_Shell_Stress_Bottom)
-      .value("IST_Shell_Stress_Mid", oofem::InternalStateType::IST_Shell_Stress_Mid)
+      .value( "IST_Shell_SxSyTxy_Top_Bottom", oofem::InternalStateType::IST_Shell_SxSyTxy_Top_Bottom )
+      .value( "IST_Beam_FxMyMz_Start_End", oofem::InternalStateType::IST_Beam_FxMyMz_Start_End )
       ;
 
     py::register_exception<oofem::InputException>(m, "InputException");

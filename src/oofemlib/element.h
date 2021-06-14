@@ -872,6 +872,7 @@ public:
      */
     virtual int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep);
     int giveGlobalIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep);
+    virtual void giveCharacteristicOutput( FloatArray &answer, TimeStep *tStep ) {} // pp hack for element output
 
     // characteristic length in gp (for some material models)
     /**

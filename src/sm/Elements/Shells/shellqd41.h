@@ -114,6 +114,7 @@ public:
     FEInterpolation* giveInterpolation() const override { return plate->giveInterpolation(); }
     MaterialMode giveMaterialMode() override { return _PlaneStress; }
     std::vector< FloatArray > giveNodeCoordinates();
+    void giveCharacteristicOutput( FloatArray &answer, TimeStep *tStep ) override { this->getStressesTopBottom( answer, tStep ); }
     void getStressesTopBottom(FloatArray& answer, TimeStep* tStep);
     void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
     void initializeFrom(InputRecord& ir) override;
@@ -123,7 +124,7 @@ public:
 
 private:
     OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;
-    OutputCategory outputCategory = OutputCategory::Combined;
+    OutputCategory outputCategory = OutputCategory::Membrane;
     OutputType outputType = OutputType::Standard;
     double outputAtZ = 0.0;
    

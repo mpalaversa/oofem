@@ -240,6 +240,27 @@ TR_SHELL02 :: giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType 
         return StructuralElement :: giveIPValue(answer, gp, type, tStep);
     }
 }
+void
+TR_SHELL02 ::getStressesTopBottom( FloatArray &answer, TimeStep *tStep )
+{
+    FloatArray temp, curgpval;
+    double gptot = 0.0;
+    temp.resize( 6 );
+    IntegrationRule *iRule = this->giveDefaultIntegrationRulePtr();
+    for ( GaussPoint *gp : *iRule ) {
+        GaussPoint *membraneGP = membrane->giveDefaultIntegrationRulePtr()->getIntegrationPoint( gp->giveNumber() - 1 );
+        membrane->giveIPValue( curgpval, membraneGP, IST_ShellForceTensor, tStep );
+        gptot += membraneGP->giveWeight();
+        temp.add( membraneGP->giveWeight(), curgpval );
+    }
+    temp.times( 1. / gptot );
+    answer.at( 1 ) = temp.at( 1 );
+    answer.at( 2 ) = temp.at( 2 );
+    answer.at( 3 ) = temp.at( 4 );
+    answer.at( 4 ) = answer.at( 1 );
+    answer.at( 5 ) = answer.at( 2 ); 
+    answer.at( 6 ) = answer.at( 3 );
+}
 
 
 //

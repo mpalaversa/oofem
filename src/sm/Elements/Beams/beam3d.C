@@ -637,19 +637,17 @@ Beam3d :: computeStressVector(FloatArray &answer, const FloatArray &strain, Gaus
     answer = this->giveStructuralCrossSection()->giveGeneralizedStress_Beam3d(strain, gp, tStep);
 }
 
-
-void
-Beam3d :: giveEndForcesVector(FloatArray &answer, TimeStep *tStep)
+void Beam3d ::giveEndForcesVector( FloatArray &answer, TimeStep *tStep )
 {
     // computes exact global end-forces vector
     FloatArray loadEndForces;
 
-    this->giveInternalForcesVector(answer, tStep);
+    this->giveInternalForcesVector( answer, tStep );
 
     // add exact end forces due to nonnodal loading
-    this->computeLocalForceLoadVector(loadEndForces, tStep, VM_Total); // will compute only contribution of loads applied directly on receiver (not using sets)
+    this->computeLocalForceLoadVector( loadEndForces, tStep, VM_Total ); // will compute only contribution of loads applied directly on receiver (not using sets)
     if ( loadEndForces.giveSize() ) {
-        answer.subtract(loadEndForces);
+        answer.subtract( loadEndForces );
     }
     /*
      * if (subsoilMat) {
@@ -662,6 +660,19 @@ Beam3d :: giveEndForcesVector(FloatArray &answer, TimeStep *tStep)
      * answer.add(F);
      * }
      */
+}
+void Beam3d ::getFxMyMzStartEnd( FloatArray &answer, TimeStep *tStep )
+{
+    FloatArray full_answer;
+
+    this->giveEndForcesVector( full_answer, tStep );
+    answer.at( 1 ) = full_answer.at( 1 );
+    answer.at( 2 ) = full_answer.at( 5 );
+    answer.at( 3 ) = full_answer.at( 6 );
+    answer.at( 4 ) = full_answer.at( 7 );
+    answer.at( 5 ) = full_answer.at( 11 );
+    answer.at( 6 ) = full_answer.at( 12 );
+   
 }
 
 
