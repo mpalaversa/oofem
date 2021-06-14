@@ -458,6 +458,9 @@ ShellQd41::initializeFrom(InputRecord& ir)
     IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
     IR_GIVE_OPTIONAL_FIELD(ir, outputAtZ, _IFT_ShellQd41_outputAtZ);
     switch (outputAtXYTemp) {
+    case 1:
+        outputAtXY = OutputLocationXY::GaussPoints;
+        break;
     case 2:
         outputAtXY = OutputLocationXY::Centroid;
         break;
@@ -468,6 +471,7 @@ ShellQd41::initializeFrom(InputRecord& ir)
         outputAtXY = OutputLocationXY::All;
         break;
     default:
+        outputAtXY = OutputLocationXY::GaussPoints;
         break;
     }
     switch (outputCategoryTemp) {
@@ -477,13 +481,20 @@ ShellQd41::initializeFrom(InputRecord& ir)
     case 2:
         outputCategory = OutputCategory::Plate;
         break;
+    case 3:
+        outputCategory = OutputCategory::Combined;
+        break;
     case 4:
         outputCategory = OutputCategory::All;
         break;
     default:
+        outputCategory = OutputCategory::Membrane;
         break;
     }
     switch (outputTypeTemp) {
+    case 1:
+        outputType = OutputType::Standard;
+        break;
     case 2:
         outputType = OutputType::Principal;
         break;
@@ -494,6 +505,7 @@ ShellQd41::initializeFrom(InputRecord& ir)
         outputType = OutputType::All;
         break;
     default:
+        outputType = OutputType::Standard;
         break;
     }
 }
