@@ -1168,10 +1168,10 @@ void EngngModel :: assembleVectorFromBC(FloatArray &answer, TimeStep *tStep,
             } else if ( ( sLoad = dynamic_cast< SurfaceLoad * >(load) ) ) { // Surface load:
                 const IntArray &boundaries = set->giveBoundaryList();
                 for ( int ibnd = 1; ibnd <= boundaries.giveSize() / 2; ++ibnd ) {
-                    Element *element = domain->giveElement( boundaries.at(ibnd * 2) );
+                    Element *element = domain->giveElement( boundaries.at(ibnd * 2 - 1) );
                     if ( element->isActivated(tStep) && this->isElementActivated(element) ) {
 
-                        int boundary = boundaries.at(ibnd * 2 - 1);
+                        int boundary = boundaries.at(ibnd * 2);
                         charVec.clear();
                         va.vectorFromSurfaceLoad(charVec, *element, sLoad, boundary, tStep, mode);
 
