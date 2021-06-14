@@ -37,6 +37,7 @@
 #include "classfactory.h"
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
+#include "load.h"
 
 namespace oofem {
 REGISTER_Element(ShellQd41);
@@ -340,6 +341,55 @@ ShellQd41::computeBmatrixPlateAt(double ksi, double eta, FloatMatrix& answer)
 void
 ShellQd41::computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer) {
     computeBmatrixPlateAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), answer);
+}
+
+void
+ShellQd41::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
+    double dens, dV;
+    FloatArray force, ntf, loadVectorFromPlate;
+    FloatMatrix T;
+
+    if ((forLoad->giveBCGeoType() != BodyLoadBGT) || (forLoad->giveBCValType() != ForceLoadBVT)) {
+        OOFEM_ERROR("unknown load type");
+    }
+
+    // note: force is assumed to be in global coordinate system.
+    forLoad->computeComponentArrayAt(force, tStep, mode);
+    // transform from global to element local c.s
+    if (this->computeLoadGToLRotationMtrx(T)) {
+        force.rotatedWith(T, 'n');
+    }
+    FloatArray loadVector;
+    loadVector.resize(3);
+    loadVector.zero();
+    loadVector.at(1) = force.at(3);
+
+    loadVectorFromPlate.clear();
+    FloatArray NMatrixTemp;
+    FloatMatrix NMatrix;
+    if (loadVector.giveSize()) {
+        for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
+            plate->giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), FEIElementGeometryWrapper(this));
+            NMatrix.beNMatrixOf(NMatrixTemp, 3);
+            dV = plate->computeVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
+            dens = this->giveCrossSection()->give('d', gp);
+            ntf.beTProductOf(NMatrix, loadVector);
+            loadVectorFromPlate.add(dV * dens, ntf);
+        }
+    }
+    else {
+        return;
+    }
+
+    answer.resize(24);
+    answer.zero();
+    int j = 3;
+    for (int i = 1; i <= 12; i+=3) {
+        answer.at(j) = loadVectorFromPlate.at(i);
+        answer.at(j+1) = loadVectorFromPlate.at(i+1);
+        answer.at(j+2) = loadVectorFromPlate.at(i+2);
+        j += 6;
+    }
 }
 
 void
@@ -818,7 +868,7 @@ ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, Gau
         answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep);
         break;
     case OutputCategory::Plate:
-        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
+        answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep);
         break;
     case OutputCategory::Combined:
         OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
@@ -838,7 +888,7 @@ ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, co
         answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     case OutputCategory::Plate:
-        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ); // If z is already taken into account when strains are evaluated, 'outputAtZ' should be removed.
+        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         answer.resize(6);
         for (int i = 1; i <= 6; i++) {
             if (i < 4)
@@ -851,7 +901,7 @@ ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, co
         computeMembraneStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
         membraneStresses = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);;
         computePlateStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
-        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep, outputAtZ);
+        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
 
         answer.resize(6);
         for (int i = 1; i <= 6; i++) {
