@@ -433,100 +433,99 @@ ShellQd41::computeGtoLRotationMatrix(FloatMatrix& answer)
     return 1;
 }
 
-double
-ShellQd41::computeVolumeAround(GaussPoint* gp)
-{
-    return membrane->computeVolumeAround(gp);
+void
+ShellQd41::computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
+    FloatMatrix b;
+    FloatArray u;
+    
+    FloatArray uMemb;
+    int j = 1;
+    switch (outputType) {
+    case OutputType::Standard:
+        this->computeVectorOf(VM_Total, tStep, u);
+        /* This is to be uncommented once adapted for ShellQd41 (if necessary).
+        if (initialDisplacements) {
+            u.subtract(*initialDisplacements);
+        }*/
+        uMemb.resize(8);
+        for (int i = 1; i <= 8; i += 2) {
+            uMemb.at(i) = u.at(j);
+            uMemb.at(i + 1) = u.at(j + 1);
+            j += 6;
+        }
+        membrane->computeBmatrixAt(xi, eta, b);
+        answer.beProductOf(b, uMemb);
+        break;
+    case OutputType::Principal:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::VM:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::All:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+
+void
+ShellQd41::computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
+    FloatArray u;
+    this->computeVectorOf(VM_Total, tStep, u);
+    /* This is to be uncommented once adapted for ShellQd41 (if necessary).
+    if (initialDisplacements) {
+        u.subtract(*initialDisplacements);
+    }*/
+
+    FloatArray uPlate;
+    uPlate.resize(12);
+    int j = 3;
+    for (int i = 1; i <= 12; i += 3) {
+        uPlate.at(i) = u.at(j);
+        uPlate.at(i + 1) = u.at(j + 1);
+        uPlate.at(i + 2) = u.at(j + 2);
+        j += 6;
+    }
+
+    FloatMatrix temp;
+    computeBmatrixPlateAt(xi, eta, temp);
+    FloatMatrix b;
+    b.beSubMatrixOf(temp, 1, 3, 1, 12);
+    answer.beProductOf(b, uPlate);
 }
 
 void
-ShellQd41::giveDofManDofIDMask(int inode, IntArray& answer) const
-{
-    answer = { D_u, D_v, D_w, R_u, R_v, R_w };
-}
-
-void
-ShellQd41::initializeFrom(InputRecord& ir)
-{
-    StructuralElement::initializeFrom(ir);
-    plate->initializeFrom(ir);
-    membrane->initializeFrom(ir);
-
-    int outputAtXYTemp, outputTypeTemp, outputAtZTemp, outputCategoryTemp;
-    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd41_outputAtXY);
-    IR_GIVE_OPTIONAL_FIELD(ir, outputTypeTemp, _IFT_ShellQd41_outputType);
-    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
-    IR_GIVE_OPTIONAL_FIELD(ir, outputAtZ, _IFT_ShellQd41_outputAtZ);
-    switch (outputAtXYTemp) {
-    case 1:
-        outputAtXY = OutputLocationXY::GaussPoints;
+ShellQd41::computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
+    FloatArray curvatures;
+    switch (outputType) {
+    case OutputType::Standard:
+        computePlateCurvaturesAt(curvatures, xi, eta, tStep);
+        answer.beScaled(outputAtZ, curvatures);
         break;
-    case 2:
-        outputAtXY = OutputLocationXY::Centroid;
+    case OutputType::Principal:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
         break;
-    case 3:
-        outputAtXY = OutputLocationXY::Corners;
+    case OutputType::VM:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
         break;
-    case 4:
-        outputAtXY = OutputLocationXY::All;
+    case OutputType::All:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
         break;
     default:
-        outputAtXY = OutputLocationXY::GaussPoints;
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
         break;
     }
-    switch (outputCategoryTemp) {
-    case 1:
-        outputCategory = OutputCategory::Membrane;
-        break;
-    case 2:
-        outputCategory = OutputCategory::Plate;
-        break;
-    case 3:
-        outputCategory = OutputCategory::Combined;
-        break;
-    case 4:
-        outputCategory = OutputCategory::All;
-        break;
-    default:
-        outputCategory = OutputCategory::Membrane;
-        break;
-    }
-    switch (outputTypeTemp) {
-    case 1:
-        outputType = OutputType::Standard;
-        break;
-    case 2:
-        outputType = OutputType::Principal;
-        break;
-    case 3:
-        outputType = OutputType::VM;
-        break;
-    case 4:
-        outputType = OutputType::All;
-        break;
-    default:
-        outputType = OutputType::Standard;
-        break;
-    }
-    outputAtXY = OutputLocationXY::GaussPoints;
-    outputCategory = OutputCategory::Membrane;
-    outputType  = OutputType::Standard;
-    //OOFEM_LOG_INFO( "Element : %d    output type = %d\n", this->giveNumber(), int(outputType) );
-}
-
-void
-ShellQd41::setCrossSection(int csIndx)
-{
-    StructuralElement::setCrossSection(csIndx);
-    plate->setCrossSection(csIndx);
-    membrane->setCrossSection(csIndx);
 }
 
 void
 ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep)
 {
     StructuralCrossSection* cs = this->giveStructuralCrossSection();
-    
+
     auto tempDrillCoeff = cs->give(CS_RelDrillingStiffness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0));
     if (tempDrillCoeff != 0.0)
         drillCoeff = tempDrillCoeff;
@@ -535,7 +534,7 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
     for (int i = 0; i <= dofManArray.giveSize(); i++) {
         membDofManArray[i] = dofManArray.at(i);
     }*/
-    
+
     FloatMatrix BMatrixPlate;
     FloatMatrix BMatrixMembrane;
 
@@ -549,7 +548,7 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
     FloatMatrix stiffMatMembrane;
 
     FloatMatrix temp;
-    
+
     bool matStiffSymmFlag = cs->isCharacteristicMtrxSymmetric(rMode);
 
     answer.clear();
@@ -739,94 +738,6 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
 }
 
 void
-ShellQd41::computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
-    FloatMatrix b;
-    FloatArray u;
-    
-    FloatArray uMemb;
-    int j = 1;
-    switch (outputType) {
-    case OutputType::Standard:
-        this->computeVectorOf(VM_Total, tStep, u);
-        /* This is to be uncommented once adapted for ShellQd41 (if necessary).
-        if (initialDisplacements) {
-            u.subtract(*initialDisplacements);
-        }*/
-        uMemb.resize(8);
-        for (int i = 1; i <= 8; i += 2) {
-            uMemb.at(i) = u.at(j);
-            uMemb.at(i + 1) = u.at(j + 1);
-            j += 6;
-        }
-        membrane->computeBmatrixAt(xi, eta, b);
-        answer.beProductOf(b, uMemb);
-        break;
-    case OutputType::Principal:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
-        break;
-    case OutputType::VM:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
-        break;
-    case OutputType::All:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
-        break;
-    default:
-        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
-        break;
-    }
-}
-
-
-void
-ShellQd41::computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
-    FloatArray u;
-    this->computeVectorOf(VM_Total, tStep, u);
-    /* This is to be uncommented once adapted for ShellQd41 (if necessary).
-    if (initialDisplacements) {
-        u.subtract(*initialDisplacements);
-    }*/
-
-    FloatArray uPlate;
-    uPlate.resize(12);
-    int j = 3;
-    for (int i = 1; i <= 12; i += 3) {
-        uPlate.at(i) = u.at(j);
-        uPlate.at(i + 1) = u.at(j + 1);
-        uPlate.at(i + 2) = u.at(j + 2);
-        j += 6;
-    }
-
-    FloatMatrix temp;
-    computeBmatrixPlateAt(xi, eta, temp);
-    FloatMatrix b;
-    b.beSubMatrixOf(temp, 1, 3, 1, 12);
-    answer.beProductOf(b, uPlate);
-}
-
-void
-ShellQd41::computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
-    FloatArray curvatures;
-    switch (outputType) {
-    case OutputType::Standard:
-        computePlateCurvaturesAt(curvatures, xi, eta, tStep);
-        answer.beScaled(outputAtZ, curvatures);
-        break;
-    case OutputType::Principal:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
-        break;
-    case OutputType::VM:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
-        break;
-    case OutputType::All:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
-        break;
-    default:
-        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
-        break;
-    }
-}
-
-void
 ShellQd41::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep)
 // Computes the vector containing the strains at the Gauss point gp of
 // the receiver, at time step tStep.
@@ -976,12 +887,114 @@ ShellQd41::giveNodeCoordinates()
     return c;
 }
 
+double
+ShellQd41::computeVolumeAround(GaussPoint* gp)
+{
+    return membrane->computeVolumeAround(gp);
+}
+
+void
+ShellQd41::giveDofManDofIDMask(int inode, IntArray& answer) const
+{
+    answer = { D_u, D_v, D_w, R_u, R_v, R_w };
+}
+
+void
+ShellQd41::initializeFrom(InputRecord& ir)
+{
+    StructuralElement::initializeFrom(ir);
+    plate->initializeFrom(ir);
+    membrane->initializeFrom(ir);
+
+    OOFEM_LOG_INFO("Element : %d    output type 1 = %d\n", this->giveNumber(), int(outputType));
+    OOFEM_LOG_INFO("Element : %d    output loc 1 = %d\n", this->giveNumber(), int(outputAtXY));
+    OOFEM_LOG_INFO("Element : %d    output cat 1 = %d\n", this->giveNumber(), int(outputCategory));
+
+    //outputAtXY = OutputLocationXY::GaussPoints;
+    //outputCategory = OutputCategory::Membrane;
+    //outputType = OutputType::Standard;
+
+    OOFEM_LOG_INFO("Element : %d    output type 2 = %d\n", this->giveNumber(), int(outputType));
+    OOFEM_LOG_INFO("Element : %d    output loc 2 = %d\n", this->giveNumber(), int(outputAtXY));
+    OOFEM_LOG_INFO("Element : %d    output cat 2 = %d\n", this->giveNumber(), int(outputCategory));
+
+    int outputAtXYTemp, outputTypeTemp, outputAtZTemp, outputCategoryTemp;
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd41_outputAtXY);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputTypeTemp, _IFT_ShellQd41_outputType);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtZ, _IFT_ShellQd41_outputAtZ);
+    switch (outputAtXYTemp) {
+    case 1:
+        outputAtXY = OutputLocationXY::GaussPoints;
+        break;
+    case 2:
+        outputAtXY = OutputLocationXY::Centroid;
+        break;
+    case 3:
+        outputAtXY = OutputLocationXY::Corners;
+        break;
+    case 4:
+        outputAtXY = OutputLocationXY::All;
+        break;
+    default:
+        outputAtXY = OutputLocationXY::GaussPoints;
+        break;
+    }
+    switch (outputCategoryTemp) {
+    case 1:
+        outputCategory = OutputCategory::Membrane;
+        break;
+    case 2:
+        outputCategory = OutputCategory::Plate;
+        break;
+    case 3:
+        outputCategory = OutputCategory::Combined;
+        break;
+    case 4:
+        outputCategory = OutputCategory::All;
+        break;
+    default:
+        outputCategory = OutputCategory::Membrane;
+        break;
+    }
+    switch (outputTypeTemp) {
+    case 1:
+        outputType = OutputType::Standard;
+        break;
+    case 2:
+        outputType = OutputType::Principal;
+        break;
+    case 3:
+        outputType = OutputType::VM;
+        break;
+    case 4:
+        outputType = OutputType::All;
+        break;
+    default:
+        outputType = OutputType::Standard;
+        break;
+    }
+    OOFEM_LOG_INFO("Element : %d    output type 3 = %d\n", this->giveNumber(), int(outputType));
+    OOFEM_LOG_INFO("Element : %d    output loc 3 = %d\n", this->giveNumber(), int(outputAtXY));
+    OOFEM_LOG_INFO("Element : %d    output cat 3 = %d\n", this->giveNumber(), int(outputCategory));
+}
+
+void
+ShellQd41::setCrossSection(int csIndx)
+{
+    StructuralElement::setCrossSection(csIndx);
+    plate->setCrossSection(csIndx);
+    membrane->setCrossSection(csIndx);
+}
+
 void
 ShellQd41::updateInternalState(TimeStep* tStep)
 // Updates receiver at the end of the step.
 {
     FloatArray stress, strain;
-
+    OOFEM_LOG_INFO("Element : %d    output type 4 = %d\n", this->giveNumber(), int(outputType));
+    OOFEM_LOG_INFO("Element : %d    output loc 4 = %d\n", this->giveNumber(), int(outputAtXY));
+    OOFEM_LOG_INFO("Element : %d    output cat 4 = %d\n", this->giveNumber(), int(outputCategory));
     // force updating strains & stresses
     switch (outputAtXY) {
     case OutputLocationXY::GaussPoints:
