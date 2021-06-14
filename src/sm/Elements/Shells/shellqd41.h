@@ -123,7 +123,7 @@ public:
 
 private:
     OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;
-    OutputCategory outputCategory = OutputCategory::Combined;
+    OutputCategory outputCategory = OutputCategory::Membrane;
     OutputType outputType = OutputType::Standard;
     double outputAtZ = 0.0;
    
