@@ -123,8 +123,8 @@ public:
     void updateLocalNumbering(EntityRenumberingFunctor& f) override;
 
 private:
-    OutputLocationXY outputAtXY = OutputLocationXY::Centroid;
-    OutputCategory outputCategory = OutputCategory::Combined;
+    OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;
+    OutputCategory outputCategory = OutputCategory::Membrane;
     OutputType outputType = OutputType::Standard;
     double outputAtZ = 0.0;
    

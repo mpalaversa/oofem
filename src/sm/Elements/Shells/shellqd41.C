@@ -496,6 +496,10 @@ ShellQd41::initializeFrom(InputRecord& ir)
     default:
         break;
     }
+    outputAtXY = OutputLocationXY::GaussPoints;
+    outputCategory = OutputCategory::Membrane;
+    outputType  = OutputType::Standard;
+    //OOFEM_LOG_INFO( "Element : %d    output type = %d\n", this->giveNumber(), int(outputType) );
 }
 
 void
