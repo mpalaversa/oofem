@@ -90,6 +90,7 @@ public:
     void computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
     void computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
     void computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
+    double computePlateVolumeAround(GaussPoint* gp);
     int computeNumberOfDofs() override { return 24; }
     void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
     void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
@@ -97,7 +98,7 @@ public:
     void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
     void computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0);
     void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
-    double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override { return plate->computeVolumeAround(gp); }
+    double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override { return computePlateVolumeAround(gp); }
     double computeVolumeAround(GaussPoint* gp) override;
     OutputCategory getOutputCategory() { return outputCategory; }
     OutputLocationXY getOutputLocationInXYPlane() { return outputAtXY; }

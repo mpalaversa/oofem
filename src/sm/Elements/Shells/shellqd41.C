@@ -371,7 +371,7 @@ ShellQd41::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* 
         for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
             plate->giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), FEIElementGeometryWrapper(this));
             NMatrix.beNMatrixOf(NMatrixTemp, 3);
-            dV = plate->computeVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
+            dV = computePlateVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
             dens = this->giveCrossSection()->give('d', gp);
             ntf.beTProductOf(NMatrix, loadVector);
             loadVectorFromPlate.add(dV * dens, ntf);
@@ -521,6 +521,18 @@ ShellQd41::computePlateStrainVectorAt(FloatArray& answer, double xi, double eta,
     }
 }
 
+double
+ShellQd41::computePlateVolumeAround(GaussPoint* gp)
+// Returns the portion of the receiver which is attached to gp.
+{
+    double detJ, weight;
+
+    weight = gp->giveWeight();
+    FEInterpolation *interpolation = giveInterpolation();
+    detJ = fabs(interpolation->giveTransformationJacobian(gp->giveNaturalCoordinates(), *membrane->giveCellGeometryWrapper()));
+    return detJ * weight; ///@todo What about thickness?
+}
+
 void
 ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep)
 {
@@ -578,7 +590,7 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
             double dV = computeVolumeAround(gp);
 
             if (matStiffSymmFlag) {
-                stiffMatPlate.plusProductSymmUpper(BMatrixPlate, DBPlate, plate->computeVolumeAround(gp));
+                stiffMatPlate.plusProductSymmUpper(BMatrixPlate, DBPlate, this->computePlateVolumeAround(gp));
                 stiffMatMembrane.plusProductSymmUpper(BMatrixMembrane, DBMembrane, dV);
             }
             else {
@@ -869,10 +881,20 @@ void
 ShellQd41::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords)
 {
     FloatArray n_vec;
-    this->giveInterpolation()->boundarySurfaceEvalN(n_vec, boundaryID, lcoords, FEIElementGeometryWrapper(this));
+    this->giveInterpolation()->boundarySurfaceEvalN(n_vec, boundaryID, lcoords, *membrane->giveCellGeometryWrapper());
     answer.beNMatrixOf(n_vec, 6);
 }
+/*
+double
+ShellQd41::computeSurfaceVolumeAround(GaussPoint* gp, int iSurf)
+{
+    FEInterpolation* fei = this->giveInterpolation();
+    const FloatArray& lcoords = gp->giveNaturalCoordinates();
+    double J = fei->boundarySurfaceGiveTransformationJacobian(iSurf, lcoords, *membrane->giveCellGeometryWrapper());
 
+    return (gp->giveWeight() * J);
+}
+*/
 std::vector< FloatArray >
 ShellQd41::giveNodeCoordinates()
 {
