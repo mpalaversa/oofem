@@ -90,6 +90,7 @@ public:
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
     void computeGaussPoints() override;
     int computeNumberOfDofs() override { return 9; }
+    void computeBmatrixAt(double xi, double eta, FloatMatrix& answer);
     void giveDofManDofIDMask(int inode, IntArray &) const override;
 
     Interface *giveInterface(InterfaceType interface) override;
@@ -97,6 +98,8 @@ public:
     void computeStrainVectorInLayer(FloatArray &answer, const FloatArray &masterGpStrain,
                                     GaussPoint *masterGp, GaussPoint *slaveGp, TimeStep *tStep) override;
 
+    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep);
+    void computeStressVectorAtCentroid(FloatArray& answer, const FloatArray& strain, TimeStep* tStep);
     void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global) override;
     void computeEgdeNMatrixAt(FloatMatrix &answer, int iedge, GaussPoint *gp);
     void giveEdgeDofMapping(IntArray &answer, int iEdge) const override;

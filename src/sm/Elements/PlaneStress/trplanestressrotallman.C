@@ -129,15 +129,16 @@ TrPlanestressRotAllman :: computeNmatrixAt(const FloatArray &iLocCoord, FloatMat
 }
 
 void
-TrPlanestressRotAllman :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui)
-// Returns the [3x12] strain-displacement matrix {B} of the receiver, eva-
-// luated at gp.
-{
+TrPlanestressRotAllman::computeBmatrixAt(double xi, double eta, FloatMatrix& answer) {
     FloatMatrix dnx;
     std::vector< FloatArray > lxy;
 
     this->computeLocalNodalCoordinates(lxy); // get ready for tranformation into 3d
-    this->qinterpolation.evaldNdx( dnx, gp->giveNaturalCoordinates(), FEIVertexListGeometryWrapper(lxy) );
+    FloatArray evaluationPoints;
+    evaluationPoints.resize(2);
+    evaluationPoints.at(1) = xi;
+    evaluationPoints.at(2) = eta;
+    this->qinterpolation.evaldNdx(dnx, evaluationPoints, FEIVertexListGeometryWrapper(lxy));
 
     answer.resize(3, 9);
     answer.zero();
@@ -146,17 +147,17 @@ TrPlanestressRotAllman :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, 
     answer.at(1, 1) = dnx.at(1, 1) + 0.5 * dnx.at(4, 1) + 0.5 * dnx.at(6, 1);
     answer.at(1, 4) = dnx.at(2, 1) + 0.5 * dnx.at(4, 1) + 0.5 * dnx.at(5, 1);
     answer.at(1, 7) = dnx.at(3, 1) + 0.5 * dnx.at(5, 1) + 0.5 * dnx.at(6, 1);
-    answer.at(1, 3) =+dnx.at(6, 1) * ( lxy [ 0 ].at(2) - lxy [ 2 ].at(2) ) / 8.0 - dnx.at(4, 1) * ( lxy [ 1 ].at(2) - lxy [ 0 ].at(2) ) / 8.0;
-    answer.at(1, 6) =+dnx.at(4, 1) * ( lxy [ 1 ].at(2) - lxy [ 0 ].at(2) ) / 8.0 - dnx.at(5, 1) * ( lxy [ 2 ].at(2) - lxy [ 1 ].at(2) ) / 8.0;
-    answer.at(1, 9) =+dnx.at(5, 1) * ( lxy [ 2 ].at(2) - lxy [ 1 ].at(2) ) / 8.0 - dnx.at(6, 1) * ( lxy [ 0 ].at(2) - lxy [ 2 ].at(2) ) / 8.0;
+    answer.at(1, 3) = +dnx.at(6, 1) * (lxy[0].at(2) - lxy[2].at(2)) / 8.0 - dnx.at(4, 1) * (lxy[1].at(2) - lxy[0].at(2)) / 8.0;
+    answer.at(1, 6) = +dnx.at(4, 1) * (lxy[1].at(2) - lxy[0].at(2)) / 8.0 - dnx.at(5, 1) * (lxy[2].at(2) - lxy[1].at(2)) / 8.0;
+    answer.at(1, 9) = +dnx.at(5, 1) * (lxy[2].at(2) - lxy[1].at(2)) / 8.0 - dnx.at(6, 1) * (lxy[0].at(2) - lxy[2].at(2)) / 8.0;
 
     // epsilon_y
     answer.at(2, 2) = dnx.at(1, 2) + 0.5 * dnx.at(4, 2) + 0.5 * dnx.at(6, 2);
     answer.at(2, 5) = dnx.at(2, 2) + 0.5 * dnx.at(4, 2) + 0.5 * dnx.at(5, 2);
     answer.at(2, 8) = dnx.at(3, 2) + 0.5 * dnx.at(5, 2) + 0.5 * dnx.at(6, 2);
-    answer.at(2, 3) =-dnx.at(6, 2) * ( lxy [ 0 ].at(1) - lxy [ 2 ].at(1) ) / 8.0 + dnx.at(4, 2) * ( lxy [ 1 ].at(1) - lxy [ 0 ].at(1) ) / 8.0;
-    answer.at(2, 6) =-dnx.at(4, 2) * ( lxy [ 1 ].at(1) - lxy [ 0 ].at(1) ) / 8.0 + dnx.at(5, 2) * ( lxy [ 2 ].at(1) - lxy [ 1 ].at(1) ) / 8.0;
-    answer.at(2, 9) =-dnx.at(5, 2) * ( lxy [ 2 ].at(1) - lxy [ 1 ].at(1) ) / 8.0 + dnx.at(6, 2) * ( lxy [ 0 ].at(1) - lxy [ 2 ].at(1) ) / 8.0;
+    answer.at(2, 3) = -dnx.at(6, 2) * (lxy[0].at(1) - lxy[2].at(1)) / 8.0 + dnx.at(4, 2) * (lxy[1].at(1) - lxy[0].at(1)) / 8.0;
+    answer.at(2, 6) = -dnx.at(4, 2) * (lxy[1].at(1) - lxy[0].at(1)) / 8.0 + dnx.at(5, 2) * (lxy[2].at(1) - lxy[1].at(1)) / 8.0;
+    answer.at(2, 9) = -dnx.at(5, 2) * (lxy[2].at(1) - lxy[1].at(1)) / 8.0 + dnx.at(6, 2) * (lxy[0].at(1) - lxy[2].at(1)) / 8.0;
 
     // gamma_xy (shear)
     answer.at(3, 1) = dnx.at(1, 2) + 0.5 * dnx.at(4, 2) + 0.5 * dnx.at(6, 2);
@@ -166,14 +167,51 @@ TrPlanestressRotAllman :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, 
     answer.at(3, 7) = dnx.at(3, 2) + 0.5 * dnx.at(5, 2) + 0.5 * dnx.at(6, 2);
     answer.at(3, 8) = dnx.at(3, 1) + 0.5 * dnx.at(5, 1) + 0.5 * dnx.at(6, 1);
 
-    answer.at(3, 3) = dnx.at(6, 2) * ( lxy [ 0 ].at(2) - lxy [ 2 ].at(2) ) / 8.0 - dnx.at(4, 2) * ( lxy [ 1 ].at(2) - lxy [ 0 ].at(2) ) / 8.0;
-    answer.at(3, 3) += -dnx.at(6, 1) * ( lxy [ 0 ].at(1) - lxy [ 2 ].at(1) ) / 8.0 + dnx.at(4, 1) * ( lxy [ 1 ].at(1) - lxy [ 0 ].at(1) ) / 8.0;
-    answer.at(3, 6) = dnx.at(4, 2) * ( lxy [ 1 ].at(2) - lxy [ 0 ].at(2) ) / 8.0 - dnx.at(5, 2) * ( lxy [ 2 ].at(2) - lxy [ 1 ].at(2) ) / 8.0;
-    answer.at(3, 6) += -dnx.at(4, 1) * ( lxy [ 1 ].at(1) - lxy [ 0 ].at(1) ) / 8.0 + dnx.at(5, 1) * ( lxy [ 2 ].at(1) - lxy [ 1 ].at(1) ) / 8.0;
-    answer.at(3, 9) = dnx.at(5, 2) * ( lxy [ 2 ].at(2) - lxy [ 1 ].at(2) ) / 8.0 - dnx.at(6, 2) * ( lxy [ 0 ].at(2) - lxy [ 2 ].at(2) ) / 8.0;
-    answer.at(3, 9) += -dnx.at(5, 1) * ( lxy [ 2 ].at(1) - lxy [ 1 ].at(1) ) / 8.0 + dnx.at(6, 1) * ( lxy [ 0 ].at(1) - lxy [ 2 ].at(1) ) / 8.0;
+    answer.at(3, 3) = dnx.at(6, 2) * (lxy[0].at(2) - lxy[2].at(2)) / 8.0 - dnx.at(4, 2) * (lxy[1].at(2) - lxy[0].at(2)) / 8.0;
+    answer.at(3, 3) += -dnx.at(6, 1) * (lxy[0].at(1) - lxy[2].at(1)) / 8.0 + dnx.at(4, 1) * (lxy[1].at(1) - lxy[0].at(1)) / 8.0;
+    answer.at(3, 6) = dnx.at(4, 2) * (lxy[1].at(2) - lxy[0].at(2)) / 8.0 - dnx.at(5, 2) * (lxy[2].at(2) - lxy[1].at(2)) / 8.0;
+    answer.at(3, 6) += -dnx.at(4, 1) * (lxy[1].at(1) - lxy[0].at(1)) / 8.0 + dnx.at(5, 1) * (lxy[2].at(1) - lxy[1].at(1)) / 8.0;
+    answer.at(3, 9) = dnx.at(5, 2) * (lxy[2].at(2) - lxy[1].at(2)) / 8.0 - dnx.at(6, 2) * (lxy[0].at(2) - lxy[2].at(2)) / 8.0;
+    answer.at(3, 9) += -dnx.at(5, 1) * (lxy[2].at(1) - lxy[1].at(1)) / 8.0 + dnx.at(6, 1) * (lxy[0].at(1) - lxy[2].at(1)) / 8.0;
 }
 
+void
+TrPlanestressRotAllman :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui)
+// Returns the [3x12] strain-displacement matrix {B} of the receiver, eva-
+// luated at gp.
+{
+    computeBmatrixAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), answer);
+}
+
+void
+TrPlanestressRotAllman::computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep)
+// Computes the vector containing the strains at the Gauss point gp of
+// the receiver, at time step tStep. The nature of these strains depends
+// on the element's type.
+{
+    FloatMatrix b;
+    FloatArray u;
+    /*
+    if (!this->isActivated(tStep)) {
+        answer.resize(StructuralMaterial::giveSizeOfVoigtSymVector(gp->giveMaterialMode()));
+        answer.zero();
+        return;
+    }*/
+
+    this->computeBmatrixAt(0.33333, 0.33333, b);
+    this->computeVectorOf(VM_Total, tStep, u);
+
+    // subtract initial displacements, if defined
+    if (initialDisplacements) {
+        u.subtract(*initialDisplacements);
+    }
+    answer.beProductOf(b, u);
+}
+
+void 
+TrPlanestressRotAllman::computeStressVectorAtCentroid(FloatArray& answer, const FloatArray& strain, TimeStep* tStep) {
+    answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+}
 
 void
 TrPlanestressRotAllman :: computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep)
