@@ -906,23 +906,13 @@ ShellQd41::initializeFrom(InputRecord& ir)
     plate->initializeFrom(ir);
     membrane->initializeFrom(ir);
 
-    OOFEM_LOG_INFO("Element : %d    output type 1 = %d\n", this->giveNumber(), int(outputType));
-    OOFEM_LOG_INFO("Element : %d    output loc 1 = %d\n", this->giveNumber(), int(outputAtXY));
-    OOFEM_LOG_INFO("Element : %d    output cat 1 = %d\n", this->giveNumber(), int(outputCategory));
-
-    //outputAtXY = OutputLocationXY::GaussPoints;
-    //outputCategory = OutputCategory::Membrane;
-    //outputType = OutputType::Standard;
-
-    OOFEM_LOG_INFO("Element : %d    output type 2 = %d\n", this->giveNumber(), int(outputType));
-    OOFEM_LOG_INFO("Element : %d    output loc 2 = %d\n", this->giveNumber(), int(outputAtXY));
-    OOFEM_LOG_INFO("Element : %d    output cat 2 = %d\n", this->giveNumber(), int(outputCategory));
-
     int outputAtXYTemp, outputTypeTemp, outputAtZTemp, outputCategoryTemp;
+    outputAtXYTemp = outputTypeTemp = outputAtZTemp = outputCategoryTemp = 0;
     IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd41_outputAtXY);
     IR_GIVE_OPTIONAL_FIELD(ir, outputTypeTemp, _IFT_ShellQd41_outputType);
     IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
     IR_GIVE_OPTIONAL_FIELD(ir, outputAtZ, _IFT_ShellQd41_outputAtZ);
+
     switch (outputAtXYTemp) {
     case 1:
         outputAtXY = OutputLocationXY::GaussPoints;
@@ -974,9 +964,7 @@ ShellQd41::initializeFrom(InputRecord& ir)
         outputType = OutputType::Standard;
         break;
     }
-    OOFEM_LOG_INFO("Element : %d    output type 3 = %d\n", this->giveNumber(), int(outputType));
-    OOFEM_LOG_INFO("Element : %d    output loc 3 = %d\n", this->giveNumber(), int(outputAtXY));
-    OOFEM_LOG_INFO("Element : %d    output cat 3 = %d\n", this->giveNumber(), int(outputCategory));
+
 }
 
 void
@@ -992,9 +980,6 @@ ShellQd41::updateInternalState(TimeStep* tStep)
 // Updates receiver at the end of the step.
 {
     FloatArray stress, strain;
-    OOFEM_LOG_INFO("Element : %d    output type 4 = %d\n", this->giveNumber(), int(outputType));
-    OOFEM_LOG_INFO("Element : %d    output loc 4 = %d\n", this->giveNumber(), int(outputAtXY));
-    OOFEM_LOG_INFO("Element : %d    output cat 4 = %d\n", this->giveNumber(), int(outputCategory));
     // force updating strains & stresses
     switch (outputAtXY) {
     case OutputLocationXY::GaussPoints:

@@ -123,12 +123,11 @@ public:
     void updateLocalNumbering(EntityRenumberingFunctor& f) override;
 
 private:
-    OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;
-    OutputCategory outputCategory = OutputCategory::Membrane;
-    OutputType outputType = OutputType::Standard;
+    OutputLocationXY outputAtXY;
+    OutputCategory outputCategory;
+    OutputType outputType;
     double outputAtZ = 0.0;
-   
-    float drillCoeff = 100;
+    double drillCoeff = 100.0;
 };
 }
 #endif
