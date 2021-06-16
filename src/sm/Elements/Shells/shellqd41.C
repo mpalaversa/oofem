@@ -361,15 +361,19 @@ ShellQd41::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* 
     }
     FloatArray loadVector;
     loadVector.resize(3);
-    loadVector.zero();
-    loadVector.at(1) = force.at(3);
+    int j{ 1 };
+    for(int i = 1; i <= force.giveSize(); i++)
+        if (force.at(i) != double(0)) {
+            loadVector.at(1) = force.at(i);
+            j = i;
+        }
 
     loadVectorFromPlate.clear();
     FloatArray NMatrixTemp;
     FloatMatrix NMatrix;
     if (loadVector.giveSize()) {
         for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
-            plate->giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), FEIElementGeometryWrapper(this));
+            giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *membrane->giveCellGeometryWrapper());
             NMatrix.beNMatrixOf(NMatrixTemp, 3);
             dV = computePlateVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
             dens = this->giveCrossSection()->give('d', gp);
@@ -383,11 +387,11 @@ ShellQd41::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* 
 
     answer.resize(24);
     answer.zero();
-    int j = 3;
     for (int i = 1; i <= 12; i+=3) {
+        // takes into account only local w-displacement (add \theta_x and \theta_y in the future)
         answer.at(j) = loadVectorFromPlate.at(i);
-        answer.at(j+1) = loadVectorFromPlate.at(i+1);
-        answer.at(j+2) = loadVectorFromPlate.at(i+2);
+        //answer.at(j+1) = loadVectorFromPlate.at(i+1);
+        //answer.at(j+2) = loadVectorFromPlate.at(i+2);
         j += 6;
     }
 }
@@ -528,8 +532,7 @@ ShellQd41::computePlateVolumeAround(GaussPoint* gp)
     double detJ, weight;
 
     weight = gp->giveWeight();
-    FEInterpolation *interpolation = giveInterpolation();
-    detJ = fabs(interpolation->giveTransformationJacobian(gp->giveNaturalCoordinates(), *membrane->giveCellGeometryWrapper()));
+    detJ = fabs(giveInterpolation()->giveTransformationJacobian(gp->giveNaturalCoordinates(), *membrane->giveCellGeometryWrapper()));
     return detJ * weight; ///@todo What about thickness?
 }
 
@@ -696,7 +699,7 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
         answer.at(11, 17) = answer.at(17, 11) = stiffMatPlate.at(6, 9);
         answer.at(11, 21) = answer.at(21, 11) = stiffMatPlate.at(6, 10);
         answer.at(11, 22) = answer.at(22, 11) = stiffMatPlate.at(6, 11);
-        answer.at(12, 23) = answer.at(23, 11) = stiffMatPlate.at(6, 12);
+        answer.at(11, 23) = answer.at(23, 11) = stiffMatPlate.at(6, 12);
         // 12th row/column:
         answer.at(12, 12) = drillCoeff;
         // 13th row/column:
