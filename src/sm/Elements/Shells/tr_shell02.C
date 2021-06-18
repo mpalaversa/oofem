@@ -69,6 +69,46 @@ TR_SHELL02 :: initializeFrom(InputRecord &ir)
     StructuralElement :: initializeFrom(ir);
     plate->initializeFrom(ir);
     membrane->initializeFrom(ir);
+
+    int outputAtXYTemp, outputCategoryTemp;
+    outputAtXYTemp = outputCategoryTemp = 0;
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd41_outputAtXY);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
+
+    switch (outputAtXYTemp) {
+    case 1:
+        outputAtXY = OutputLocationXY::GaussPoints;
+        break;
+    case 2:
+        outputAtXY = OutputLocationXY::Centroid;
+        break;
+    case 3:
+        outputAtXY = OutputLocationXY::Corners;
+        break;
+    case 4:
+        outputAtXY = OutputLocationXY::All;
+        break;
+    default:
+        outputAtXY = OutputLocationXY::GaussPoints;
+        break;
+    }
+    switch (outputCategoryTemp) {
+    case 1:
+        outputCategory = OutputCategory::Membrane;
+        break;
+    case 2:
+        outputCategory = OutputCategory::Plate;
+        break;
+    case 3:
+        outputCategory = OutputCategory::Combined;
+        break;
+    case 4:
+        outputCategory = OutputCategory::All;
+        break;
+    default:
+        outputCategory = OutputCategory::Membrane;
+        break;
+    }
 }
 
 void
@@ -171,8 +211,82 @@ void
 TR_SHELL02 :: updateInternalState(TimeStep *tStep)
 // Updates the receiver at end of step.
 {
-    plate->updateInternalState(tStep);
-    membrane->updateInternalState(tStep);
+    FloatArray stress, strain;
+    // force updating strains & stresses
+    switch (outputAtXY) {
+    case OutputLocationXY::GaussPoints:
+        plate->updateInternalState(tStep);
+        membrane->updateInternalState(tStep);
+        break;
+    case OutputLocationXY::Centroid:
+        this->computeStrainVectorAtCentroid(strain, tStep);
+        this->computeStressVectorAtCentroid(stress, tStep, strain);
+        break;
+    case OutputLocationXY::Corners:
+        OOFEM_ERROR("Not implemented for this element");
+        break;
+    case OutputLocationXY::All:
+        OOFEM_ERROR("Not implemented for this element");
+        break;
+    deafult:
+        OOFEM_ERROR("Something went wrong. Output requested at an unknown location in x-y plane of element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+TR_SHELL02::computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep) {
+    FloatArray membraneStrains, plateStrains;
+
+    switch (outputCategory) {
+    case OutputCategory::Membrane:
+        membrane->computeStrainVectorAtCentroid(answer, tStep);
+        break;
+    case OutputCategory::Plate:
+        plate->computeStrainVectorAtCentroid(answer, tStep, this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2);
+        break;
+    case OutputCategory::Combined:
+        membrane->computeStrainVectorAtCentroid(membraneStrains, tStep);
+        plate->computeStrainVectorAtCentroid(plateStrains, tStep, this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2);
+        membraneStrains.add(plateStrains);
+        answer.resize(3);
+        answer = membraneStrains;
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+TR_SHELL02::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
+    FloatArray membraneStrains, plateStrains, membraneStresses, plateStresses;
+
+    switch (outputCategory) {
+    case OutputCategory::Membrane:
+        membrane->computeStressVectorAtCentroid(answer, strain, tStep);
+        break;
+    case OutputCategory::Plate:
+        plate->computeStressVectorAtCentroid(answer, strain, tStep);
+        break;
+    case OutputCategory::Combined:
+        membrane->computeStrainVectorAtCentroid(membraneStrains, tStep);
+        membrane->computeStressVectorAtCentroid(membraneStresses, membraneStrains, tStep);
+        plate->computeStrainVectorAtCentroid(plateStrains, tStep, this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2);
+        plate->computeStressVectorAtCentroid(plateStresses, plateStrains, tStep);
+
+        answer.resize(3);
+        for (int i = 1; i <= 6; i++) {
+            if (i < 4)
+                answer.at(i) = plateStresses.at(i) + membraneStresses.at(i);
+            else
+                answer.at(i) = -plateStresses.at(i - 3) + membraneStresses.at(i - 3);
+        }
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
 }
 
 void
@@ -245,9 +359,20 @@ TR_SHELL02 ::getStressesTopBottom( FloatArray &answer, TimeStep *tStep )
 {
     double outputAtZ = this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2;
 
-    FloatArray membraneStrains, membraneStresses;
+    FloatArray membraneStrains, membraneStresses, plateStrains, plateStresses;
     membrane->computeStrainVectorAtCentroid(membraneStrains, tStep);
     membrane->computeStressVectorAtCentroid(membraneStresses, membraneStrains, tStep);
+
+    plate->computeStrainVectorAtCentroid(plateStrains, tStep, outputAtZ);
+    plate->computeStressVectorAtCentroid(plateStresses, plateStrains, tStep);
+
+    answer.resize(6);
+    for (int i = 1; i <= 6; i++) {
+        if (i < 4)
+            answer.at(i) = plateStresses.at(i) + membraneStresses.at(i);
+        else
+            answer.at(i) = -plateStresses.at(i - 3) + membraneStresses.at(i - 3);
+    }
 }
 
 

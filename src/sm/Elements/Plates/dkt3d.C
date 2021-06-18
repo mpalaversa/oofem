@@ -556,4 +556,41 @@ DKTPlate3d :: computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeSte
         answer.clear();          // nil resultant
     }
 }
+
+void
+DKTPlate3d::computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
+    FloatArray u;
+    this->computeVectorOf(VM_Total, tStep, u);
+    /* This is to be uncommented once adapted for ShellQd41 (if necessary).
+    if (initialDisplacements) {
+        u.subtract(*initialDisplacements);
+    }*/
+
+    FloatMatrix temp;
+    computeBmatrixAt(xi, eta, temp);
+    FloatMatrix b;
+    b.beSubMatrixOf(temp, 1, 3, 1, 9);
+    answer.beProductOf(b, u);
+}
+
+void
+DKTPlate3d::computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep, double outputAtZ) {
+    FloatArray curvatures;
+    computeCurvaturesAt(curvatures, 0.33333, 0.33333, tStep);
+    curvatures.at(3) = 2 * curvatures.at(3);
+    answer.beScaled(outputAtZ, curvatures);
+}
+
+void
+DKTPlate3d::computeStressVectorAtCentroid(FloatArray& answer, const FloatArray& strain, TimeStep* tStep) {
+    FloatArray plateStresses;
+    plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+    answer.resize(6);
+    for (int i = 1; i <= 6; i++) {
+        if (i < 4)
+            answer.at(i) = plateStresses.at(i);
+        else
+            answer.at(i) = -plateStresses.at(i - 3);
+    }
+}
 } // end namespace oofem

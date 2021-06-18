@@ -45,8 +45,24 @@
 #include <memory>
 
 #define _IFT_TR_SHELL02_Name "tr_shell02"
+#define _IFT_ShellQd41_outputAtXY "outputatxy"
+#define _IFT_ShellQd41_outputCategory "outputcategory"
 
 namespace oofem {
+    // Enumeration for output location of strains and stresses in element's x-y plane.
+    enum class OutputLocationXY {
+        GaussPoints,
+        Centroid,
+        Corners,
+        All
+    };
+    // Enumeration for output category of strains and stresses.
+    enum class OutputCategory {
+        Membrane,
+        Plate,
+        Combined,
+        All
+    };
 /**
  * This class implements an triangular three-node shell finite element, composed of
  * dkt3d and trplanestressrotallman3d elements.
@@ -146,7 +162,8 @@ protected:
     double computeSurfaceVolumeAround( GaussPoint *gp, int iSurf ) override;
     int computeLoadLSToLRotationMatrix( FloatMatrix &answer, int iSurf, GaussPoint *gp ) override;
     //@}
-
+    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep);
+    void computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0);
 protected:
     void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override
     { OOFEM_ERROR("calling of this function is not allowed"); }
@@ -173,6 +190,10 @@ public:
     { OOFEM_ERROR("calling of this function is not allowed"); }
     void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord) override
     { OOFEM_ERROR("calling of this function is not allowed"); }
+
+    private:
+        OutputLocationXY outputAtXY;
+        OutputCategory outputCategory;
 };
 } // end namespace oofem
 #endif

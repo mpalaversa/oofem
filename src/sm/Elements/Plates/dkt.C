@@ -134,44 +134,35 @@ DKTPlate :: computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, TimeStep 
     }
 }
 
-
 void
-DKTPlate :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui)
-// Returns the [5x9] strain-displacement matrix {B} of the receiver,
-// evaluated at gp.
-// strain components xx, yy, zz, xz, yz
-{
+DKTPlate :: computeBmatrixAt(double ksi, double eta, FloatMatrix& answer) {
     // get node coordinates
     double x1, x2, x3, y1, y2, y3, z1, z2, z3;
     this->giveNodeCoordinates(x1, x2, x3, y1, y2, y3, z1, z2, z3);
-
-
-    double ksi = gp->giveNaturalCoordinate(1);
-    double eta = gp->giveNaturalCoordinate(2);
 
     double N1dk = 4.0 * ksi - 1.0;
     double N2dk = 0.0;
     double N3dk = -3.0 + 4.0 * ksi + 4.0 * eta;
     double N4dk = 4.0 * eta;
     double N5dk = -4.0 * eta;
-    double N6dk = 4.0 * ( 1.0 - 2.0 * ksi - eta );
+    double N6dk = 4.0 * (1.0 - 2.0 * ksi - eta);
 
     double N1de = 0.0;
     double N2de = 4.0 * eta - 1.0;
     double N3de = -3.0 + 4.0 * eta + 4.0 * ksi;
     double N4de = 4.0 * ksi;
-    double N5de = 4.0 * ( 1.0 - 2.0 * eta - ksi );
+    double N5de = 4.0 * (1.0 - 2.0 * eta - ksi);
     double N6de = -4.0 * ksi;
 
-    double A = N1dk * x1 + N2dk * x2 + N3dk * x3 + N4dk * ( x1 + x2 ) / 2 + N5dk * ( x2 + x3 ) / 2 + N6dk * ( x1 + x3 ) / 2;
-    double B = N1dk * y1 + N2dk * y2 + N3dk * y3 + N4dk * ( y1 + y2 ) / 2 + N5dk * ( y2 + y3 ) / 2 + N6dk * ( y1 + y3 ) / 2;
-    double C = N1de * x1 + N2de * x2 + N3de * x3 + N4de * ( x1 + x2 ) / 2 + N5de * ( x2 + x3 ) / 2 + N6de * ( x1 + x3 ) / 2;
-    double D = N1de * y1 + N2de * y2 + N3de * y3 + N4de * ( y1 + y2 ) / 2 + N5de * ( y2 + y3 ) / 2 + N6de * ( y1 + y3 ) / 2;
+    double A = N1dk * x1 + N2dk * x2 + N3dk * x3 + N4dk * (x1 + x2) / 2 + N5dk * (x2 + x3) / 2 + N6dk * (x1 + x3) / 2;
+    double B = N1dk * y1 + N2dk * y2 + N3dk * y3 + N4dk * (y1 + y2) / 2 + N5dk * (y2 + y3) / 2 + N6dk * (y1 + y3) / 2;
+    double C = N1de * x1 + N2de * x2 + N3de * x3 + N4de * (x1 + x2) / 2 + N5de * (x2 + x3) / 2 + N6de * (x1 + x3) / 2;
+    double D = N1de * y1 + N2de * y2 + N3de * y3 + N4de * (y1 + y2) / 2 + N5de * (y2 + y3) / 2 + N6de * (y1 + y3) / 2;
 
-    double dxdk = D / ( A * D - B * C );
-    double dydk = -C / ( A * D - B * C );
-    double dxde = -B / ( A * D - B * C );
-    double dyde = A / ( A * D - B * C );
+    double dxdk = D / (A * D - B * C);
+    double dydk = -C / (A * D - B * C);
+    double dxde = -B / (A * D - B * C);
+    double dyde = A / (A * D - B * C);
 
     double dN102 = N1dk * dxdk + N1de * dxde;
     double dN104 = N2dk * dxdk + N2de * dxde;
@@ -286,6 +277,15 @@ DKTPlate :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui
     answer.at(3, 9) = -dN205 - T39 * dN110 - T59 * dN112 - T49 * dN209 - T69 * dN211;
 
     // Note: no shear strains, no shear forces => the 4th and 5th rows are zero
+}
+
+void
+DKTPlate :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, int li, int ui)
+// Returns the [5x9] strain-displacement matrix {B} of the receiver,
+// evaluated at gp.
+// strain components xx, yy, zz, xz, yz
+{
+    computeBmatrixAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), answer);
 }
 
 

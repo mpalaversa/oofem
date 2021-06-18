@@ -108,6 +108,10 @@ protected:
     int computeLoadLSToLRotationMatrix(FloatMatrix &answer, int iSurf, GaussPoint *gp) override;
     //@}
 
+    void computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
+    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep, double outputAtZ);
+    void computeStressVectorAtCentroid(FloatArray& answer, const FloatArray& strain, TimeStep* tStep);
+
 public:
     // definition & identification
     const char *giveClassName() const override { return "DktPlate3d"; }

@@ -129,6 +129,8 @@ public:
     const char *giveInputRecordName() const override { return _IFT_DKTPlate_Name; }
     void initializeFrom(InputRecord &ir) override;
 
+    void computeBmatrixAt(double xi, double eta, FloatMatrix& answer);
+
     void computeGaussPoints() override;
     int computeNumberOfDofs() override { return 9; }
     void giveDofManDofIDMask(int inode, IntArray &) const override;
