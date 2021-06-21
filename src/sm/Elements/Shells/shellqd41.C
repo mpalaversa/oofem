@@ -34,6 +34,7 @@
  
 #include "sm/Elements/Shells/shellqd41.h"
 
+#include "boundaryload.h"
 #include "classfactory.h"
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
@@ -397,6 +398,96 @@ ShellQd41::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* 
 }
 
 void
+ShellQd41::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
+{
+    answer.clear();
+    if (type != ExternalForcesVector) {
+        return;
+    }
+
+    FEInterpolation* fei = this->giveInterpolation();
+    if (!fei) {
+        OOFEM_ERROR("No interpolator available");
+    }
+
+    FloatArray n_vec;
+    FloatMatrix n, T;
+    FloatArray force, globalIPcoords;
+    //int nsd = fei->giveNsd();
+
+    std::unique_ptr< IntegrationRule >iRule(this->giveBoundarySurfaceIntegrationRule(load->giveApproxOrder(), boundary));
+
+    for (GaussPoint* gp : *iRule) {
+        const FloatArray& lcoords = gp->giveNaturalCoordinates();
+
+        if (load->giveFormulationType() == Load::FT_Entity) {
+            load->computeValueAt(force, tStep, lcoords, mode);
+        }
+        else {
+            fei->boundaryLocal2Global(globalIPcoords, boundary, lcoords, *membrane->giveCellGeometryWrapper());
+            load->computeValueAt(force, tStep, globalIPcoords, mode);
+        }
+
+        ///@todo Make sure this part is correct.
+        // We always want the global values in the end, so we might as well compute them here directly:
+        // transform force
+        if (load->giveCoordSystMode() == Load::CST_Global) {
+            // then just keep it in global c.s
+        }
+        else {
+            ///@todo Support this...
+            // transform from local boundary to element local c.s
+            // uncommented since the other (now commented) approach did not work correctly
+            if (this->computeLoadLSToLRotationMatrix(T, boundary, gp)) {
+                force.rotatedWith(T, 'n');
+            }
+            // then to global c.s
+            //if ( this->computeLoadGToLRotationMtrx(T) ) {
+            //    force.rotatedWith(T, 't');
+            //}
+        }
+
+        // Construct n-matrix
+        this->computeSurfaceNMatrix(n, boundary, lcoords); // to allow adaptation on element level
+
+        ///@todo Some way to ask for the thickness at a global coordinate maybe?
+        double thickness = 1.0; // Should be the circumference for axisymm-elements.
+        double dV = thickness * this->computeSurfaceVolumeAround(gp, boundary);
+        answer.plusProduct(n, force, dV);
+    }
+
+    if (load->giveCoordSystMode() == Load::CST_Local) {
+        FloatMatrix transMat, transMatTemp;
+        computeLoadGToLRotationMtrx(transMatTemp);
+        transMat.resize(6, 6);
+        transMat.beTranspositionOf(transMatTemp);
+
+        FloatArray firstNodeLoads, secondNodeLoads, thirdNodeLoads, fourthNodeLoads;
+        firstNodeLoads.resize(6), secondNodeLoads.resize(6), thirdNodeLoads.resize(6), fourthNodeLoads.resize(6);
+        for (int i = 1; i <= 6; i++) {
+            firstNodeLoads.at(i) = answer.at(i);
+            secondNodeLoads.at(i) = answer.at(i + 6);
+            thirdNodeLoads.at(i) = answer.at(i + 12);
+            fourthNodeLoads.at(i) = answer.at(i + 18);
+        }
+
+        FloatArray firstNodeLoadsTemp, secondNodeLoadsTemp, thirdNodeLoadsTemp, fourthNodeLoadsTemp;
+        firstNodeLoadsTemp.resize(6), secondNodeLoadsTemp.resize(6), thirdNodeLoadsTemp.resize(6), fourthNodeLoadsTemp.resize(6);
+        firstNodeLoadsTemp.beProductOf(transMat, firstNodeLoads);
+        secondNodeLoadsTemp.beProductOf(transMat, secondNodeLoads);
+        thirdNodeLoadsTemp.beProductOf(transMat, thirdNodeLoads);
+        fourthNodeLoadsTemp.beProductOf(transMat, fourthNodeLoads);
+
+        for (int i = 1; i <= 6; i++) {
+            answer.at(i) = firstNodeLoadsTemp.at(i);
+            answer.at(i + 6) = secondNodeLoadsTemp.at(i);
+            answer.at(i + 12) = thirdNodeLoadsTemp.at(i);
+            answer.at(i + 18) = fourthNodeLoadsTemp.at(i);
+        }
+    }
+}
+
+void
 ShellQd41::computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep)
 {   
     answer.add(this->giveStructuralCrossSection()->giveStiffnessMatrix_PlaneStress(rMode, gp, tStep));
@@ -606,148 +697,150 @@ ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
         answer.zero();
 
         // Assembling element stiffness matrix composed of the "membrane" and the "plate" part.
-        // 1st row/column:
+        // 1st row:
         answer.at(1, 1) = stiffMatMembrane.at(1, 1);
-        answer.at(1, 2) = answer.at(2, 1) = stiffMatMembrane.at(1, 2);
-        answer.at(1, 7) = answer.at(7, 1) = stiffMatMembrane.at(1, 3);
-        answer.at(1, 8) = answer.at(8, 1) = stiffMatMembrane.at(1, 4);
-        answer.at(1, 13) = answer.at(13, 1) = stiffMatMembrane.at(1, 5);
-        answer.at(1, 14) = answer.at(14, 1) = stiffMatMembrane.at(1, 6);
-        answer.at(1, 19) = answer.at(19, 1) = stiffMatMembrane.at(1, 7);
-        answer.at(1, 20) = answer.at(20, 1) = stiffMatMembrane.at(1, 8);
-        // 2nd row/column:
+        answer.at(1, 2) = stiffMatMembrane.at(1, 2);
+        answer.at(1, 7) = stiffMatMembrane.at(1, 3);
+        answer.at(1, 8) = stiffMatMembrane.at(1, 4);
+        answer.at(1, 13) = stiffMatMembrane.at(1, 5);
+        answer.at(1, 14) = stiffMatMembrane.at(1, 6);
+        answer.at(1, 19) = stiffMatMembrane.at(1, 7);
+        answer.at(1, 20) = stiffMatMembrane.at(1, 8);
+        // 2nd row:
         answer.at(2, 2) = stiffMatMembrane.at(2, 2);
-        answer.at(2, 7) = answer.at(7, 2) = stiffMatMembrane.at(2, 3);
-        answer.at(2, 8) = answer.at(8, 2) = stiffMatMembrane.at(2, 4);
-        answer.at(2, 13) = answer.at(13, 2) = stiffMatMembrane.at(2, 5);
-        answer.at(2, 14) = answer.at(14, 2) = stiffMatMembrane.at(2, 6);
-        answer.at(2, 19) = answer.at(19, 2) = stiffMatMembrane.at(2, 7);
-        answer.at(2, 20) = answer.at(20, 2) = stiffMatMembrane.at(2, 8);
-        // 3rd row/column:
+        answer.at(2, 7) = stiffMatMembrane.at(2, 3);
+        answer.at(2, 8) = stiffMatMembrane.at(2, 4);
+        answer.at(2, 13) = stiffMatMembrane.at(2, 5);
+        answer.at(2, 14) = stiffMatMembrane.at(2, 6);
+        answer.at(2, 19) = stiffMatMembrane.at(2, 7);
+        answer.at(2, 20) = stiffMatMembrane.at(2, 8);
+        // 3rd row:
         answer.at(3, 3) = stiffMatPlate.at(1, 1);
-        answer.at(3, 4) = answer.at(4, 3) = stiffMatPlate.at(1, 2);
-        answer.at(3, 5) = answer.at(5, 3) = stiffMatPlate.at(1, 3);
-        answer.at(3, 9) = answer.at(9, 3) = stiffMatPlate.at(1, 4);
-        answer.at(3, 10) = answer.at(10, 3) = stiffMatPlate.at(1, 5);
-        answer.at(3, 11) = answer.at(11, 3) = stiffMatPlate.at(1, 6);
-        answer.at(3, 15) = answer.at(15, 3) = stiffMatPlate.at(1, 7);
-        answer.at(3, 16) = answer.at(16, 3) = stiffMatPlate.at(1, 8);
-        answer.at(3, 17) = answer.at(17, 3) = stiffMatPlate.at(1, 9);
-        answer.at(3, 21) = answer.at(21, 3) = stiffMatPlate.at(1, 10);
-        answer.at(3, 22) = answer.at(22, 3) = stiffMatPlate.at(1, 11);
-        answer.at(3, 23) = answer.at(23, 3) = stiffMatPlate.at(1, 12);
-        // 4th row/column:
+        answer.at(3, 4) = stiffMatPlate.at(1, 2);
+        answer.at(3, 5) = stiffMatPlate.at(1, 3);
+        answer.at(3, 9) = stiffMatPlate.at(1, 4);
+        answer.at(3, 10) = stiffMatPlate.at(1, 5);
+        answer.at(3, 11) = stiffMatPlate.at(1, 6);
+        answer.at(3, 15) = stiffMatPlate.at(1, 7);
+        answer.at(3, 16) = stiffMatPlate.at(1, 8);
+        answer.at(3, 17) = stiffMatPlate.at(1, 9);
+        answer.at(3, 21) = stiffMatPlate.at(1, 10);
+        answer.at(3, 22) = stiffMatPlate.at(1, 11);
+        answer.at(3, 23) = stiffMatPlate.at(1, 12);
+        // 4th row:
         answer.at(4, 4) = stiffMatPlate.at(2, 2);
-        answer.at(4, 5) = answer.at(5, 4) = stiffMatPlate.at(2, 3);
-        answer.at(4, 9) = answer.at(9, 4) = stiffMatPlate.at(2, 4);
-        answer.at(4, 10) = answer.at(10, 4) = stiffMatPlate.at(2, 5);
-        answer.at(4, 11) = answer.at(11, 4) = stiffMatPlate.at(2, 6);
-        answer.at(4, 15) = answer.at(15, 4) = stiffMatPlate.at(2, 7);
-        answer.at(4, 16) = answer.at(16, 4) = stiffMatPlate.at(2, 8);
-        answer.at(4, 17) = answer.at(17, 4) = stiffMatPlate.at(2, 9);
-        answer.at(4, 21) = answer.at(21, 4) = stiffMatPlate.at(2, 10);
-        answer.at(4, 22) = answer.at(22, 4) = stiffMatPlate.at(2, 11);
-        answer.at(4, 23) = answer.at(23, 4) = stiffMatPlate.at(2, 12);
-        // 5th row/column:
+        answer.at(4, 5) = stiffMatPlate.at(2, 3);
+        answer.at(4, 9) = stiffMatPlate.at(2, 4);
+        answer.at(4, 10) = stiffMatPlate.at(2, 5);
+        answer.at(4, 11) = stiffMatPlate.at(2, 6);
+        answer.at(4, 15) = stiffMatPlate.at(2, 7);
+        answer.at(4, 16) = stiffMatPlate.at(2, 8);
+        answer.at(4, 17) = stiffMatPlate.at(2, 9);
+        answer.at(4, 21) = stiffMatPlate.at(2, 10);
+        answer.at(4, 22) = stiffMatPlate.at(2, 11);
+        answer.at(4, 23) = stiffMatPlate.at(2, 12);
+        // 5th row:
         answer.at(5, 5) = stiffMatPlate.at(3, 3);
-        answer.at(5, 9) = answer.at(9, 5) = stiffMatPlate.at(3, 4);
-        answer.at(5, 10) = answer.at(10, 5) = stiffMatPlate.at(3, 5);
-        answer.at(5, 11) = answer.at(11, 5) = stiffMatPlate.at(3, 6);
-        answer.at(5, 15) = answer.at(15, 5) = stiffMatPlate.at(3, 7);
-        answer.at(5, 16) = answer.at(16, 5) = stiffMatPlate.at(3, 8);
-        answer.at(5, 17) = answer.at(17, 5) = stiffMatPlate.at(3, 9);
-        answer.at(5, 21) = answer.at(21, 5) = stiffMatPlate.at(3, 10);
-        answer.at(5, 22) = answer.at(22, 5) = stiffMatPlate.at(3, 11);
-        answer.at(5, 23) = answer.at(23, 5) = stiffMatPlate.at(3, 12);
-        // 6th row/column:
+        answer.at(5, 9) = stiffMatPlate.at(3, 4);
+        answer.at(5, 10) = stiffMatPlate.at(3, 5);
+        answer.at(5, 11) = stiffMatPlate.at(3, 6);
+        answer.at(5, 15) = stiffMatPlate.at(3, 7);
+        answer.at(5, 16) = stiffMatPlate.at(3, 8);
+        answer.at(5, 17) = stiffMatPlate.at(3, 9);
+        answer.at(5, 21) = stiffMatPlate.at(3, 10);
+        answer.at(5, 22) = stiffMatPlate.at(3, 11);
+        answer.at(5, 23) = stiffMatPlate.at(3, 12);
+        // 6th row:
         answer.at(6, 6) = drillCoeff;
-        // 7th row/column:
+        // 7th row:
         answer.at(7, 7) = stiffMatMembrane.at(3, 3);
-        answer.at(7, 8) = answer.at(8, 7) = stiffMatMembrane.at(3, 4);
-        answer.at(7, 13) = answer.at(13, 7) = stiffMatMembrane.at(3, 5);
-        answer.at(7, 14) = answer.at(14, 7) = stiffMatMembrane.at(3, 6);
-        answer.at(7, 19) = answer.at(19, 7) = stiffMatMembrane.at(3, 7);
-        answer.at(7, 20) = answer.at(20, 7) = stiffMatMembrane.at(3, 8);
-        // 8th row/column:
+        answer.at(7, 8) = stiffMatMembrane.at(3, 4);
+        answer.at(7, 13) = stiffMatMembrane.at(3, 5);
+        answer.at(7, 14) = stiffMatMembrane.at(3, 6);
+        answer.at(7, 19) = stiffMatMembrane.at(3, 7);
+        answer.at(7, 20) = stiffMatMembrane.at(3, 8);
+        // 8th row:
         answer.at(8, 8) = stiffMatMembrane.at(4, 4);
-        answer.at(8, 13) = answer.at(13, 8) = stiffMatMembrane.at(4, 5);
-        answer.at(8, 14) = answer.at(14, 8) = stiffMatMembrane.at(4, 6);
-        answer.at(8, 19) = answer.at(19, 8) = stiffMatMembrane.at(4, 7);
-        answer.at(8, 20) = answer.at(20, 8) = stiffMatMembrane.at(4, 8);
-        // 9th row/column:
+        answer.at(8, 13) = stiffMatMembrane.at(4, 5);
+        answer.at(8, 14) = stiffMatMembrane.at(4, 6);
+        answer.at(8, 19) = stiffMatMembrane.at(4, 7);
+        answer.at(8, 20) = stiffMatMembrane.at(4, 8);
+        // 9th row:
         answer.at(9, 9) = stiffMatPlate.at(4, 4);
-        answer.at(9, 10) = answer.at(10, 9) = stiffMatPlate.at(4, 5);
-        answer.at(9, 11) = answer.at(11, 9) = stiffMatPlate.at(4, 6);
-        answer.at(9, 15) = answer.at(15, 9) = stiffMatPlate.at(4, 7);
-        answer.at(9, 16) = answer.at(16, 9) = stiffMatPlate.at(4, 8);
-        answer.at(9, 17) = answer.at(17, 9) = stiffMatPlate.at(4, 9);
-        answer.at(9, 21) = answer.at(21, 9) = stiffMatPlate.at(4, 10);
-        answer.at(9, 22) = answer.at(22, 9) = stiffMatPlate.at(4, 11);
-        answer.at(9, 23) = answer.at(23, 9) = stiffMatPlate.at(4, 12);
-        // 10th row/column:
+        answer.at(9, 10) = stiffMatPlate.at(4, 5);
+        answer.at(9, 11) = stiffMatPlate.at(4, 6);
+        answer.at(9, 15) = stiffMatPlate.at(4, 7);
+        answer.at(9, 16) = stiffMatPlate.at(4, 8);
+        answer.at(9, 17) = stiffMatPlate.at(4, 9);
+        answer.at(9, 21) = stiffMatPlate.at(4, 10);
+        answer.at(9, 22) = stiffMatPlate.at(4, 11);
+        answer.at(9, 23) = stiffMatPlate.at(4, 12);
+        // 10th row:
         answer.at(10, 10) = stiffMatPlate.at(5, 5);
-        answer.at(10, 11) = answer.at(11, 10) = stiffMatPlate.at(5, 6);
-        answer.at(10, 15) = answer.at(15, 10) = stiffMatPlate.at(5, 7);
-        answer.at(10, 16) = answer.at(16, 10) = stiffMatPlate.at(5, 8);
-        answer.at(10, 17) = answer.at(17, 10) = stiffMatPlate.at(5, 9);
-        answer.at(10, 21) = answer.at(21, 10) = stiffMatPlate.at(5, 10);
-        answer.at(10, 22) = answer.at(22, 10) = stiffMatPlate.at(5, 11);
-        answer.at(10, 23) = answer.at(23, 10) = stiffMatPlate.at(5, 12);
-        // 11th row/column:
+        answer.at(10, 11) = stiffMatPlate.at(5, 6);
+        answer.at(10, 15) = stiffMatPlate.at(5, 7);
+        answer.at(10, 16) = stiffMatPlate.at(5, 8);
+        answer.at(10, 17) = stiffMatPlate.at(5, 9);
+        answer.at(10, 21) = stiffMatPlate.at(5, 10);
+        answer.at(10, 22) = stiffMatPlate.at(5, 11);
+        answer.at(10, 23) = stiffMatPlate.at(5, 12);
+        // 11th row:
         answer.at(11, 11) = stiffMatPlate.at(6, 6);
-        answer.at(11, 15) = answer.at(15, 11) = stiffMatPlate.at(6, 7);
-        answer.at(11, 16) = answer.at(16, 11) = stiffMatPlate.at(6, 8);
-        answer.at(11, 17) = answer.at(17, 11) = stiffMatPlate.at(6, 9);
-        answer.at(11, 21) = answer.at(21, 11) = stiffMatPlate.at(6, 10);
-        answer.at(11, 22) = answer.at(22, 11) = stiffMatPlate.at(6, 11);
-        answer.at(11, 23) = answer.at(23, 11) = stiffMatPlate.at(6, 12);
-        // 12th row/column:
+        answer.at(11, 15) = stiffMatPlate.at(6, 7);
+        answer.at(11, 16) = stiffMatPlate.at(6, 8);
+        answer.at(11, 17) = stiffMatPlate.at(6, 9);
+        answer.at(11, 21) = stiffMatPlate.at(6, 10);
+        answer.at(11, 22) = stiffMatPlate.at(6, 11);
+        answer.at(11, 23) = stiffMatPlate.at(6, 12);
+        // 12th row:
         answer.at(12, 12) = drillCoeff;
-        // 13th row/column:
+        // 13th row:
         answer.at(13, 13) = stiffMatMembrane.at(5, 5);
-        answer.at(13, 14) = answer.at(14, 13) = stiffMatMembrane.at(5, 6);
-        answer.at(13, 19) = answer.at(19, 13) = stiffMatMembrane.at(5, 7);
-        answer.at(13, 20) = answer.at(20, 13) = stiffMatMembrane.at(5, 8);
-        // 14th row/column:
+        answer.at(13, 14) = stiffMatMembrane.at(5, 6);
+        answer.at(13, 19) = stiffMatMembrane.at(5, 7);
+        answer.at(13, 20) = stiffMatMembrane.at(5, 8);
+        // 14th row:
         answer.at(14, 14) = stiffMatMembrane.at(6, 6);
-        answer.at(14, 19) = answer.at(19, 14) = stiffMatMembrane.at(6, 7);
-        answer.at(14, 20) = answer.at(20, 14) = stiffMatMembrane.at(6, 8);
-        // 15th row/column:
+        answer.at(14, 19) = stiffMatMembrane.at(6, 7);
+        answer.at(14, 20) = stiffMatMembrane.at(6, 8);
+        // 15th row:
         answer.at(15, 15) = stiffMatPlate.at(7, 7);
-        answer.at(15, 16) = answer.at(16, 15) = stiffMatPlate.at(7, 8);
-        answer.at(15, 17) = answer.at(17, 15) = stiffMatPlate.at(7, 9);
-        answer.at(15, 21) = answer.at(21, 15) = stiffMatPlate.at(7, 10);
-        answer.at(15, 22) = answer.at(22, 15) = stiffMatPlate.at(7, 11);
-        answer.at(15, 23) = answer.at(23, 15) = stiffMatPlate.at(7, 12);
-        // 16th row/column:
+        answer.at(15, 16) = stiffMatPlate.at(7, 8);
+        answer.at(15, 17) = stiffMatPlate.at(7, 9);
+        answer.at(15, 21) = stiffMatPlate.at(7, 10);
+        answer.at(15, 22) = stiffMatPlate.at(7, 11);
+        answer.at(15, 23) = stiffMatPlate.at(7, 12);
+        // 16th row:
         answer.at(16, 16) = stiffMatPlate.at(8, 8);
-        answer.at(16, 17) = answer.at(17, 16) = stiffMatPlate.at(8, 9);
-        answer.at(16, 21) = answer.at(21, 16) = stiffMatPlate.at(8, 10);
-        answer.at(16, 22) = answer.at(22, 16) = stiffMatPlate.at(8, 11);
-        answer.at(16, 23) = answer.at(23, 16) = stiffMatPlate.at(8, 12);
-        // 17th row/column:
+        answer.at(16, 17) = stiffMatPlate.at(8, 9);
+        answer.at(16, 21) = stiffMatPlate.at(8, 10);
+        answer.at(16, 22) = stiffMatPlate.at(8, 11);
+        answer.at(16, 23) = stiffMatPlate.at(8, 12);
+        // 17th row:
         answer.at(17, 17) = stiffMatPlate.at(9, 9);
-        answer.at(17, 21) = answer.at(21, 17) = stiffMatPlate.at(9, 10);
-        answer.at(17, 22) = answer.at(22, 17) = stiffMatPlate.at(9, 11);
-        answer.at(17, 23) = answer.at(23, 17) = stiffMatPlate.at(9, 12);
-        // 18th row/column:
+        answer.at(17, 21) = stiffMatPlate.at(9, 10);
+        answer.at(17, 22) = stiffMatPlate.at(9, 11);
+        answer.at(17, 23) = stiffMatPlate.at(9, 12);
+        // 18th row:
         answer.at(18, 18) = drillCoeff;
-        // 19th row/column:
+        // 19th row:
         answer.at(19, 19) = stiffMatMembrane.at(7, 7);
-        answer.at(19, 20) = answer.at(20, 19) = stiffMatMembrane.at(7, 8);
-        // 20th row/column:
+        answer.at(19, 20) = stiffMatMembrane.at(7, 8);
+        // 20th row:
         answer.at(20, 20) = stiffMatMembrane.at(8, 8);
-        // 21st row/column:
+        // 21st row:
         answer.at(21, 21) = stiffMatPlate.at(10, 10);
-        answer.at(21, 22) = answer.at(22, 21) = stiffMatPlate.at(10, 11);
-        answer.at(21, 23) = answer.at(23, 21) = stiffMatPlate.at(10, 12);
-        // 22nd row/column:
+        answer.at(21, 22) = stiffMatPlate.at(10, 11);
+        answer.at(21, 23) = stiffMatPlate.at(10, 12);
+        // 22nd row:
         answer.at(22, 22) = stiffMatPlate.at(11, 11);
-        answer.at(22, 23) = answer.at(23, 22) = stiffMatPlate.at(11, 12);
-        // 23rd row/column:
+        answer.at(22, 23) = stiffMatPlate.at(11, 12);
+        // 23rd row:
         answer.at(23, 23) = stiffMatPlate.at(12, 12);
-        // 24th row/column:
+        // 24th row:
         answer.at(24, 24) = drillCoeff;
+
+        answer.symmetrized();
     }
     else
         OOFEM_ERROR("It is not allowed to define more than 1 integration rule for this element.");

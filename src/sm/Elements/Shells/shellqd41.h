@@ -82,11 +82,12 @@ public:
     void computeBmatrixPlateAt(double xi, double eta, FloatMatrix& answer);
     void computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer);
     void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
+    void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
     void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
     void computeGaussPoints() override;
     bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
     int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
-    int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return membrane->computeLoadGToLRotationMtrx(answer); }
+    int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }
     void computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
     void computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
     void computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
