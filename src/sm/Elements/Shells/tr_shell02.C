@@ -40,6 +40,7 @@
 #include "classfactory.h"
 #include "node.h"
 #include "load.h"
+#include "boundaryload.h"
 
 #ifdef __OOFEG
  #include "node.h"
@@ -275,7 +276,7 @@ TR_SHELL02::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, c
         plate->computeStrainVectorAtCentroid(plateStrains, tStep, this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2);
         plate->computeStressVectorAtCentroid(plateStresses, plateStrains, tStep);
 
-        answer.resize(3);
+        answer.resize(6);
         for (int i = 1; i <= 6; i++) {
             if (i < 4)
                 answer.at(i) = plateStresses.at(i) + membraneStresses.at(i);
@@ -583,9 +584,97 @@ TR_SHELL02 ::computeSurfaceVolumeAround( GaussPoint *gp, int iSurf )
 }
 
 
-int TR_SHELL02 ::computeLoadLSToLRotationMatrix( FloatMatrix &answer, int isurf, GaussPoint *gp )
+int
+TR_SHELL02 ::computeLoadLSToLRotationMatrix( FloatMatrix &answer, int isurf, GaussPoint *gp )
 {
     return plate->computeLoadLSToLRotationMatrix( answer, isurf, gp );
+}
+
+void
+TR_SHELL02::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
+{
+    answer.clear();
+    if (type != ExternalForcesVector) {
+        return;
+    }
+
+    FEInterpolation* fei = this->giveInterpolation();
+    if (!fei) {
+        OOFEM_ERROR("No interpolator available");
+    }
+
+    FloatArray n_vec;
+    FloatMatrix n, T;
+    FloatArray force, globalIPcoords;
+    //int nsd = fei->giveNsd();
+
+    std::unique_ptr< IntegrationRule >iRule(this->giveBoundarySurfaceIntegrationRule(load->giveApproxOrder(), boundary));
+
+    for (GaussPoint* gp : *iRule) {
+        const FloatArray& lcoords = gp->giveNaturalCoordinates();
+
+        if (load->giveFormulationType() == Load::FT_Entity) {
+            load->computeValueAt(force, tStep, lcoords, mode);
+        }
+        else {
+            fei->boundaryLocal2Global(globalIPcoords, boundary, lcoords, FEIElementGeometryWrapper(this));
+            load->computeValueAt(force, tStep, globalIPcoords, mode);
+        }
+
+        ///@todo Make sure this part is correct.
+        // We always want the global values in the end, so we might as well compute them here directly:
+        // transform force
+        if (load->giveCoordSystMode() == Load::CST_Global) {
+            // then just keep it in global c.s
+        }
+        else {
+            ///@todo Support this...
+            // transform from local boundary to element local c.s
+            // uncommented since the other (now commented) approach did not work correctly
+            if (this->computeLoadLSToLRotationMatrix(T, boundary, gp)) {
+                force.rotatedWith(T, 'n');
+            }
+            // then to global c.s
+            //if ( this->computeLoadGToLRotationMtrx(T) ) {
+            //    force.rotatedWith(T, 't');
+            //}
+        }
+
+        // Construct n-matrix
+        this->computeSurfaceNMatrix(n, boundary, lcoords); // to allow adaptation on element level
+
+        ///@todo Some way to ask for the thickness at a global coordinate maybe?
+        double thickness = 1.0; // Should be the circumference for axisymm-elements.
+        double dV = thickness * this->computeSurfaceVolumeAround(gp, boundary);
+        answer.plusProduct(n, force, dV);
+        
+        if (load->giveCoordSystMode() == Load::CST_Local) {
+            FloatMatrix transMat, transMatTemp;
+            plate->computeLoadGToLRotationMtrx(transMatTemp);
+            transMat.resize(6, 6);
+            transMat.beTranspositionOf(transMatTemp);
+            
+            FloatArray firstNodeLoads, secondNodeLoads, thirdNodeLoads;
+            firstNodeLoads.resize(6), secondNodeLoads.resize(6), thirdNodeLoads.resize(6);
+            for (int i = 1; i <= 6; i++) {
+                firstNodeLoads.at(i) = answer.at(i);
+                secondNodeLoads.at(i) = answer.at(i + 6);
+                thirdNodeLoads.at(i) = answer.at(i + 12);
+            }
+
+            FloatArray firstNodeLoadsTemp, secondNodeLoadsTemp, thirdNodeLoadsTemp;
+            firstNodeLoadsTemp.resize(6), secondNodeLoadsTemp.resize(6), thirdNodeLoadsTemp.resize(6);
+            firstNodeLoadsTemp.beProductOf(transMat, firstNodeLoads);
+            secondNodeLoadsTemp.beProductOf(transMat, secondNodeLoads);
+            thirdNodeLoadsTemp.beProductOf(transMat, thirdNodeLoads);
+            
+            for (int i = 1; i <= 6; i++) {
+                answer.at(i) = firstNodeLoadsTemp.at(i);
+                answer.at(i + 6) = secondNodeLoadsTemp.at(i);
+                answer.at(i + 12) = thirdNodeLoadsTemp.at(i);
+            }
+        }
+    }
 }
 
 //

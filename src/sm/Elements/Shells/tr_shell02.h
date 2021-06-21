@@ -162,6 +162,7 @@ protected:
     double computeSurfaceVolumeAround( GaussPoint *gp, int iSurf ) override;
     int computeLoadLSToLRotationMatrix( FloatMatrix &answer, int iSurf, GaussPoint *gp ) override;
     //@}
+    void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
     void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep);
     void computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0);
 protected:
