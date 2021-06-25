@@ -77,13 +77,13 @@ public:
     ShellQd41(int n, Domain* d);
     virtual ~ShellQd41() { }
 
-    void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
+    void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) { }
     // Computes B matrix for the plate part of the element at natural coordinates (xi, eta).
     void computeBmatrixPlateAt(double xi, double eta, FloatMatrix& answer);
     void computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer);
     void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
     void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
-    void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
+    void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override { }
     void computeGaussPoints() override;
     bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
     int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }

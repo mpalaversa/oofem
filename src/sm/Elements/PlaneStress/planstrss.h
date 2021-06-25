@@ -95,11 +95,10 @@ public:
     const char *giveClassName() const override { return "PlaneStress2d"; }
     void initializeFrom(InputRecord &ir) override;
 
+protected:
     void computeBmatrixAt(double xi, double eta, FloatMatrix& answer);
     void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int = 1, int = ALL_STRAINS) override;
     void computeBHmatrixAt(GaussPoint* gp, FloatMatrix& answer) override;
-
-protected:
 
     int giveNumberOfIPForMassMtrxIntegration() override { return 4; } 
 };

@@ -70,6 +70,13 @@ protected:
         GlobalMomentTensor
     };
 
+    /**
+    * Transformation Matrix form GtoL(3,3) is stored
+    * at the element level for computation efficiency
+    */
+    FloatMatrix* GtoLRotationMatrix;
+
+    friend class ShellQd41;
 public:
     LinQuad3DPlaneStress(int n, Domain * d);
     virtual ~LinQuad3DPlaneStress();
@@ -93,12 +100,6 @@ public:
     // definition & identification
     const char *giveInputRecordName() const override { return _IFT_LinQuad3DPlaneStress_Name; }
     const char *giveClassName() const override { return "LinQuad3DPlaneStress"; }
-
-    /**
-     * Transformation Matrix form GtoL(3,3) is stored
-     * at the element level for computation efficiency
-     */
-    FloatMatrix* GtoLRotationMatrix;
 };
 } // end namespace oofem
 #endif // linquad3d_planestress_h

@@ -69,6 +69,7 @@ public ZZErrorEstimatorInterface
 protected:
     /// Element geometry approximation
     static FEI2dQuadLin interp_lin;
+    friend class ShellQd41;
 
 public:
     QDKTPlate(int n, Domain * d);
@@ -80,9 +81,6 @@ public:
     MaterialMode giveMaterialMode() override { return _2dPlate; }
     int testElementExtension(ElementExtension ext) override { return ( ( ( ext == Element_EdgeLoadSupport ) || ( ext == Element_SurfaceLoadSupport ) ) ? 1 : 0 ); }
 
-    void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int = 1, int = ALL_STRAINS) override;
-    void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
-
     /**
      * @name Surface load support
      */
@@ -92,19 +90,18 @@ public:
     void computeSurfaceNMatrixAt(FloatMatrix& answer, int iSurf, GaussPoint* gp);
     void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
     int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override;
-    void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
     //@}
 protected:
     void computeGaussPoints() override;
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override;
-
+    void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int = 1, int = ALL_STRAINS) override;
     void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;
-
+    void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
 
     virtual void giveNodeCoordinates(double &x1, double &x2, double &x3, double &x4,
                                      double &y1, double &y2, double &y3, double &y4,
                                      double &z1, double &z2, double &z3, double &z4);
-
+    void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
     /**
      * @name Edge load support
      */

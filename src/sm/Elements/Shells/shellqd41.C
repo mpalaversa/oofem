@@ -51,106 +51,6 @@ ShellQd41 ::ShellQd41(int n, Domain* aDomain) : NLStructuralElement(n, aDomain)
     membrane = new LinQuad3DPlaneStress(n, aDomain);
     plate = new QDKTPlate(n, aDomain);
 }
-/*
-void
-ShellQd41::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int li, int ui)
-{
-    FloatMatrix BMatrixPlate;
-    computeBmatrixPlateAt(gp, BMatrixPlate);
-
-    FloatMatrix BMatrixMembrane;
-    membrane->computeBmatrixAt(gp, BMatrixMembrane, li, ui);
-
-    // Sets order of matrix B for ShellQd41 and all terms to 0.
-    answer.resize(3, 24);
-    answer.zero();
-    // Set values for terms in the first row.
-    answer.at(1, 1) = BMatrixMembrane(0, 0);
-    answer.at(1, 3) = BMatrixPlate(0, 0);
-    answer.at(1, 4) = BMatrixPlate(0, 1);
-    answer.at(1, 5) = BMatrixPlate(0, 2);
-    answer.at(1, 7) = BMatrixMembrane(0, 2);
-    answer.at(1, 9) = BMatrixPlate(0, 3);
-    answer.at(1, 10) = BMatrixPlate(0, 4);
-    answer.at(1, 11) = BMatrixPlate(0, 5);
-    answer.at(1, 13) = BMatrixMembrane(0, 4);
-    answer.at(1, 15) = BMatrixPlate(0, 6);
-    answer.at(1, 16) = BMatrixPlate(0, 7);
-    answer.at(1, 17) = BMatrixPlate(0, 8);
-    answer.at(1, 19) = BMatrixMembrane(0, 6);
-    answer.at(1, 21) = BMatrixPlate(0, 9);
-    answer.at(1, 22) = BMatrixPlate(0, 10);
-    answer.at(1, 23) = BMatrixPlate(0, 11);
-    // Set values for terms in the second row.
-    answer.at(2, 2) = BMatrixMembrane(1, 1);
-    answer.at(2, 3) = BMatrixPlate(1, 0);
-    answer.at(2, 4) = BMatrixPlate(1, 1);
-    answer.at(2, 5) = BMatrixPlate(1, 2);
-    answer.at(2, 8) = BMatrixMembrane(1, 3);
-    answer.at(2, 9) = BMatrixPlate(1, 3);
-    answer.at(2, 10) = BMatrixPlate(1, 4);
-    answer.at(2, 11) = BMatrixPlate(1, 5);
-    answer.at(2, 14) = BMatrixMembrane(1, 5);
-    answer.at(2, 15) = BMatrixPlate(1, 6);
-    answer.at(2, 16) = BMatrixPlate(1, 7);
-    answer.at(2, 17) = BMatrixPlate(1, 8);
-    answer.at(2, 20) = BMatrixMembrane(1, 7);
-    answer.at(2, 21) = BMatrixPlate(1, 9);
-    answer.at(2, 22) = BMatrixPlate(1, 10);
-    answer.at(2, 23) = BMatrixPlate(1, 11);
-    // Set values for terms in the third row.
-    answer.at(3, 1) = BMatrixMembrane(2, 0);
-    answer.at(3, 2) = BMatrixMembrane(2, 1);
-    answer.at(3, 3) = BMatrixPlate(2, 0);
-    answer.at(3, 4) = BMatrixPlate(2, 1);
-    answer.at(3, 5) = BMatrixPlate(2, 2);
-    answer.at(3, 7) = BMatrixMembrane(2, 2);
-    answer.at(3, 8) = BMatrixMembrane(2, 3);
-    answer.at(3, 9) = BMatrixPlate(2, 3);
-    answer.at(3, 10) = BMatrixPlate(2, 4);
-    answer.at(3, 11) = BMatrixPlate(2, 5);
-    answer.at(3, 13) = BMatrixMembrane(2, 4);
-    answer.at(3, 14) = BMatrixMembrane(2, 5);
-    answer.at(3, 15) = BMatrixPlate(2, 6);
-    answer.at(3, 16) = BMatrixPlate(2, 7);
-    answer.at(3, 17) = BMatrixPlate(2, 8);
-    answer.at(3, 19) = BMatrixMembrane(2, 6);
-    answer.at(3, 20) = BMatrixMembrane(2, 7);
-    answer.at(3, 21) = BMatrixPlate(2, 9);
-    answer.at(3, 22) = BMatrixPlate(2, 10);
-    answer.at(3, 23) = BMatrixPlate(2, 11);
-}
-*/
-
-void
-ShellQd41::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int li, int ui)
-{
-    FloatMatrix BMatrixMembrane;
-    membrane->computeBmatrixAt(gp, BMatrixMembrane, li, ui);
-
-    // Sets order of matrix B for ShellQd41 and all terms to 0.
-    answer.resize(3, 24);
-    answer.zero();
-    // Set values for terms in the first row.
-    answer.at(1, 1) = BMatrixMembrane(0, 0);
-    answer.at(1, 7) = BMatrixMembrane(0, 2);
-    answer.at(1, 13) = BMatrixMembrane(0, 4);
-    answer.at(1, 19) = BMatrixMembrane(0, 6);
-    // Set values for terms in the second row.
-    answer.at(2, 2) = BMatrixMembrane(1, 1);
-    answer.at(2, 8) = BMatrixMembrane(1, 3);
-    answer.at(2, 14) = BMatrixMembrane(1, 5);
-    answer.at(2, 20) = BMatrixMembrane(1, 7);
-    // Set values for terms in the third row.
-    answer.at(3, 1) = BMatrixMembrane(2, 0);
-    answer.at(3, 2) = BMatrixMembrane(2, 1);
-    answer.at(3, 7) = BMatrixMembrane(2, 2);
-    answer.at(3, 8) = BMatrixMembrane(2, 3);
-    answer.at(3, 13) = BMatrixMembrane(2, 4);
-    answer.at(3, 14) = BMatrixMembrane(2, 5);
-    answer.at(3, 19) = BMatrixMembrane(2, 6);
-    answer.at(3, 20) = BMatrixMembrane(2, 7);
-}
 
 void
 ShellQd41::computeBmatrixPlateAt(double ksi, double eta, FloatMatrix& answer)
@@ -488,15 +388,6 @@ ShellQd41::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* lo
 }
 
 void
-ShellQd41::computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep)
-{   
-    answer.add(this->giveStructuralCrossSection()->giveStiffnessMatrix_PlaneStress(rMode, gp, tStep));
-    FloatMatrix DPlate;
-    DPlate.beSubMatrixOf(this->giveStructuralCrossSection()->give2dPlateStiffMtrx(rMode, gp, tStep), 1, 3, 1, 3);
-    answer.add(DPlate);
-}
-
-void
 ShellQd41::computeGaussPoints()
 // Sets up the array containing the four Gauss points of the receiver.
 {
@@ -514,7 +405,7 @@ ShellQd41::computeGtoLRotationMatrix(FloatMatrix& answer)
 // for one node (r written transposed): {u,v,w,R_u,R_v,R_w} = T * {u,v,w,R_u,R_v,R_w}
 {
     if (membrane->GtoLRotationMatrix == NULL)
-        membrane->computeGtoLRotationMatrix();;
+        membrane->computeGtoLRotationMatrix();
 
     answer.resize(24, 24);
     answer.zero();
@@ -538,7 +429,7 @@ ShellQd41::computeMembraneStrainVectorAt(FloatArray& answer, double xi, double e
     switch (outputType) {
     case OutputType::Standard:
         this->computeVectorOf(VM_Total, tStep, u);
-        /* This is to be uncommented once adapted for ShellQd41 (if necessary).
+        /*
         if (initialDisplacements) {
             u.subtract(*initialDisplacements);
         }*/
@@ -981,17 +872,7 @@ ShellQd41::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const Floa
     this->giveInterpolation()->boundarySurfaceEvalN(n_vec, boundaryID, lcoords, *membrane->giveCellGeometryWrapper());
     answer.beNMatrixOf(n_vec, 6);
 }
-/*
-double
-ShellQd41::computeSurfaceVolumeAround(GaussPoint* gp, int iSurf)
-{
-    FEInterpolation* fei = this->giveInterpolation();
-    const FloatArray& lcoords = gp->giveNaturalCoordinates();
-    double J = fei->boundarySurfaceGiveTransformationJacobian(iSurf, lcoords, *membrane->giveCellGeometryWrapper());
 
-    return (gp->giveWeight() * J);
-}
-*/
 std::vector< FloatArray >
 ShellQd41::giveNodeCoordinates()
 {
