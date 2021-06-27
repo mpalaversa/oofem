@@ -599,7 +599,6 @@ ShellQd41::computePlateStrainVectorAt(FloatArray& answer, double xi, double eta,
     switch (outputType) {
     case OutputType::Standard:
         computePlateCurvaturesAt(curvatures, xi, eta, tStep);
-        curvatures.at(3) = 2 * curvatures.at(3);
         answer.beScaled(outputAtZ, curvatures);
         break;
     case OutputType::Principal:
