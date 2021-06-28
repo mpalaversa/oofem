@@ -577,7 +577,6 @@ void
 DKTPlate3d::computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep, double outputAtZ) {
     FloatArray curvatures;
     computeCurvaturesAt(curvatures, 0.33333, 0.33333, tStep);
-    curvatures.at(3) = 2 * curvatures.at(3);
     answer.beScaled(outputAtZ, curvatures);
 }
 
