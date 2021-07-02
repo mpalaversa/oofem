@@ -5,6 +5,7 @@ set (sm_element
     Elements/nlstructuralelement.C
     Elements/structural2delement.C
     Elements/structural3delement.C
+	Elements/qdelement.C
     Elements/3D/space3delementevaluator.C
     Elements/3D/lspace.C 
     Elements/3D/lspacebb.C
@@ -46,6 +47,8 @@ set (sm_element
     Elements/Plates/qdkt.C
     Elements/Plates/quad1mindlin.C
     Elements/Plates/dkt3d.C
+	Elements/Plates/qdplate.C
+	Elements/Plates/pltqd4dkt.C
     Elements/Shells/rershell.C 
     Elements/Shells/tr_shell01.C 
     Elements/Shells/tr_shell02.C 
@@ -57,6 +60,8 @@ set (sm_element
     Elements/Shells/tr2shell7xfem.C
     Elements/Shells/mitc4.C
 	Elements/Shells/shellqd41.C
+	Elements/Shells/shellqd42.C
+	Elements/Shells/qdshell.C
     Elements/Axisymmetry/q4axisymm.C
     Elements/Axisymmetry/axisymm3d.C 
     Elements/Axisymmetry/l4axisymm.C
@@ -79,6 +84,9 @@ set (sm_element
     Elements/PlaneStress/basicelement.C
     Elements/PlaneStress/trplanestressrotallman3d.C
     Elements/PlaneStress/linquad3d_planestress.C
+	Elements/PlaneStress/qdmembrane.C
+	Elements/PlaneStress/plnstrssqd1.C
+	Elements/PlaneStress/plnstrssqd1rot.C
 	Elements/Fsb/FsbLinearStatic.C
     Elements/Fsb/FsbLinearStatic2D.C
     Elements/Fsb/FsbPlaneStress.C
