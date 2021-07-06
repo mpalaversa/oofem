@@ -39,6 +39,7 @@
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
 #include "load.h"
+#include "sm/Materials/structuralms.h"
 
 namespace oofem {
 REGISTER_Element(ShellQd41);
@@ -746,7 +747,7 @@ ShellQd41::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tSt
         answer.zero();
         return;
     }
-
+    FloatArray membraneStrains, plateStrains;
     switch (outputCategory) {
     case OutputCategory::Membrane:
         computeMembraneStrainVectorAt(answer, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
@@ -755,7 +756,11 @@ ShellQd41::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tSt
         computePlateStrainVectorAt(answer, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
         break;
     case OutputCategory::Combined:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        computeMembraneStrainVectorAt(membraneStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+        computePlateStrainVectorAt(plateStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+        membraneStrains.add(plateStrains);
+        answer.resize(3);
+        answer = membraneStrains;
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
@@ -789,6 +794,7 @@ ShellQd41::computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep) {
 
 void
 ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) {
+    FloatArray membraneStrains, plateStrains;
     switch (outputCategory) {
     case OutputCategory::Membrane:
         answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep);
@@ -797,7 +803,9 @@ ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, Gau
         answer = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, gp, tStep);
         break;
     case OutputCategory::Combined:
-        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        computeMembraneStrainVectorAt(membraneStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+        computePlateStrainVectorAt(plateStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+        answer = this->giveStructuralCrossSection()->giveRealStress_Shell(membraneStrains, plateStrains, gp, tStep);
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
@@ -807,7 +815,7 @@ ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, Gau
 
 void
 ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
-    FloatArray membraneStrains, plateStrains, membraneStresses, plateStresses;
+    FloatArray membraneStrains, plateStrains, plateStresses;
     
     switch (outputCategory) {
     case OutputCategory::Membrane:
@@ -816,26 +824,11 @@ ShellQd41::computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, co
     case OutputCategory::Plate:
         plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         answer.resize(6);
-        for (int i = 1; i <= 6; i++) {
-            if (i < 4)
-                answer.at(i) = plateStresses.at(i);
-            else
-                answer.at(i) = -plateStresses.at(i - 3);
-        }
         break;
     case OutputCategory::Combined:
         computeMembraneStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
-        membraneStresses = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);;
         computePlateStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
-        plateStresses = this->giveStructuralCrossSection()->giveRealStress_KirchhoffPlate(plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
-
-        answer.resize(6);
-        for (int i = 1; i <= 6; i++) {
-            if (i < 4)
-                answer.at(i) = plateStresses.at(i) + membraneStresses.at(i);
-            else
-                answer.at(i) = -plateStresses.at(i - 3) + membraneStresses.at(i - 3);
-        }
+        answer = this->giveStructuralCrossSection()->giveRealStress_Shell(membraneStrains, plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
@@ -962,6 +955,252 @@ ShellQd41::initializeFrom(InputRecord& ir)
     default:
         outputType = OutputType::Standard;
         break;
+    }
+}
+
+void
+ShellQd41::printOutputAt(FILE* file, TimeStep* tStep)
+{
+    FloatArray v;
+    fprintf(file, "element %d (%8d):\n", this->giveLabel(), number);
+    int nPointsXY{ 0 }, nPointsZ{ 0 };
+    switch (outputAtXY)
+    {
+    case OutputLocationXY::GaussPoints:
+        nPointsXY = giveIntegrationRulesArray()[0]->giveNumberOfIntegrationPoints();
+        break;
+    case OutputLocationXY::Centroid:
+        nPointsXY = 1;
+        break;
+    case OutputLocationXY::Corners:
+        nPointsXY = giveNumberOfDofManagers();
+        break;
+    case OutputLocationXY::All:
+        nPointsXY = giveIntegrationRulesArray()[0]->giveNumberOfIntegrationPoints() + giveNumberOfDofManagers() + 1;
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. The following options for output location at XY plane can be selected for ShellQd41 element: 'All', 'Centroid', 'Gauss points' and 'Corners'.");
+        break;
+    }
+
+    FloatArray strains, stresses;
+    switch (outputCategory)
+    {
+    case OutputCategory::Membrane:
+        nPointsZ = 1;
+        strains.resize(3);
+        stresses.resize(3);
+        break;
+    case OutputCategory::Plate:
+        nPointsZ = 1;
+        strains.resize(3);
+        stresses.resize(3);
+        break;
+    case OutputCategory::Combined:
+        nPointsZ = 2;
+        strains.resize(6);
+        stresses.resize(6);
+        break;
+    case OutputCategory::All:
+        nPointsZ = 2;
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. The following options for output location at z can be selected for ShellQd41 element: 'All', 'Membrane', 'Plate' and 'Combined'.");
+        break;
+    }
+
+    StructuralMaterialStatus* ms;
+    GaussPoint *gp;
+    for (int i = 0; i < nPointsXY; i++) {
+        switch (outputAtXY)
+        {
+        case OutputLocationXY::GaussPoints:
+            fprintf(file, "  GP %d :", i + 1);
+            gp = integrationRulesArray[0]->getIntegrationPoint(i);
+            ms = static_cast<StructuralMaterialStatus*>(gp->giveMaterialStatus());
+
+            /*
+            fprintf(file, "  forces     ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellForceTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          moments    ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellMomentTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+            
+            fprintf(file, "\n          strains    ");
+            for (auto& val : ms->giveStrainVector()) {
+                fprintf(file, " %.4e", val);
+            }
+            
+            fprintf(file, "\n          curvatures ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_CurvatureTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }*/
+
+            if (nPointsZ == 1) {
+                if (outputCategory == OutputCategory::Plate) {
+                    fprintf(file, "\n          at z = %f :\n", outputAtZ);
+
+
+                    fprintf(file, "                      strains    ");
+                    for (auto& val : ms->giveStrainVector()) {
+                        fprintf(file, " %.4e", val);
+                    }
+
+                    fprintf(file, "\n                      stresses   ");
+                    for (auto& val : ms->giveStressVector()) {
+                        fprintf(file, " %.4e", val);
+                    }
+                }
+                else {
+                    fprintf(file, "\n          strains    ");
+                    for (auto& val : ms->giveStrainVector())
+                        fprintf(file, " %.4e", val);
+
+                    fprintf(file, "\n          stresses    ");
+                    for (auto& val : ms->giveStressVector())
+                        fprintf(file, " %.4e", val);
+                }
+            }
+            else {
+                strains = ms->giveStrainVector();
+                stresses = ms->giveStressVector();
+                for (int j = 0; j < nPointsZ; j++) {
+                    if (j == 0) {
+                        fprintf(file, "\n           at z = %f :\n", outputAtZ);
+
+                        fprintf(file, "                      strains    ");
+                        for (int k = 1; k <= 6; k++) {
+                            fprintf(file, " %.4e", strains.at(k));
+                        }
+
+                        fprintf(file, "\n                      stresses    ");
+                        for (int k = 1; k <= 6; k++) {
+                            fprintf(file, " %.4e", stresses.at(k));
+                        }
+                    }
+                    else {
+                        fprintf(file, "\n           at z = -%f :\n", outputAtZ);
+
+                        fprintf(file, "                      strains    ");
+                        for (int k = 7; k <= 12; k++) {
+                            fprintf(file, " %.4e", strains.at(k));
+                        }
+
+                        fprintf(file, "\n                      stresses   ");
+                        for (int k = 7; k <= 12; k++) {
+                            fprintf(file, " %.4e", stresses.at(k));
+                        }
+                    }
+                }
+            }
+            
+            fprintf(file, "\n");
+            break;
+        case OutputLocationXY::Centroid:
+            fprintf(file, "  Centroid");
+            gp = integrationRulesArray[0]->getIntegrationPoint(0);
+            ms = static_cast<StructuralMaterialStatus*>(gp->giveMaterialStatus());
+
+            /*
+            fprintf(file, "  forces     ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellForceTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          moments    ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellMomentTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          strains    ");
+            for (auto& val : ms->giveStrainVector()) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          curvatures ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_CurvatureTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }*/
+
+            if (nPointsZ == 1) {
+                if (outputCategory == OutputCategory::Plate) {
+                    fprintf(file, "\n          at z = %f :\n", outputAtZ);
+
+
+                    fprintf(file, "                      strains    ");
+                    for (auto& val : ms->giveStrainVector()) {
+                        fprintf(file, " %.4e", val);
+                    }
+
+                    fprintf(file, "\n                      stresses   ");
+                    for (auto& val : ms->giveStressVector()) {
+                        fprintf(file, " %.4e", val);
+                    }
+                }
+                else {
+                    fprintf(file, "\n          strains    ");
+                    for (auto& val : ms->giveStrainVector())
+                        fprintf(file, " %.4e", val);
+
+                    fprintf(file, "\n          stresses    ");
+                    for (auto& val : ms->giveStressVector())
+                        fprintf(file, " %.4e", val);
+                }
+            }
+            else {
+                strains = ms->giveStrainVector();
+                stresses = ms->giveStressVector();
+                for (int j = 0; j < nPointsZ; j++) {
+                    if (j == 0) {
+                        fprintf(file, "\n          at z = %f :\n", outputAtZ);
+                        
+                        fprintf(file, "                      strains    ");
+                        for (int k = 1; k <= 6; k++) {
+                            fprintf(file, " %.4e", strains.at(k));
+                        }
+
+                        fprintf(file, "\n                      stresses    ");
+                        for (int k = 1; k <= 6; k++) {
+                            fprintf(file, " %.4e", stresses.at(k));
+                        }
+                    }
+                    else {
+                        fprintf(file, "\n          at z = -%f :\n", outputAtZ);
+
+                        fprintf(file, "                      strains    ");
+                        for (int k = 7; k <= 12; k++) {
+                            fprintf(file, " %.4e", strains.at(k));
+                        }
+
+                        fprintf(file, "\n                      stresses   ");
+                        for (int k = 7; k <= 12; k++) {
+                            fprintf(file, " %.4e", stresses.at(k));
+                        }
+                    }
+                }
+            }
+
+            fprintf(file, "\n");
+            break;
+        case OutputLocationXY::Corners:
+            fprintf(file, "  Node %d :", i + 1);
+            break;
+        case OutputLocationXY::All:
+            if(i<4)
+                fprintf(file, "  GP %d :", i + 1);
+            else if(i>=4 && i<8)
+                fprintf(file, "  Node %d :", i - 3);
+            else
+                fprintf(file, "  Centroid :");
+            break;
+        default:
+            OOFEM_ERROR("Something went wrong. The following options for output location at XY plane can be selected for ShellQd41 element: 'All', 'Centroid', 'Gauss points' and 'Corners'.");
+            break;
+        }
     }
 }
 

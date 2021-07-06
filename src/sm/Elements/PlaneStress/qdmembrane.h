@@ -54,6 +54,11 @@ namespace oofem {
 	public:
 		QdMembrane(int n, Domain* d);
 		virtual ~QdMembrane() {}
+
+		virtual void giveDofManDofIDMask(int inode, IntArray&) const override;
+		virtual void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
+		void postInitialize() override;
+		//void printOutputAt(FILE* file, TimeStep* tStep) override;
 	};
 }
 #endif

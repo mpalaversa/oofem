@@ -80,7 +80,25 @@ FloatArrayF<3>
 SimpleCrossSection :: giveRealStress_PlaneStress(const FloatArrayF<3> &strain, GaussPoint *gp, TimeStep *tStep) const
 {
     auto mat = dynamic_cast< StructuralMaterial * >( this->giveMaterial(gp) );
-    return mat->giveRealStressVector_PlaneStress(strain, gp, tStep);
+    FloatArrayF<3> stress = mat->giveRealStressVector_PlaneStress(strain, gp, tStep);
+
+    FloatArrayF<6> strainsToSave, stressesToSave;
+    for (int i = 1; i <= 3; i++) {
+        if (i < 3) {
+            strainsToSave.at(i) = strain.at(i);
+            stressesToSave.at(i) = stress.at(i);
+        }
+        else {
+            strainsToSave.at(i + 3) = strain.at(i);
+            stressesToSave.at(i + 3) = stress.at(i);
+        }
+    }
+
+    auto status = static_cast<StructuralMaterialStatus*>(mat->giveStatus(gp));
+    status->letTempStrainVectorBe(strainsToSave);
+    status->letTempStressVectorBe(stressesToSave);
+
+    return stress;
 }
 
 FloatArrayF<3>
@@ -90,11 +108,66 @@ SimpleCrossSection::giveRealStress_KirchhoffPlate(const FloatArrayF<3>& strain, 
     auto mat = dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp));
     stress = mat->giveRealStressVector_KirchhoffPlate(strain, gp, tStep, dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp))->givePlaneStressStiffMtrx(ElasticStiffness, gp, tStep));
 
+    FloatArrayF<6> strainsToSave, stressesToSave;
+    for (int i = 1; i <= 3; i++) {
+        if (i < 3) {
+            strainsToSave.at(i) = strain.at(i);
+            stressesToSave.at(i) = stress.at(i);
+        }
+        else {
+            strainsToSave.at(i + 3) = strain.at(i);
+            stressesToSave.at(i + 3) = stress.at(i);
+        }
+    }
+
     auto status = static_cast<StructuralMaterialStatus*>(mat->giveStatus(gp));
-    status->letTempStrainVectorBe(strain);
-    status->letTempStressVectorBe(stress);
+    status->letTempStrainVectorBe(strainsToSave);
+    status->letTempStressVectorBe(stressesToSave);
     
     return stress;
+}
+
+FloatArrayF<6>
+SimpleCrossSection::giveRealStress_Shell(const FloatArrayF<3>& membraneStrains, const FloatArrayF<3>& plateStrains, GaussPoint* gp, TimeStep* tStep) const
+{
+    auto mat = dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp));
+    auto status = static_cast<StructuralMaterialStatus*>(mat->giveStatus(gp));
+
+    FloatArrayF<3> membraneStresses, plateStresses;
+    membraneStresses = giveRealStress_PlaneStress(membraneStrains, gp, tStep);
+    plateStresses = giveRealStress_KirchhoffPlate(plateStrains, gp, tStep);
+
+    FloatArrayF<6> shellStresses, shellStrains;
+    for (int i = 1; i <= 6; i++) {
+        if (i < 4){
+            shellStresses.at(i) = plateStresses.at(i) + membraneStresses.at(i);
+            shellStrains.at(i) = plateStrains.at(i) + membraneStrains.at(i);
+        }
+        else {
+            shellStresses.at(i) = -plateStresses.at(i - 3) + membraneStresses.at(i - 3);
+            shellStrains.at(i) = -plateStrains.at(i - 3) + membraneStrains.at(i - 3);
+        }
+    }
+
+    FloatArrayF<12> strainsToSave, stressesToSave;
+    for (int i = 1; i <= 6; i++) {
+        if (i < 3) {
+            strainsToSave.at(i) = shellStrains.at(i);
+            stressesToSave.at(i) = shellStresses.at(i);
+        }
+        else if (i >= 3 && i < 6) {
+            strainsToSave.at(i+3) = shellStrains.at(i);
+            stressesToSave.at(i+3) = shellStresses.at(i);
+        }
+        else {
+            strainsToSave.at(i + 6) = shellStrains.at(i);
+            stressesToSave.at(i + 6) = shellStresses.at(i);
+        }
+    }
+    status->letTempStrainVectorBe(strainsToSave);
+    status->letTempStressVectorBe(stressesToSave);
+
+    return shellStresses;
 }
 
 FloatArrayF<1>

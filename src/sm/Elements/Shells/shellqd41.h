@@ -120,6 +120,7 @@ public:
     void getStressesTopBottom(FloatArray& answer, TimeStep* tStep);
     void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
     void initializeFrom(InputRecord& ir) override;
+    void printOutputAt(FILE* file, TimeStep* tStep) override;
     void setCrossSection(int csIndx) override;
     void updateInternalState(TimeStep* tStep) override;
     void updateLocalNumbering(EntityRenumberingFunctor& f) override;

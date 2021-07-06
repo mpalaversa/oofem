@@ -40,6 +40,32 @@ REGISTER_Element(QdMembrane);
 
 QdMembrane :: QdMembrane(int n, Domain* aDomain) : QdElement(n, aDomain)
 {
-	// Constructor.
+	outputCategory = OutputCategory::Membrane;
 }
+
+void
+QdMembrane::giveDofManDofIDMask(int inode, IntArray& answer) const
+{
+	answer = { D_u, D_v };
+}
+
+void
+QdMembrane::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
+{
+    if (iSurf == 1 || iSurf == 2) {
+        answer.enumerate(8);
+    }
+    else {
+        OOFEM_ERROR("wrong surface number");
+    }
+}
+
+void
+QdMembrane::postInitialize()
+{
+    // Element must be created before giveNumberOfNodes can be called
+    StructuralElement::postInitialize();
+    this->numberOfDofMans = this->giveNumberOfNodes();
+}
+
 }
