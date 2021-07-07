@@ -45,17 +45,22 @@
 #include <vector>
 #include <memory>
 
-#define _IFT_QdShell_Name "qdshell"
-
 namespace oofem {
 	class QdShell : public QdElement
 	{
-	public:
-		QdShell(int n, Domain* d);
-		virtual ~QdShell() {}
+    protected:
+        // Enumeration for output category of strains and stresses.
+        enum class OutputCategory {
+            Membrane,
+            Plate,
+            Combined,
+            All
+        };
 
-		const char* giveClassName() const override { return "QdShell"; }
-		const char* giveInputRecordName() const override { return _IFT_QdShell_Name; }
+        OutputCategory outputCategory;
+
+    public:
+        QdShell(int n, Domain* d);
 	};
 }
 #endif

@@ -48,14 +48,29 @@
 #define _IFT_PlnStrssQd1_Name "plnstrssqd1"
 
 namespace oofem {
+	class FEI2dQuadLin;
+
 	class PlnStrssQd1 : public QdMembrane
 	{
+	protected:
+		static FEI2dQuadLin interpolation;
+
 	public:
 		PlnStrssQd1(int n, Domain* d);
 		virtual ~PlnStrssQd1() {}
 
+		bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
+		bool giveRotationMatrix(FloatMatrix& answer) override;
+		void giveDofManDofIDMask(int inode, IntArray&) const override;
+		FEInterpolation* giveInterpolation() const override;
+		MaterialMode giveMaterialMode() override { return _PlaneStress; }
+
+		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override;
 		const char* giveClassName() const override { return "PlnStrssQd1"; }
 		const char* giveInputRecordName() const override { return _IFT_PlnStrssQd1_Name; }
+
+		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(8); }
 	};
 }
 #endif

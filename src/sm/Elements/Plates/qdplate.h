@@ -45,16 +45,11 @@
 #include <vector>
 #include <memory>
 
-#define _IFT_QdPlate_Name "qdplate"
-
 namespace oofem {
 	class QdPlate : public QdElement
 	{
 	public:
 		QdPlate(int n, Domain* d);
-		virtual ~QdPlate() {}
-		const char* giveClassName() const override { return "QdPlate"; }
-		const char* giveInputRecordName() const override { return _IFT_QdPlate_Name; }
 	};
 }
 #endif

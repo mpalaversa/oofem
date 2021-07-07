@@ -38,14 +38,18 @@
 #include "gausspoint.h"
 
 namespace oofem {
-REGISTER_Element(QdElement);
-
 QdElement::QdElement(int n, Domain* aDomain) : NLStructuralElement(n, aDomain)
 {
-    OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;
-    OutputType outputType = OutputType::Standard;
+        outputAtXY = OutputLocationXY::GaussPoints;
+        outputType = OutputType::Standard;
 
-    GtoLRotationMatrix->resize(3, 3);
+        GtoLRotationMatrix = NULL;
+        cellGeometryWrapper = NULL;
+}
+
+void
+QdElement::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx, int upperIndx) {
+    computeBmatrixAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), answer);
 }
 
 const FloatMatrix*
@@ -62,7 +66,7 @@ QdElement::computeGtoLRotationMatrix()
 {
     if (GtoLRotationMatrix == NULL) {
         FloatArray e1, e2, e3, help;
-
+        
         // compute e1' = [N2-N1]  and  help = [N3-N1]
         e1.beDifferenceOf(this->giveNode(2)->giveCoordinates(), this->giveNode(1)->giveCoordinates());
         help.beDifferenceOf(this->giveNode(3)->giveCoordinates(), this->giveNode(1)->giveCoordinates());
@@ -78,7 +82,6 @@ QdElement::computeGtoLRotationMatrix()
         // now from e3' x e1' compute e2'
         e2.beVectorProductOf(e3, e1);
 
-        //
         GtoLRotationMatrix = new FloatMatrix(3, 3);
 
         for (int i = 1; i <= 3; i++) {
@@ -127,6 +130,15 @@ QdElement::computeLocalNodalCoordinates(std::vector< FloatArray >& lxy)
     }
 }
 
+int
+QdElement::computeNumberOfDofs()
+{
+    ///@todo move one hiearchy up and generalize
+    IntArray dofIdMask;
+    this->giveDofManDofIDMask(-1, dofIdMask); // ok for standard elements
+    return this->giveInterpolation()->giveNumberOfNodes() * dofIdMask.giveSize();
+}
+
 void
 QdElement::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords)
 {
@@ -149,6 +161,10 @@ QdElement::computeSurfaceVolumeAround(GaussPoint* gp, int iSurf)
 FEICellGeometry*
 QdElement::giveCellGeometryWrapper()
 {
+    if (!cellGeometryWrapper) {
+        cellGeometryWrapper = new FEIElementGeometryWrapper(this);
+    }
+
     if (cellGeometryWrapper) {
         return cellGeometryWrapper;
     }
@@ -189,7 +205,7 @@ QdElement::updateInternalState(TimeStep* tStep)
         break;
     case OutputLocationXY::Centre:
         this->computeStrainVectorAt(strain, 0.0, 0.0, tStep);
-        this->computeStressVectorAt(stress, 0.0, 0.0, tStep, strain);
+        this->computeStressVector(stress, strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     case OutputLocationXY::Corners:
         OOFEM_ERROR("Not implemented for this element");

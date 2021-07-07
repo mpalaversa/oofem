@@ -42,4 +42,10 @@ PlnStrssQd1Rot :: PlnStrssQd1Rot(int n, Domain* aDomain) : QdMembrane(n, aDomain
 {
 	// Constructor.
 }
+
+void
+PlnStrssQd1Rot::giveDofManDofIDMask(int inode, IntArray& answer) const
+{
+	answer = { D_u, D_v, D_w, R_w }; // Does the plane R_w rotation transform into all three rotations in space?
+}
 }

@@ -46,19 +46,24 @@
 #include <vector>
 #include <memory>
 
-#define _IFT_QdMembrane_Name "qdmembrane"
-
 namespace oofem {
 	class QdMembrane : public QdElement
 	{
 	public:
 		QdMembrane(int n, Domain* d);
-		virtual ~QdMembrane() {}
 
-		virtual void giveDofManDofIDMask(int inode, IntArray&) const override;
+		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
+		void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
+		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
+		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
+		double computeVolumeAround(GaussPoint* gp) override;
 		virtual void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
+		//void initializeFrom(InputRecord& ir) override;
 		void postInitialize() override;
-		//void printOutputAt(FILE* file, TimeStep* tStep) override;
+		void printOutputAt(FILE* file, TimeStep* tStep) override;
+
+	protected:
+		void computeGaussPoints() override;
 	};
 }
 #endif

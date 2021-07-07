@@ -54,8 +54,18 @@ namespace oofem {
 		PlnStrssQd1Rot(int n, Domain* d);
 		virtual ~PlnStrssQd1Rot() {}
 
+		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
+		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override { }
+		void giveDofManDofIDMask(int inode, IntArray&) const override;
+		MaterialMode giveMaterialMode() override { return _PlaneStress; }
+
 		const char* giveClassName() const override { return "PlnStrssQd1Rot"; }
 		const char* giveInputRecordName() const override { return _IFT_PlnStrssQd1Rot_Name; }
+		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
+		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
+
+		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(16); answer.zero(); }
 	};
 }
 #endif

@@ -36,10 +36,8 @@
 #include "classfactory.h"
 
 namespace oofem {
-REGISTER_Element(QdShell);
-
-QdShell :: QdShell(int n, Domain* aDomain) : QdElement(n, aDomain)
-{
-	// Constructor.
-}
+	QdShell::QdShell(int n, Domain* aDomain) : QdElement(n, aDomain)
+	{
+		outputCategory = OutputCategory::Combined;
+	}
 }

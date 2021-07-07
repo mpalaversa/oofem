@@ -36,10 +36,8 @@
 #include "classfactory.h"
 
 namespace oofem {
-REGISTER_Element(QdPlate);
+    QdPlate::QdPlate(int n, Domain* aDomain) : QdElement(n, aDomain)
+    {
 
-QdPlate :: QdPlate(int n, Domain* aDomain) : QdElement(n, aDomain)
-{
-	// Constructor.
-}
+    }
 }

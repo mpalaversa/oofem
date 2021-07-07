@@ -54,8 +54,16 @@ namespace oofem {
 		PltQd4DKT(int n, Domain* d);
 		virtual ~PltQd4DKT() {}
 
+		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
+		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override { }
+
 		const char* giveClassName() const override { return "PltQd4DKT"; }
 		const char* giveInputRecordName() const override { return _IFT_PltQd4DKT_Name; }
+		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
+		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
+
+		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(12); }
 	};
 }
 #endif

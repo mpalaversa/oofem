@@ -54,8 +54,16 @@ namespace oofem {
 		ShellQd42(int n, Domain* d);
 		virtual ~ShellQd42() {}
 
+		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
+		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override { }
+
 		const char* giveClassName() const override { return "ShellQd42"; }
 		const char* giveInputRecordName() const override { return _IFT_ShellQd42_Name; }
+		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
+		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
+
+		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(24); }
 	};
 }
 #endif

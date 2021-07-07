@@ -33,20 +33,88 @@
  */
  
 #include "sm/Elements/PlaneStress/qdmembrane.h"
+
 #include "classfactory.h"
+#include "gaussintegrationrule.h"
+#include "gausspoint.h"
+#include "sm/Materials/structuralms.h"
+#include "sm/CrossSections/structuralcrosssection.h"
 
 namespace oofem {
-REGISTER_Element(QdMembrane);
-
-QdMembrane :: QdMembrane(int n, Domain* aDomain) : QdElement(n, aDomain)
+QdMembrane::QdMembrane(int n, Domain* aDomain) : QdElement(n, aDomain)
 {
-	outputCategory = OutputCategory::Membrane;
+
 }
 
 void
-QdMembrane::giveDofManDofIDMask(int inode, IntArray& answer) const
+QdMembrane::computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep)
 {
-	answer = { D_u, D_v };
+    answer = this->giveStructuralCrossSection()->giveStiffnessMatrix_PlaneStress(rMode, gp, tStep);
+}
+
+void
+QdMembrane::computeGaussPoints()
+{
+    // Sets up the integration rule array which contains all the Gauss points
+    // Default: create one integration rule
+    if (integrationRulesArray.size() == 0) {
+        integrationRulesArray.resize(1);
+        integrationRulesArray[0] = std::make_unique<GaussIntegrationRule>(1, this, 1, 3);
+        this->giveCrossSection()->setupIntegrationPoints(*integrationRulesArray[0], this->numberOfGaussPoints, this);
+    }
+}
+
+void
+QdMembrane::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) {
+    computeStrainVectorAt(answer, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+}
+
+void
+QdMembrane::computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
+    FloatMatrix b;
+    FloatArray u;
+
+    switch (outputType) {
+    case OutputType::Standard:
+        this->computeVectorOf(VM_Total, tStep, u);
+        /*
+        if (initialDisplacements) {
+            u.subtract(*initialDisplacements);
+        }*/
+        computeBmatrixAt(xi, eta, b);
+        answer.beProductOf(b, u);
+        break;
+    case OutputType::Principal:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::VM:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    case OutputType::All:
+        OOFEM_ERROR("Not yet implemented for a %s element.", giveClassName());
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
+    }
+}
+
+void
+QdMembrane::computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) {
+    answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep);
+}
+
+double
+QdMembrane::computeVolumeAround(GaussPoint* gp)
+{
+    // Computes the volume element dV associated with the given gp.
+
+    double weight = gp->giveWeight();
+    const FloatArray& lCoords = gp->giveNaturalCoordinates(); // local/natural coords of the gp (parent domain)
+    double detJ = fabs(this->giveInterpolation()->giveTransformationJacobian(lCoords, *this->giveCellGeometryWrapper()));
+    double thickness = this->giveCrossSection()->give(CS_Thickness, gp); // the cross section keeps track of the thickness
+
+    return detJ * thickness * weight; // dV
 }
 
 void
@@ -68,4 +136,123 @@ QdMembrane::postInitialize()
     this->numberOfDofMans = this->giveNumberOfNodes();
 }
 
+void
+QdMembrane::printOutputAt(FILE* file, TimeStep* tStep)
+{
+    FloatArray v;
+    fprintf(file, "element %d (%8d):\n", this->giveLabel(), number);
+    int nPointsXY{ 0 };
+    switch (outputAtXY)
+    {
+    case OutputLocationXY::GaussPoints:
+        nPointsXY = giveIntegrationRulesArray()[0]->giveNumberOfIntegrationPoints();
+        break;
+    case OutputLocationXY::Centre:
+        nPointsXY = 1;
+        break;
+    case OutputLocationXY::Corners:
+        nPointsXY = giveNumberOfDofManagers();
+        break;
+    case OutputLocationXY::All:
+        nPointsXY = giveIntegrationRulesArray()[0]->giveNumberOfIntegrationPoints() + giveNumberOfDofManagers() + 1;
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. The following options for output location at XY plane can be selected for a membrane element: 'All', 'Centroid', 'Gauss points' and 'Corners'.");
+        break;
+    }
+
+    StructuralMaterialStatus* ms;
+    GaussPoint* gp;
+    for (int i = 0; i < nPointsXY; i++) {
+        switch (outputAtXY)
+        {
+        case OutputLocationXY::GaussPoints:
+            fprintf(file, "  GP %d :", i + 1);
+            gp = integrationRulesArray[0]->getIntegrationPoint(i);
+            ms = static_cast<StructuralMaterialStatus*>(gp->giveMaterialStatus());
+
+            /*
+            fprintf(file, "  forces     ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellForceTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          moments    ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellMomentTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          strains    ");
+            for (auto& val : ms->giveStrainVector()) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          curvatures ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_CurvatureTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }*/
+
+            fprintf(file, "\n          strains    ");
+            for (auto& val : ms->giveStrainVector())
+                fprintf(file, " %.4e", val);
+
+            fprintf(file, "\n          stresses    ");
+            for (auto& val : ms->giveStressVector())
+                fprintf(file, " %.4e", val);
+
+            fprintf(file, "\n");
+            break;
+        case OutputLocationXY::Centre:
+            fprintf(file, "  Centre");
+            gp = integrationRulesArray[0]->getIntegrationPoint(0);
+            ms = static_cast<StructuralMaterialStatus*>(gp->giveMaterialStatus());
+
+            /*
+            fprintf(file, "  forces     ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellForceTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          moments    ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_ShellMomentTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          strains    ");
+            for (auto& val : ms->giveStrainVector()) {
+                fprintf(file, " %.4e", val);
+            }
+
+            fprintf(file, "\n          curvatures ");
+            for (auto& val : this->giveMidplaneIPValue(i, IST_CurvatureTensor, tStep)) {
+                fprintf(file, " %.4e", val);
+            }*/
+
+            fprintf(file, "\n          strains    ");
+            for (auto& val : ms->giveStrainVector())
+                fprintf(file, " %.4e", val);
+
+            fprintf(file, "\n          stresses    ");
+            for (auto& val : ms->giveStressVector())
+                fprintf(file, " %.4e", val);
+
+            fprintf(file, "\n");
+            break;
+        case OutputLocationXY::Corners:
+            fprintf(file, "  Node %d :", i + 1);
+            break;
+        case OutputLocationXY::All:
+            if (i < 4)
+                fprintf(file, "  GP %d :", i + 1);
+            else if (i >= 4 && i < 8)
+                fprintf(file, "  Node %d :", i - 3);
+            else
+                fprintf(file, "  Centroid :");
+            break;
+        default:
+            OOFEM_ERROR("Something went wrong. The following options for output location at XY plane can be selected for a membrane element: 'All', 'Centroid', 'Gauss points' and 'Corners'.");
+            break;
+        }
+    }
+}
 }

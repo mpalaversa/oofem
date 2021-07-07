@@ -46,8 +46,6 @@
 #include <vector>
 #include <memory>
 
-#define _IFT_QdElement_Name "qdelement"
-
 namespace oofem {
 	class QdElement : public NLStructuralElement
 	{
@@ -59,13 +57,7 @@ namespace oofem {
             Corners,
             All
         };
-        // Enumeration for output category of strains and stresses.
-        enum class OutputCategory {
-            Membrane,
-            Plate,
-            Combined,
-            All
-        };
+
         // Enumeration for output type of strains and stresses.
         enum class OutputType {
             Standard,
@@ -85,39 +77,27 @@ namespace oofem {
 
         OutputLocationXY outputAtXY;
 		OutputType outputType;
-        OutputCategory outputCategory;
 
-        void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) {}
-        void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override { }
+        virtual void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) = 0;
+        void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
         const FloatMatrix* computeGtoLRotationMatrix();
-        virtual void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {} //= 0;
-        virtual void computeStressVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep, const FloatArray& strain) {} //= 0;
+        virtual void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) = 0;
 
     public:
         QdElement(int n, Domain* d);
-        virtual ~QdElement() {}
 
         int computeLoadGToLRotationMtrx(FloatMatrix& answer);
         int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }
         void computeLocalNodalCoordinates(std::vector< FloatArray >& lxy);
-        virtual void computeStrainVectorAt(FloatArray& answer, OutputLocationXY outputAtXY, TimeStep* tStep) {} //= 0;
-        virtual void computeStressVectorAt(FloatArray& answer, OutputLocationXY outputAtXY, TimeStep* tStep, const FloatArray& strain) {} //= 0;
+        int computeNumberOfDofs() override;
         void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
         double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override;
         OutputLocationXY getOutputLocationInXYPlane() { return outputAtXY; }
         OutputType getOutputType() { return outputType; }
         FEICellGeometry* giveCellGeometryWrapper();
         IntegrationRule* giveIntegrationRule(int i) override { return integrationRulesArray[i].get(); }
-        // giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-        void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(24); answer.zero(); }
         std::vector< FloatArray > giveNodeCoordinates();
         void updateInternalState(TimeStep* tStep) override;
-
-        //The following three methods are implemented only to prevent that this class and its subclasses become abstract.
-        void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
-        const char* giveClassName() const override { return "QdElement"; }
-        const char* giveInputRecordName() const override { return _IFT_QdElement_Name; }
-        void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
 	};
 }
 #endif
