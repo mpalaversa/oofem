@@ -60,7 +60,6 @@ namespace oofem {
 		virtual ~PlnStrssQd1() {}
 
 		bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
-		bool giveRotationMatrix(FloatMatrix& answer) override;
 		void giveDofManDofIDMask(int inode, IntArray&) const override;
 		FEInterpolation* giveInterpolation() const override;
 		MaterialMode giveMaterialMode() override { return _PlaneStress; }

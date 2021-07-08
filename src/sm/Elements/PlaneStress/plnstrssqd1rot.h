@@ -48,24 +48,27 @@
 #define _IFT_PlnStrssQd1Rot_Name "plnstrssqd1rot"
 
 namespace oofem {
+	class FEI2dQuadQuad;
+
 	class PlnStrssQd1Rot : public QdMembrane
 	{
+	protected:
+		static FEI2dQuadQuad interpolation;
+
 	public:
 		PlnStrssQd1Rot(int n, Domain* d);
 		virtual ~PlnStrssQd1Rot() {}
 
-		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
-		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override { }
+		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override;
+		bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
+		const char* giveClassName() const override { return "PlnStrssQd1Rot"; }
 		void giveDofManDofIDMask(int inode, IntArray&) const override;
+		const char* giveInputRecordName() const override { return _IFT_PlnStrssQd1Rot_Name; }
+		FEInterpolation* giveInterpolation() const override;
 		MaterialMode giveMaterialMode() override { return _PlaneStress; }
 
-		const char* giveClassName() const override { return "PlnStrssQd1Rot"; }
-		const char* giveInputRecordName() const override { return _IFT_PlnStrssQd1Rot_Name; }
-		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
-		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
-
 		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(16); answer.zero(); }
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(12); }
 	};
 }
 #endif

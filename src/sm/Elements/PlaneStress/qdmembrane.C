@@ -117,6 +117,33 @@ QdMembrane::computeVolumeAround(GaussPoint* gp)
     return detJ * thickness * weight; // dV
 }
 
+bool
+QdMembrane::giveRotationMatrix(FloatMatrix& answer)
+{
+    bool is_GtoL, is_NtoG;
+    FloatMatrix GtoL, NtoG;
+    IntArray nodes;
+    nodes.enumerate(this->giveNumberOfDofManagers());
+
+    is_GtoL = this->computeGtoLRotationMatrix(GtoL);
+    is_NtoG = this->computeDofTransformationMatrix(NtoG, nodes, true);
+
+    if (is_GtoL && NtoG.isNotEmpty()) {
+        answer.beProductOf(GtoL, NtoG);
+    }
+    else if (is_GtoL) {
+        answer = GtoL;
+    }
+    else if (is_NtoG) {
+        answer = NtoG;
+    }
+    else {
+        answer.clear();
+        return false;
+    }
+    return true;
+}
+
 void
 QdMembrane::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
 {

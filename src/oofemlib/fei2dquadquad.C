@@ -210,14 +210,51 @@ FEI2dQuadQuad :: evaldNdx(FloatMatrix &answer, const FloatArray &lcoords, const 
     FloatMatrix jacobianMatrix(2, 2), inv, dn;
 
     this->evaldNdxi(dn, lcoords, cellgeo);
-    for ( int i = 1; i <= dn.giveNumberOfRows(); i++ ) {
-        double x = cellgeo.giveVertexCoordinates(i).at(xind);
-        double y = cellgeo.giveVertexCoordinates(i).at(yind);
+    if (cellgeo.giveNumberOfVertices() == dn.giveNumberOfRows()) {
+        for (int i = 1; i <= dn.giveNumberOfRows(); i++) {
+            double x = cellgeo.giveVertexCoordinates(i).at(xind);
+            double y = cellgeo.giveVertexCoordinates(i).at(yind);
 
-        jacobianMatrix.at(1, 1) += dn.at(i, 1) * x;
-        jacobianMatrix.at(1, 2) += dn.at(i, 1) * y;
-        jacobianMatrix.at(2, 1) += dn.at(i, 2) * x;
-        jacobianMatrix.at(2, 2) += dn.at(i, 2) * y;
+            jacobianMatrix.at(1, 1) += dn.at(i, 1) * x;
+            jacobianMatrix.at(1, 2) += dn.at(i, 1) * y;
+            jacobianMatrix.at(2, 1) += dn.at(i, 2) * x;
+            jacobianMatrix.at(2, 2) += dn.at(i, 2) * y;
+        }
+    }
+    // This is implemented to accomodate calculation of dNdx for the plane stress element with rotational DOFs.
+    else {
+        double x{ 0 }, y{ 0 }, xPlus{ 0 }, yPlus{ 0 };
+        for (int i = 1; i <= dn.giveNumberOfRows(); i++) {
+            if (i <= dn.giveNumberOfRows() / 2) {
+                x = cellgeo.giveVertexCoordinates(i).at(xind);
+                y = cellgeo.giveVertexCoordinates(i).at(yind);
+
+                jacobianMatrix.at(1, 1) += dn.at(i, 1) * x;
+                jacobianMatrix.at(1, 2) += dn.at(i, 1) * y;
+                jacobianMatrix.at(2, 1) += dn.at(i, 2) * x;
+                jacobianMatrix.at(2, 2) += dn.at(i, 2) * y;
+            }
+            else {
+                x = cellgeo.giveVertexCoordinates(i - dn.giveNumberOfRows() / 2).at(xind);
+                y = cellgeo.giveVertexCoordinates(i - dn.giveNumberOfRows() / 2).at(yind);
+                if (i == dn.giveNumberOfRows()) {
+                    xPlus = cellgeo.giveVertexCoordinates(1).at(xind);
+                    yPlus = cellgeo.giveVertexCoordinates(1).at(yind);
+                }
+                else
+                {
+                    xPlus = cellgeo.giveVertexCoordinates(i + 1 - dn.giveNumberOfRows() / 2).at(xind);
+                    yPlus = cellgeo.giveVertexCoordinates(i + 1 - dn.giveNumberOfRows() / 2).at(yind);
+                }
+                x = (x + xPlus) / 2;
+                y = (y + yPlus) / 2;
+
+                jacobianMatrix.at(1, 1) += dn.at(i, 1) * x;
+                jacobianMatrix.at(1, 2) += dn.at(i, 1) * y;
+                jacobianMatrix.at(2, 1) += dn.at(i, 2) * x;
+                jacobianMatrix.at(2, 2) += dn.at(i, 2) * y;
+            }
+        }
     }
     inv.beInverseOf(jacobianMatrix);
 
@@ -235,9 +272,42 @@ FEI2dQuadQuad :: local2global(FloatArray &answer, const FloatArray &lcoords,  co
 
     answer.resize(2);
     answer.zero();
-    for ( int i = 1; i <= n.giveSize(); i++ ) {
-        answer.at(1) += n.at(i) * cellgeo.giveVertexCoordinates(i).at(xind);
-        answer.at(2) += n.at(i) * cellgeo.giveVertexCoordinates(i).at(yind);
+    if (cellgeo.giveNumberOfVertices() == n.giveSize()) {
+        for (int i = 1; i <= n.giveSize(); i++) {
+            answer.at(1) += n.at(i) * cellgeo.giveVertexCoordinates(i).at(xind);
+            answer.at(2) += n.at(i) * cellgeo.giveVertexCoordinates(i).at(yind);
+        }
+    }
+    // This is implemented to accomodate calculation of dNdx for the plane stress element with rotational DOFs.
+    else {
+        double x{ 0 }, y{ 0 }, xPlus{ 0 }, yPlus{ 0 };
+        for (int i = 1; i <= n.giveSize(); i++) {
+            if (i <= n.giveSize() / 2) {
+                x = cellgeo.giveVertexCoordinates(i).at(xind);
+                y = cellgeo.giveVertexCoordinates(i).at(yind);
+
+                answer.at(1) += n.at(i) * x;
+                answer.at(2) += n.at(i) * y;
+            }
+            else {
+                x = cellgeo.giveVertexCoordinates(i - n.giveSize() / 2).at(xind);
+                y = cellgeo.giveVertexCoordinates(i - n.giveSize() / 2).at(yind);
+                if (i == n.giveSize()) {
+                    xPlus = cellgeo.giveVertexCoordinates(1).at(xind);
+                    yPlus = cellgeo.giveVertexCoordinates(1).at(yind);
+                }
+                else
+                {
+                    xPlus = cellgeo.giveVertexCoordinates(i + 1 - n.giveSize() / 2).at(xind);
+                    yPlus = cellgeo.giveVertexCoordinates(i + 1 - n.giveSize() / 2).at(yind);
+                }
+                x = (x + xPlus) / 2;
+                y = (y + yPlus) / 2;
+
+                answer.at(1) += n.at(i) * x;
+                answer.at(2) += n.at(i) * y;
+            }
+        }
     }
 }
 

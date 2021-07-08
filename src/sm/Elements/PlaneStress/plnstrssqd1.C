@@ -42,9 +42,6 @@ FEI2dQuadLin PlnStrssQd1::interpolation(1, 2);
 
 PlnStrssQd1 :: PlnStrssQd1(int n, Domain* aDomain) : QdMembrane(n, aDomain)
 {
-    OutputLocationXY outputAtXY = OutputLocationXY::GaussPoints;
-    OutputType outputType = OutputType::Standard;
-
     numberOfDofMans = 4;
     numberOfGaussPoints = 4;
 }
@@ -107,32 +104,5 @@ PlnStrssQd1::giveDofManDofIDMask(int inode, IntArray& answer) const
 FEInterpolation*
 PlnStrssQd1::giveInterpolation() const {
     return &interpolation;
-}
-
-bool
-PlnStrssQd1::giveRotationMatrix(FloatMatrix& answer)
-{
-    bool is_GtoL, is_NtoG;
-    FloatMatrix GtoL, NtoG;
-    IntArray nodes;
-    nodes.enumerate(this->giveNumberOfDofManagers());
-
-    is_GtoL = this->computeGtoLRotationMatrix(GtoL);
-    is_NtoG = this->computeDofTransformationMatrix(NtoG, nodes, true);
-
-    if (is_GtoL && NtoG.isNotEmpty()) {
-        answer.beProductOf(GtoL, NtoG);
-    }
-    else if (is_GtoL) {
-        answer = GtoL;
-    }
-    else if (is_NtoG) {
-        answer = NtoG;
-    }
-    else {
-        answer.clear();
-        return false;
-    }
-    return true;
 }
 }

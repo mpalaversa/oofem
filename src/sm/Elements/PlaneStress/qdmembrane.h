@@ -53,10 +53,12 @@ namespace oofem {
 		QdMembrane(int n, Domain* d);
 
 		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
+		virtual bool computeGtoLRotationMatrix(FloatMatrix& answer) override = 0;
 		void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
 		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
 		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
-		double computeVolumeAround(GaussPoint* gp) override;
+		virtual double computeVolumeAround(GaussPoint* gp) override;
+		bool giveRotationMatrix(FloatMatrix& answer) override;
 		virtual void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
 		//void initializeFrom(InputRecord& ir) override;
 		void postInitialize() override;
