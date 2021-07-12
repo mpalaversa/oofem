@@ -69,70 +69,35 @@ PlnStrssQd1Rot::computeBmatrixAt(double xi, double eta, FloatMatrix& answer)
         BMatrix8.at(3, 2 * i - 1) = dNdx.at(i, 2);
         BMatrix8.at(3, 2 * i - 0) = dNdx.at(i, 1);
     }
-    
-    // Group N,x and N,y into respective matrices.
-    FloatMatrix NXDiff;
-    NXDiff.resize(1, 4);
-    FloatMatrix NYDiff;
-    NYDiff.resize(1, 4);
-    int k{ 9 };
-    for (int i = 1; i <= 4; i++) {
-        NXDiff.at(1, i) = BMatrix8.at(1, k);
-        NYDiff.at(1, i) = BMatrix8.at(2, k + 1);
-        k += 2;
-    }
 
     // Fetch nodes coordinates in element's coord. system.
     std::vector< FloatArray > locCoords = giveNodeCoordinates();
 
-    FloatMatrix transformedRows;
-    transformedRows.resize(3, 4);
-    int j{ 1 };
-    k = 1;
-    double xPlus{0.0};
-    double yPlus{ 0.0 };
-    double xMinus{ 0.0 };
-    double yMinus{ 0.0 };
-    double x{ 0.0 };
-    double y{ 0.0 };
-    for (int i = 1; i <= 4; i++) {
-        j = i - 1;
-        if (j < 1)
-            j = 4;
-        k = i + 1;
-        if (k > 4)
-            k = 1;
-        
-        x = locCoords.at(i - 1).at(1);
-        y = locCoords.at(i - 1).at(2);
-        xPlus = locCoords.at(k - 1).at(1);
-        yPlus = locCoords.at(k - 1).at(2);
-        xMinus = locCoords.at(j - 1).at(1);
-        yMinus = locCoords.at(j - 1).at(2);
-        // Get the derivatives that correspond to the rotational DOFs at vertices.
-        transformedRows.at(1, i) = (y - yPlus) * NXDiff.at(1, i) + (y - yMinus) * NXDiff.at(1, j);
-        transformedRows.at(2, i) = (xPlus - x) * NYDiff.at(1, i) + (xMinus - x) * NYDiff.at(1, j);
-        transformedRows.at(3, i) = (xPlus - x) * NXDiff.at(1, i) + (xMinus - x) * NXDiff.at(1, j) + (y - yPlus) * NYDiff.at(1, i) + (y - yMinus) * NYDiff.at(1, j);
+    // Matrix that transforms the displacement vector of the 8-node quad to the displacement vector of the 4-node quad with rotational DOFs.
+    FloatMatrix TMatrix;
+    TMatrix.resize(16, 12);
+    // u and v at the vertices of the 8-node element correspond to those of the 4-node element.
+    TMatrix.at(1, 1) = TMatrix.at(2, 2) = TMatrix.at(3, 4) = TMatrix.at(4, 5) = TMatrix.at(5, 7) = TMatrix.at(6, 8) = TMatrix.at(7, 10) = TMatrix.at(8, 11) = 1;
+    
+    // Set transformation coefficients for the DOFs at the midside nodes.
+    int midsideNode{ 5 };
+    IntArray vertexNodes;
+    for (int i = 9; i <= 16; i+=2) {
+        getVertexNodes(vertexNodes, midsideNode);
+        // Set values for transformation of u at a midside node.
+        TMatrix.at(i, (vertexNodes.at(1) - 1) * 3 + 1) = 0.5;
+        TMatrix.at(i, (vertexNodes.at(1) - 1) * 3 + 3) = - (locCoords.at(vertexNodes.at(2) - 1)[1] - locCoords.at(vertexNodes.at(1) - 1)[1])/8;
+        TMatrix.at(i, (vertexNodes.at(2) - 1) * 3 + 1) = 0.5;
+        TMatrix.at(i, (vertexNodes.at(2) - 1) * 3 + 3) = (locCoords.at(vertexNodes.at(2) - 1)[1] - locCoords.at(vertexNodes.at(1) - 1)[1]) / 8;
+        // Set values for transformation of v at a midside node.
+        TMatrix.at(i + 1, (vertexNodes.at(1) - 1) * 3 + 2) = 0.5;
+        TMatrix.at(i + 1, (vertexNodes.at(1) - 1) * 3 + 3) = (locCoords.at(vertexNodes.at(2) - 1)[0] - locCoords.at(vertexNodes.at(1) - 1)[0]) / 8;
+        TMatrix.at(i + 1, (vertexNodes.at(2) - 1) * 3 + 2) = 0.5;
+        TMatrix.at(i + 1, (vertexNodes.at(2) - 1) * 3 + 3) = - (locCoords.at(vertexNodes.at(2) - 1)[0] - locCoords.at(vertexNodes.at(1) - 1)[0]) / 8;
+        midsideNode++;
     }
 
-    // Form B-matrix of size 3x12 for the element with rotational DOFs.
-    answer.resize(3, 12);
-    k = 9;
-    int l{ 1 };
-    for (int i = 1; i <= 3; i++) {
-        l = 1;
-        k = 9;
-        for (int j = 1; j <= 12; j++) {
-            if (j % 3 == 0) {
-                answer.at(i, j) = transformedRows.at(i, l);
-                l++;
-            }
-            else {
-                answer.at(i, j) = BMatrix8.at(i, k);
-                k++;
-            }
-        }
-    }
+    answer.beProductOf(BMatrix8, TMatrix);
 }
 
 bool
@@ -157,9 +122,24 @@ PlnStrssQd1Rot::computeGtoLRotationMatrix(FloatMatrix& answer)
 }
 
 void
+PlnStrssQd1Rot::getVertexNodes(IntArray &answer, int midsideNode)
+// Returns nodes associated with the element's vertices next to the given midside node of a corresponding 8-node quad.
+{
+    answer.resize(2);
+
+    int smallerVertex = midsideNode - 4;
+    int greaterVertex = smallerVertex + 1;
+    if (greaterVertex == 5)
+        greaterVertex = 1;
+
+    answer.at(1) = smallerVertex;
+    answer.at(2) = greaterVertex;
+}
+
+void
 PlnStrssQd1Rot::giveDofManDofIDMask(int inode, IntArray& answer) const
 {
-	answer = { D_u, D_v, R_w }; // Does the plane R_w rotation transform into all three rotations in space?
+	answer = { D_u, D_v, D_w, R_u, R_v, R_w };
 }
 
 FEInterpolation*

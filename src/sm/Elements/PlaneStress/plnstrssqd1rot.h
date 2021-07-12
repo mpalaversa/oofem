@@ -52,6 +52,9 @@ namespace oofem {
 
 	class PlnStrssQd1Rot : public QdMembrane
 	{
+	private:
+		void getVertexNodes(IntArray &answer, int midsideNode);
+
 	protected:
 		static FEI2dQuadQuad interpolation;
 
