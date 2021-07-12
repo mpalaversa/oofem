@@ -35,6 +35,7 @@
 #ifndef pltqd4dkt_h
 #define pltqd4dkt_h
 
+#include "sm/Elements/Plates/kirchhoffplate.h"
 #include "qdplate.h"
 #include "femcmpnn.h"
 #include "error.h"
@@ -48,7 +49,7 @@
 #define _IFT_PltQd4DKT_Name "pltqd4dkt"
 
 namespace oofem {
-	class PltQd4DKT : public QdPlate
+	class PltQd4DKT : public KirchhoffPlate
 	{
 	public:
 		PltQd4DKT(int n, Domain* d);
@@ -59,8 +60,6 @@ namespace oofem {
 
 		const char* giveClassName() const override { return "PltQd4DKT"; }
 		const char* giveInputRecordName() const override { return _IFT_PltQd4DKT_Name; }
-		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
-		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
 
 		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
 		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(12); }

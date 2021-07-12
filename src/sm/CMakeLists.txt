@@ -49,6 +49,8 @@ set (sm_element
     Elements/Plates/dkt3d.C
 	Elements/Plates/qdplate.C
 	Elements/Plates/pltqd4dkt.C
+	Elements/Plates/kirchhoffplate.C
+	Elements/Plates/mindlinplate.C
     Elements/Shells/rershell.C 
     Elements/Shells/tr_shell01.C 
     Elements/Shells/tr_shell02.C 

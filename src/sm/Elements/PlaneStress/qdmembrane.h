@@ -60,7 +60,6 @@ namespace oofem {
 		virtual double computeVolumeAround(GaussPoint* gp) override;
 		bool giveRotationMatrix(FloatMatrix& answer) override;
 		virtual void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
-		//void initializeFrom(InputRecord& ir) override;
 		void postInitialize() override;
 		void printOutputAt(FILE* file, TimeStep* tStep) override;
 

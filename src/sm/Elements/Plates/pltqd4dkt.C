@@ -38,7 +38,7 @@
 namespace oofem {
 REGISTER_Element(PltQd4DKT);
 
-PltQd4DKT :: PltQd4DKT(int n, Domain* aDomain) : QdPlate(n, aDomain)
+PltQd4DKT :: PltQd4DKT(int n, Domain* aDomain) : KirchhoffPlate(n, aDomain)
 {
 	// Constructor.
 }

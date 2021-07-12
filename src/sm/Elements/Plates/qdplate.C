@@ -33,11 +33,36 @@
  */
  
 #include "sm/Elements/Plates/qdplate.h"
+
 #include "classfactory.h"
+#include "gaussintegrationrule.h"
+#include "sm/CrossSections/structuralcrosssection.h"
 
 namespace oofem {
     QdPlate::QdPlate(int n, Domain* aDomain) : QdElement(n, aDomain)
     {
+        outputAtZ = 0.0;
+    }
 
+    void
+    QdPlate::computeGaussPoints()
+        // Sets up the array containing the four Gauss points of the receiver.
+    {
+        if (integrationRulesArray.size() == 0) {
+            integrationRulesArray.resize(1);
+            integrationRulesArray[0] = std::make_unique<GaussIntegrationRule>(1, this, 1, 5);
+            this->giveCrossSection()->setupIntegrationPoints(*integrationRulesArray[0], numberOfGaussPoints, this);
+        }
+    }
+
+    void
+    QdPlate::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
+    {
+        if (iSurf == 1 || iSurf == 2) {
+            answer.enumerate(24);
+        }
+        else {
+            OOFEM_ERROR("wrong surface number");
+        }
     }
 }

@@ -35,7 +35,7 @@
 #ifndef qdplate_h
 #define qdplate_h
 
-#include "sm/Elements//qdelement.h"
+#include "sm/Elements/qdelement.h"
 #include "femcmpnn.h"
 #include "error.h"
 #include "floatmatrix.h"
@@ -48,8 +48,18 @@
 namespace oofem {
 	class QdPlate : public QdElement
 	{
+	protected:
+		double outputAtZ;
+
+		void computeGaussPoints() override;
+
 	public:
 		QdPlate(int n, Domain* d);
+
+		virtual void computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) = 0;
+		double getOutputLocationInZ() { return outputAtZ; }
+		void getStressesTopBottom(FloatArray& answer, TimeStep* tStep) { }
+		void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
 	};
 }
 #endif
