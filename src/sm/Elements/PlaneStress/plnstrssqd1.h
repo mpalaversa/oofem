@@ -46,6 +46,8 @@
 #include <memory>
 
 #define _IFT_PlnStrssQd1_Name "plnstrssqd1"
+#define _IFT_PlnStrssQd1_outputAtXY "outputatxy"
+#define _IFT_PlnStrssQd1_outputType "outputtype"
 
 namespace oofem {
 	class FEI2dQuadLin;
@@ -67,6 +69,7 @@ namespace oofem {
 		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override;
 		const char* giveClassName() const override { return "PlnStrssQd1"; }
 		const char* giveInputRecordName() const override { return _IFT_PlnStrssQd1_Name; }
+		void initializeFrom(InputRecord& ir) override;
 
 		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
 		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(8); }

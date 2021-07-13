@@ -54,7 +54,6 @@ namespace oofem {
 
 		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
 		virtual bool computeGtoLRotationMatrix(FloatMatrix& answer) override = 0;
-		void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
 		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
 		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
 		virtual double computeVolumeAround(GaussPoint* gp) override;

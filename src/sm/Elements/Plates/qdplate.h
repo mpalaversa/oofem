@@ -59,6 +59,7 @@ namespace oofem {
 		virtual void computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) = 0;
 		double getOutputLocationInZ() { return outputAtZ; }
 		void getStressesTopBottom(FloatArray& answer, TimeStep* tStep) { }
+		void giveDofManDofIDMask(int inode, IntArray&) const override;
 		void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
 	};
 }

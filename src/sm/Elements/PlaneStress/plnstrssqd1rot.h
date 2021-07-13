@@ -46,12 +46,15 @@
 #include <memory>
 
 #define _IFT_PlnStrssQd1Rot_Name "plnstrssqd1rot"
+#define _IFT_PlnStrssQd1Rot_outputAtXY "outputatxy"
+#define _IFT_PlnStrssQd1Rot_outputType "outputtype"
 
 namespace oofem {
 	class FEI2dQuadQuad;
 
 	class PlnStrssQd1Rot : public QdMembrane
 	{
+		friend class ShellQd42;
 	private:
 		void getVertexNodes(IntArray &answer, int midsideNode);
 
@@ -68,6 +71,7 @@ namespace oofem {
 		void giveDofManDofIDMask(int inode, IntArray&) const override;
 		const char* giveInputRecordName() const override { return _IFT_PlnStrssQd1Rot_Name; }
 		FEInterpolation* giveInterpolation() const override;
+		void initializeFrom(InputRecord& ir) override;
 		MaterialMode giveMaterialMode() override { return _PlaneStress; }
 
 		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.

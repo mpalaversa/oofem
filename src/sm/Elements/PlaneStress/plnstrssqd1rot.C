@@ -146,4 +146,50 @@ FEInterpolation*
 PlnStrssQd1Rot::giveInterpolation() const {
     return &interpolation;
 }
+
+void
+PlnStrssQd1Rot::initializeFrom(InputRecord& ir)
+{
+    StructuralElement::initializeFrom(ir);
+
+    int outputAtXYTemp, outputTypeTemp;
+    outputAtXYTemp = outputTypeTemp = 0;
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_PlnStrssQd1Rot_outputAtXY);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputTypeTemp, _IFT_PlnStrssQd1Rot_outputType);
+
+    switch (outputAtXYTemp) {
+    case 1:
+        outputAtXY = OutputLocationXY::GaussPoints;
+        break;
+    case 2:
+        outputAtXY = OutputLocationXY::Centre;
+        break;
+    case 3:
+        outputAtXY = OutputLocationXY::Corners;
+        break;
+    case 4:
+        outputAtXY = OutputLocationXY::All;
+        break;
+    default:
+        outputAtXY = OutputLocationXY::GaussPoints;
+        break;
+    }
+    switch (outputTypeTemp) {
+    case 1:
+        outputType = OutputType::Standard;
+        break;
+    case 2:
+        outputType = OutputType::Principal;
+        break;
+    case 3:
+        outputType = OutputType::VM;
+        break;
+    case 4:
+        outputType = OutputType::All;
+        break;
+    default:
+        outputType = OutputType::Standard;
+        break;
+    }
+}
 }

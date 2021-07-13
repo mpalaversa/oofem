@@ -65,11 +65,6 @@ QdMembrane::computeGaussPoints()
 }
 
 void
-QdMembrane::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) {
-    computeStrainVectorAt(answer, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
-}
-
-void
 QdMembrane::computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
     FloatMatrix b;
     FloatArray u;

@@ -56,6 +56,12 @@ namespace oofem {
     }
 
     void
+    QdPlate::giveDofManDofIDMask(int inode, IntArray& answer) const
+    {
+        answer = { D_u, D_v, D_w, R_u, R_v, R_w };
+    }
+
+    void
     QdPlate::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
     {
         if (iSurf == 1 || iSurf == 2) {

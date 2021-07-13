@@ -57,10 +57,20 @@ namespace oofem {
             All
         };
 
+        double outputAtZ;
         OutputCategory outputCategory;
 
     public:
         QdShell(int n, Domain* d);
+
+        virtual void computeStrainVector(FloatArray& answer, TimeStep* tStep) { }
+        virtual void computeStressVector(FloatArray& answer, const FloatArray& strain, TimeStep* tStep) { }
+        OutputCategory getOutputCategory() { return outputCategory; }
+        double getOutputLocationInZ() { return outputAtZ; }
+        void getStressesTopBottom(FloatArray& answer, TimeStep* tStep);
+        void giveDofManDofIDMask(int inode, IntArray&) const override;
+        void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
+        void printOutputAt(FILE* file, TimeStep* tStep) override;
 	};
 }
 #endif

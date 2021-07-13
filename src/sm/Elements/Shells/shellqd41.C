@@ -1054,6 +1054,7 @@ ShellQd41::printOutputAt(FILE* file, TimeStep* tStep)
                     for (auto& val : ms->giveStressVector()) {
                         fprintf(file, " %.4e", val);
                     }
+                    fprintf(file, "\n");
                 }
                 else {
                     fprintf(file, "\n          strains    ");

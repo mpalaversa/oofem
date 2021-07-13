@@ -35,6 +35,9 @@
 #ifndef shellqd42_h
 #define shellqd42_h
 
+#include "sm/Elements/PlaneStress/plnstrssqd1rot.h"
+#include "sm/Elements/Plates/pltqd4dkt.h"
+
 #include "qdshell.h"
 #include "femcmpnn.h"
 #include "error.h"
@@ -46,22 +49,35 @@
 #include <memory>
 
 #define _IFT_ShellQd42_Name "shellqd42"
+#define _IFT_ShellQd41_outputAtXY "outputatxy"
+#define _IFT_ShellQd41_outputType "outputtype"
+#define _IFT_ShellQd41_outputAtZ "outputatz"
+#define _IFT_ShellQd41_outputCategory "outputcategory"
 
 namespace oofem {
 	class OOFEM_EXPORT ShellQd42 : public QdShell
 	{
+		PlnStrssQd1Rot* membrane;
+		PltQd4DKT* plate;
+
 	public:
 		ShellQd42(int n, Domain* d);
-		virtual ~ShellQd42() {}
+		virtual ~ShellQd42() { delete[] membrane; delete[] plate; }
 
-		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
-		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override { }
-
-		const char* giveClassName() const override { return "ShellQd42"; }
-		const char* giveInputRecordName() const override { return _IFT_ShellQd42_Name; }
-		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
+		void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
+		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
 		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
+		const char* giveClassName() const override { return "ShellQd42"; }
+		int giveDefaultIntegrationRule() const override { return plate->giveDefaultIntegrationRule(); }
+		const char* giveInputRecordName() const override { return _IFT_ShellQd42_Name; }
+		MaterialMode giveMaterialMode() override { return _PlaneStress; }
+		void initializeFrom(InputRecord& ir) override;
+		void updateLocalNumbering(EntityRenumberingFunctor& f) override;
 
+		// This method should never be called.
+		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
+		// This method should never be called.
+		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
 		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
 		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(24); }
 	};

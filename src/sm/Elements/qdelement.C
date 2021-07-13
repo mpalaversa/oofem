@@ -140,6 +140,11 @@ QdElement::computeNumberOfDofs()
 }
 
 void
+QdElement::computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) {
+    computeStrainVectorAt(answer, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+}
+
+void
 QdElement::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords)
 {
     FloatArray n_vec;
