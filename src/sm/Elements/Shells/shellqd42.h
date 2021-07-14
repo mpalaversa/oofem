@@ -55,23 +55,31 @@
 #define _IFT_ShellQd41_outputCategory "outputcategory"
 
 namespace oofem {
-	class OOFEM_EXPORT ShellQd42 : public QdShell
+	class ShellQd42 : public QdShell
 	{
 		PlnStrssQd1Rot* membrane;
 		PltQd4DKT* plate;
 
+	protected:
+		// This should be moved to the QdShell class (with casted plate and membrane objects).
+		void computeGaussPoints() override;
+	
 	public:
 		ShellQd42(int n, Domain* d);
 		virtual ~ShellQd42() { delete[] membrane; delete[] plate; }
 
 		void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
 		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
-		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override { }
+		// This method is used for stress calculation at Gauss points only for this element.
+		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
+		void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) override;
 		const char* giveClassName() const override { return "ShellQd42"; }
 		int giveDefaultIntegrationRule() const override { return plate->giveDefaultIntegrationRule(); }
+		FEInterpolation* giveInterpolation() const override { return plate->giveInterpolation(); }
 		const char* giveInputRecordName() const override { return _IFT_ShellQd42_Name; }
 		MaterialMode giveMaterialMode() override { return _PlaneStress; }
 		void initializeFrom(InputRecord& ir) override;
+		void setCrossSection(int csIndx) override;
 		void updateLocalNumbering(EntityRenumberingFunctor& f) override;
 
 		// This method should never be called.

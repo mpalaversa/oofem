@@ -166,10 +166,6 @@ QdElement::computeSurfaceVolumeAround(GaussPoint* gp, int iSurf)
 FEICellGeometry*
 QdElement::giveCellGeometryWrapper()
 {
-    if (!cellGeometryWrapper) {
-        cellGeometryWrapper = new FEIElementGeometryWrapper(this);
-    }
-
     if (cellGeometryWrapper) {
         return cellGeometryWrapper;
     }
@@ -210,7 +206,7 @@ QdElement::updateInternalState(TimeStep* tStep)
         break;
     case OutputLocationXY::Centre:
         this->computeStrainVectorAt(strain, 0.0, 0.0, tStep);
-        this->computeStressVector(stress, strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        this->computeStressVectorAtCentre(stress, tStep, strain);
         break;
     case OutputLocationXY::Corners:
         OOFEM_ERROR("Not implemented for this element");

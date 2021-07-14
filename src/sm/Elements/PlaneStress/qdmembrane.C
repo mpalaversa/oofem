@@ -99,6 +99,11 @@ QdMembrane::computeStressVector(FloatArray& answer, const FloatArray& strain, Ga
     answer = this->giveStructuralCrossSection()->giveRealStress_PlaneStress(strain, gp, tStep);
 }
 
+void
+QdMembrane::computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
+    computeStressVector(answer, strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+}
+
 double
 QdMembrane::computeVolumeAround(GaussPoint* gp)
 {

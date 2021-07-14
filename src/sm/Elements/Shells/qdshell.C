@@ -45,7 +45,28 @@ namespace oofem {
 		outputAtZ = 0.0;
 	}
 
-	void
+    bool
+    QdShell::computeGtoLRotationMatrix(FloatMatrix& answer)
+    // Returns the rotation matrix of the receiver of the size [24,24]
+    // r(local) = T * r(global)
+    // for one node (r written transposed): {u,v,w,R_u,R_v,R_w} = T * {u,v,w,R_u,R_v,R_w}
+    {
+        if (GtoLRotationMatrix == NULL)
+            QdElement::computeGtoLRotationMatrix();
+
+        answer.resize(24, 24);
+        answer.zero();
+
+        for (int i = 1; i <= 3; i++) {
+            answer.at(1, i) = answer.at(4, i + 3) = answer.at(7, i + 6) = answer.at(10, i + 9) = answer.at(13, i + 12) = answer.at(16, i + 15) = answer.at(19, i + 18) = answer.at(22, i + 21) = GtoLRotationMatrix->at(1, i);
+            answer.at(2, i) = answer.at(5, i + 3) = answer.at(8, i + 6) = answer.at(11, i + 9) = answer.at(14, i + 12) = answer.at(17, i + 15) = answer.at(20, i + 18) = answer.at(23, i + 21) = GtoLRotationMatrix->at(2, i);
+            answer.at(3, i) = answer.at(6, i + 3) = answer.at(9, i + 6) = answer.at(12, i + 9) = answer.at(15, i + 12) = answer.at(18, i + 15) = answer.at(21, i + 18) = answer.at(24, i + 21) = GtoLRotationMatrix->at(3, i);
+        }
+
+        return 1;
+    }
+    
+    void
 	QdShell::giveDofManDofIDMask(int inode, IntArray& answer) const
 	{
 		answer = { D_u, D_v, D_w, R_u, R_v, R_w };

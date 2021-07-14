@@ -309,7 +309,7 @@ PltQd4DKT::computeSurfaceVolumeAround(GaussPoint* gp, int iSurf)
     double detJ, weight;
 
     weight = gp->giveWeight();
-    detJ = fabs(this->interp_lin.giveTransformationJacobian(gp->giveNaturalCoordinates(), FEIElementGeometryWrapper(this)));
+    detJ = fabs(this->interp_lin.giveTransformationJacobian(gp->giveNaturalCoordinates(), *giveCellGeometryWrapper()));
     return detJ * weight;
 }
 

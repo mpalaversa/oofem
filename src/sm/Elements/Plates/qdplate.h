@@ -55,8 +55,10 @@ namespace oofem {
 
 	public:
 		QdPlate(int n, Domain* d);
+		virtual ~QdPlate() = default;
 
 		virtual void computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) = 0;
+		void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) override;
 		double getOutputLocationInZ() { return outputAtZ; }
 		void getStressesTopBottom(FloatArray& answer, TimeStep* tStep) { }
 		void giveDofManDofIDMask(int inode, IntArray&) const override;

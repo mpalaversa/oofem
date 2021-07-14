@@ -56,6 +56,7 @@ namespace oofem {
 		virtual bool computeGtoLRotationMatrix(FloatMatrix& answer) override = 0;
 		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
 		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
+		void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) override;
 		virtual double computeVolumeAround(GaussPoint* gp) override;
 		bool giveRotationMatrix(FloatMatrix& answer) override;
 		virtual void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;

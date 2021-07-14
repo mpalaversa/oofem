@@ -35,6 +35,7 @@
 #include "sm/Elements/Shells/shellqd42.h"
 
 #include "classfactory.h"
+#include "crosssection.h"
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
 #include "load.h"
@@ -49,6 +50,51 @@ ShellQd42 :: ShellQd42(int n, Domain* aDomain) : QdShell(n, aDomain)
 
     membrane = new PlnStrssQd1Rot(n, aDomain);
     plate = new PltQd4DKT(n, aDomain);
+}
+
+void
+ShellQd42::computeGaussPoints()
+{
+    // Sets up the integration rule array which contains all the Gauss points
+    // Default: create one integration rule
+    
+    if (integrationRulesArray.size() == 0) {
+        integrationRulesArray.resize(1);
+        integrationRulesArray[0] = std::make_unique<GaussIntegrationRule>(1, this, 1, 3);
+        this->giveCrossSection()->setupIntegrationPoints(*integrationRulesArray[0], this->numberOfGaussPoints, this);
+    }
+
+    membrane->computeGaussPoints();
+    plate->computeGaussPoints();
+}
+
+void
+ShellQd42::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep)
+{
+    FloatMatrix stiffMatPlate;
+    plate->computeStiffnessMatrix(stiffMatPlate, rMode, tStep);
+    FloatMatrix stiffMatMembrane;
+    membrane->computeStiffnessMatrix(stiffMatMembrane, rMode, tStep);
+
+    IntArray positionVectorMemb, positionVectorPlate;
+    positionVectorMemb.resize(12);
+    positionVectorMemb = { 1, 2, 6, 7, 8, 12, 13, 14, 18, 19, 20, 24 };
+    positionVectorPlate.resize(12);
+    positionVectorPlate = { 3, 4, 5, 9, 10, 11, 15, 16, 17, 21, 22, 23 };
+    
+    answer.clear();
+    answer.resize(24, 24);
+
+    int startCol{ 1 };
+    for (int i = 1; i <= 12; i++) {
+        for (int j = startCol; j <= 12; j++) {
+            answer.at(positionVectorMemb.at(i), positionVectorMemb.at(j)) = stiffMatMembrane.at(i, j);
+            answer.at(positionVectorPlate.at(i), positionVectorPlate.at(j)) = stiffMatPlate.at(i, j);
+        }
+        startCol++;
+    }
+
+    answer.symmetrized();
 }
 
 void
@@ -74,55 +120,64 @@ ShellQd42::computeStrainVectorAt(FloatArray& answer, double xi, double eta, Time
         break;
     }
 }
-/*
+
 void
 ShellQd42::computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) {
     FloatArray membraneStrains, membraneStresses, plateStrains, plateStresses;
-    // IT SEEMS THAT THIS CANNOT WORK FOR SHELL ELEMENTS. HOW DO YOU CALCULATE COMBINED STRESSES AT ELEMENT'S CENTRE WITH THIS METHOD? 
     switch (outputCategory) {
     case OutputCategory::Membrane:
         membrane->computeStrainVectorAt(membraneStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
-        membrane->computeStressVector(membraneStresses, membraneStrains, gp, tStep);
+        answer.resize(3);
+        membrane->computeStressVector(answer, membraneStrains, gp, tStep);
         break;
     case OutputCategory::Plate:
         plate->computeStrainVectorAt(plateStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
-        plate->computeStressVector(plateStresses, plateStrains, gp, tStep);
+        answer.resize(3);
+        plate->computeStressVector(answer, plateStrains, gp, tStep);
         break;
     case OutputCategory::Combined:
-        membrane->computeStrainVectorAt(membraneStrains, xi, eta, tStep);
-        plate->computeStrainVectorAt(plateStrains, xi, eta, tStep);
-        membraneStrains.add(plateStrains);
+        membrane->computeStrainVectorAt(membraneStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+        membrane->computeStressVector(membraneStresses, membraneStrains, gp, tStep);
+        plate->computeStrainVectorAt(plateStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+        plate->computeStressVector(plateStresses, plateStrains, gp, tStep);
+        membraneStresses.add(plateStresses);
         answer.resize(3);
-        answer = membraneStrains;
+        answer = membraneStresses;
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for the element %d.", giveGlobalNumber());
         break;
     }
-}*/
+}
 
 void
-ShellQd42::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep)
-{
-    StructuralCrossSection* cs = this->giveStructuralCrossSection();
+ShellQd42::computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
+    FloatArray membraneStrains, plateStrains, membraneStresses, plateStresses;
 
-    FloatMatrix stiffMatPlate;
-    plate->computeStiffnessMatrix(stiffMatPlate, rMode, tStep);
-    FloatMatrix stiffMatMembrane;
-    membrane->computeStiffnessMatrix(stiffMatMembrane, rMode, tStep);
-
-    answer.clear();
-
-    // Compute stiffness matrix of the shell element by manipulating relevant terms of its constituent parts' stiffness matrices.
-    if (integrationRulesArray.size() == 1) {
-
-        answer.resize(24, 24);
-
-        answer = stiffMatMembrane;
-        answer.add(stiffMatPlate);
+    switch (outputCategory) {
+    case OutputCategory::Membrane:
+        membrane->computeStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
+        answer.resize(3);
+        membrane->computeStressVector(answer, membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        break;
+    case OutputCategory::Plate:
+        plate->computeStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
+        answer.resize(3);
+        plate->computeStressVector(answer, plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        break;
+    case OutputCategory::Combined:
+        membrane->computeStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
+        membrane->computeStressVector(membraneStresses, membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        plate->computeStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
+        plate->computeStressVector(plateStresses, plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        membraneStresses.add(plateStresses);
+        answer.resize(3);
+        answer = membraneStresses;
+        break;
+    default:
+        OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
+        break;
     }
-    else
-        OOFEM_ERROR("It is not allowed to define more than 1 integration rule for this element.");
 }
 
 void
@@ -197,6 +252,14 @@ ShellQd42::initializeFrom(InputRecord& ir)
     plate->outputAtXY = outputAtXY;
     plate->outputType = outputType;
     plate->outputAtZ = outputAtZ;
+}
+
+void
+ShellQd42::setCrossSection(int csIndx)
+{
+    StructuralElement::setCrossSection(csIndx);
+    plate->setCrossSection(csIndx);
+    membrane->setCrossSection(csIndx);
 }
 
 void

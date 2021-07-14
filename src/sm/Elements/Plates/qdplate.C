@@ -56,6 +56,11 @@ namespace oofem {
     }
 
     void
+    QdPlate::computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
+        computeStressVector(answer, strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+    }
+
+    void
     QdPlate::giveDofManDofIDMask(int inode, IntArray& answer) const
     {
         answer = { D_u, D_v, D_w, R_u, R_v, R_w };

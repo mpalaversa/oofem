@@ -85,12 +85,14 @@ namespace oofem {
 
     public:
         QdElement(int n, Domain* d);
+        virtual ~QdElement() = default;
 
         int computeLoadGToLRotationMtrx(FloatMatrix& answer);
         int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }
         void computeLocalNodalCoordinates(std::vector< FloatArray >& lxy);
         int computeNumberOfDofs() override;
         void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
+        virtual void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) = 0;
         void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
         double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override;
         OutputLocationXY getOutputLocationInXYPlane() { return outputAtXY; }
