@@ -92,6 +92,7 @@ namespace oofem {
         void computeLocalNodalCoordinates(std::vector< FloatArray >& lxy);
         int computeNumberOfDofs() override;
         void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
+        // When we want to get membrane or plate stresses at the output, the corresponding strains must be supplied. For shells, a method for strain calculation is invoked from within the method.
         virtual void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) = 0;
         void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
         double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override;

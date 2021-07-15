@@ -39,6 +39,7 @@
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
 #include "load.h"
+#include "sm/CrossSections/structuralcrosssection.h"
 
 namespace oofem {
 REGISTER_Element(ShellQd42);
@@ -137,12 +138,8 @@ ShellQd42::computeStressVector(FloatArray& answer, const FloatArray& strain, Gau
         break;
     case OutputCategory::Combined:
         membrane->computeStrainVectorAt(membraneStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
-        membrane->computeStressVector(membraneStresses, membraneStrains, gp, tStep);
         plate->computeStrainVectorAt(plateStrains, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
-        plate->computeStressVector(plateStresses, plateStrains, gp, tStep);
-        membraneStresses.add(plateStresses);
-        answer.resize(3);
-        answer = membraneStresses;
+        answer = giveStructuralCrossSection()->giveRealStress_Shell(membraneStrains, plateStrains, gp, tStep);
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for the element %d.", giveGlobalNumber());
@@ -156,23 +153,15 @@ ShellQd42::computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, cons
 
     switch (outputCategory) {
     case OutputCategory::Membrane:
-        membrane->computeStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
-        answer.resize(3);
-        membrane->computeStressVector(answer, membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        membrane->computeStressVector(answer, strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     case OutputCategory::Plate:
-        plate->computeStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
-        answer.resize(3);
-        plate->computeStressVector(answer, plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
+        plate->computeStressVector(answer, strain, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     case OutputCategory::Combined:
         membrane->computeStrainVectorAt(membraneStrains, 0.0, 0.0, tStep);
-        membrane->computeStressVector(membraneStresses, membraneStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         plate->computeStrainVectorAt(plateStrains, 0.0, 0.0, tStep);
-        plate->computeStressVector(plateStresses, plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
-        membraneStresses.add(plateStresses);
-        answer.resize(3);
-        answer = membraneStresses;
+        answer = this->giveStructuralCrossSection()->giveRealStress_Shell(membraneStrains, plateStrains, this->giveIntegrationRulesArray()[0]->getIntegrationPoint(0), tStep);
         break;
     default:
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());

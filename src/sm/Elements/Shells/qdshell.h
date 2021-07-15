@@ -70,6 +70,7 @@ namespace oofem {
         OutputCategory getOutputCategory() { return outputCategory; }
         double getOutputLocationInZ() { return outputAtZ; }
         void getStressesTopBottom(FloatArray& answer, TimeStep* tStep);
+        void giveCharacteristicOutput(FloatArray& answer, TimeStep* tStep) override { this->getStressesTopBottom(answer, tStep); }
         void giveDofManDofIDMask(int inode, IntArray&) const override;
         void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
         void printOutputAt(FILE* file, TimeStep* tStep) override;

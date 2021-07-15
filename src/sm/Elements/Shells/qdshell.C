@@ -74,16 +74,13 @@ namespace oofem {
 
 	void
 	QdShell::getStressesTopBottom(FloatArray& answer, TimeStep* tStep) {
-		// Remove the following 3 lines of code when the method is considered generic.
+		// Remove the following 4 lines of code when the method is considered generic.
 		outputAtXY = OutputLocationXY::Centre;
 		outputCategory = OutputCategory::Combined;
 		outputType = OutputType::Standard;
-		
 		outputAtZ = this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2;
 
-		FloatArray strains;
-		computeStrainVector(strains, tStep);
-		computeStressVector(answer, strains, tStep);
+        computeStressVectorAtCentre(answer, tStep);
 	}
 
 	void
