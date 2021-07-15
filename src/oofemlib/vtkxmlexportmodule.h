@@ -193,6 +193,7 @@ protected:
 #ifdef _PYBIND_BINDINGS
     ///Dictionaries used for Python export
     py::dict Py_PrimaryVars, Py_IntVars, Py_CellVars, Py_Nodes, Py_Elements;
+    py::dict Py_Reaction_Forces;
 #endif
 
 public:
@@ -246,6 +247,7 @@ public:
     py::dict getCellVars(void) { return Py_CellVars; }
     py::dict getNodes(void) { return Py_Nodes; } //from all VTKpieces sorted in dictionary
     py::dict getElementsConnectivity(void) { return Py_Elements; }
+    py::dict getReactionForces( void ) { return Py_Reaction_Forces; }
     
 
 #endif
@@ -357,6 +359,11 @@ protected:
 
     /// Writes a VTK collection file for Gauss points.
     void writeGPVTKCollection();
+#ifdef _PYBIND_BINDINGS
+    // write reaction forces - py only
+    void doOutputReactionForces( TimeStep *tStep );
+#endif
+
 
 #ifdef __VTK_MODULE
     void writeVTKPointData(const char *name, vtkSmartPointer< vtkDoubleArray >varArray);

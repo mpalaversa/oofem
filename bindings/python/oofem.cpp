@@ -1064,6 +1064,7 @@ PYBIND11_MODULE(oofempy, m) {
     .def("getCellVars", &oofem::VTKXMLExportModule::getCellVars)
     .def("getNodes", &oofem::VTKXMLExportModule::getNodes)
     .def("getElementsConnectivity", &oofem::VTKXMLExportModule::getElementsConnectivity)
+    .def("getReactionForces", &oofem::VTKXMLExportModule::getReactionForces )
     ;
     
 
