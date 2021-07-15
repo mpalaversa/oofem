@@ -70,6 +70,10 @@
  #include <vtkUnstructuredGrid.h>
  #include <vtkSmartPointer.h>
 #endif
+#ifdef __SM_MODULE
+#include "sm/EngineeringModels/structengngmodel.h"
+#endif
+#include "outputmanager.h"
 
 namespace oofem {
 REGISTER_ExportModule(VTKXMLExportModule)
@@ -577,6 +581,14 @@ Py_Elements.clear();
         this->pvdBuffer.push_back(pvdEntry.str() );
         this->writeVTKCollection();
     }
+#ifdef _PYBIND_BINDINGS
+    // write reaction forces - py only
+    Py_Reaction_Forces.clear();
+    // do reactions only for export object where primary vars are exported (only one for REWMAKE)
+    if ( primaryVarsToExport.giveSize() > 0 ) {
+        this->doOutputReactionForces( tStep );
+    }
+#endif
 }
 
 
@@ -2290,4 +2302,44 @@ VTKXMLExportModule::exportIntVarsInGpAs(IntArray valIDs, TimeStep *tStep)
         streamG.close();
     }
 }
+#ifdef _PYBIND_BINDINGS
+void VTKXMLExportModule ::doOutputReactionForces( TimeStep *tStep )
+{
+
+    int domainIndex = 1;
+    Domain *domain  = emodel->giveDomain( domainIndex );
+
+    FloatArray reactions;
+    IntArray dofManMap, dofidMap, eqnMap;
+#ifdef __SM_MODULE
+    StructuralEngngModel *strEngMod = dynamic_cast<StructuralEngngModel *>( emodel );
+    if ( strEngMod ) {
+        strEngMod->buildReactionTable( dofManMap, dofidMap, eqnMap, tStep, domainIndex );
+        strEngMod->computeReaction( reactions, tStep, 1 );
+
+        //
+        // loop over reactions and print them
+        //
+        py::list bcnodeids;
+        py::list bcdofids;
+        py::list bcreactions;
+        for ( int i = 1; i <= dofManMap.giveSize(); i++ ) {
+            if ( domain->giveOutputManager()->testDofManOutput( dofManMap.at( i ), tStep ) ) {
+                py::list bcdof;
+                bcnodeids.append( domain->giveDofManager( dofManMap.at( i ) )->giveLabel() ); //Node
+                bcdofids.append( dofidMap.at( i ) ); // iDof
+                bcreactions.append( reactions.at( eqnMap.at( i ) ) ); // reaction
+            }
+        }
+        this->Py_Reaction_Forces["nodeid"] = bcnodeids; 
+        this->Py_Reaction_Forces["dofid"]  = bcdofids; 
+        this->Py_Reaction_Forces["reaction"] = bcreactions; 
+
+    } else
+#endif
+    {
+        OOFEM_ERROR( "Cannot export reaction forces - only implemented for structural problems." );
+    }
+}
+#endif
 } // end namespace oofem
