@@ -82,6 +82,12 @@ namespace oofem {
 		void setCrossSection(int csIndx) override;
 		void updateLocalNumbering(EntityRenumberingFunctor& f) override;
 
+		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
+		void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
+		int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
+		int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }
+		void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
+
 		// This method should never be called.
 		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
 		// This method should never be called.

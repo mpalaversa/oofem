@@ -34,6 +34,7 @@
  
 #include "sm/Elements/Shells/shellqd42.h"
 
+#include "boundaryload.h"
 #include "classfactory.h"
 #include "crosssection.h"
 #include "gaussintegrationrule.h"
@@ -51,6 +52,149 @@ ShellQd42 :: ShellQd42(int n, Domain* aDomain) : QdShell(n, aDomain)
 
     membrane = new PlnStrssQd1Rot(n, aDomain);
     plate = new PltQd4DKT(n, aDomain);
+}
+
+void
+ShellQd42::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
+    double dens, dV;
+    FloatArray force, ntf, loadVectorFromPlate;
+    FloatMatrix T;
+
+    if ((forLoad->giveBCGeoType() != BodyLoadBGT) || (forLoad->giveBCValType() != ForceLoadBVT)) {
+        OOFEM_ERROR("unknown load type");
+    }
+
+    // note: force is assumed to be in global coordinate system.
+    forLoad->computeComponentArrayAt(force, tStep, mode);
+    // transform from global to element local c.s
+    if (this->computeLoadGToLRotationMtrx(T)) {
+        force.rotatedWith(T, 'n');
+    }
+    FloatArray loadVector;
+    loadVector.resize(3);
+    int j{ 1 };
+    for (int i = 1; i <= force.giveSize(); i++)
+        if (force.at(i) != double(0)) {
+            loadVector.at(1) = force.at(i);
+            j = i;
+        }
+
+    loadVectorFromPlate.clear();
+    FloatArray NMatrixTemp;
+    FloatMatrix NMatrix;
+    if (loadVector.giveSize()) {
+        for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
+            giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
+            NMatrix.beNMatrixOf(NMatrixTemp, 3);
+            dV = computeVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
+            dens = this->giveCrossSection()->give('d', gp);
+            ntf.beTProductOf(NMatrix, loadVector);
+            loadVectorFromPlate.add(dV * dens, ntf);
+        }
+    }
+    else {
+        return;
+    }
+
+    answer.resize(24);
+    answer.zero();
+    for (int i = 1; i <= 12; i += 3) {
+        // takes into account only local w-displacement (add \theta_x and \theta_y in the future)
+        answer.at(j) = loadVectorFromPlate.at(i);
+        //answer.at(j+1) = loadVectorFromPlate.at(i+1);
+        //answer.at(j+2) = loadVectorFromPlate.at(i+2);
+        j += 6;
+    }
+}
+
+void
+ShellQd42::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
+{
+    answer.clear();
+    if (type != ExternalForcesVector) {
+        return;
+    }
+
+    FEInterpolation* fei = this->giveInterpolation();
+    if (!fei) {
+        OOFEM_ERROR("No interpolator available");
+    }
+
+    FloatArray n_vec;
+    FloatMatrix n, T;
+    FloatArray force, globalIPcoords;
+    //int nsd = fei->giveNsd();
+
+    std::unique_ptr< IntegrationRule >iRule(this->giveBoundarySurfaceIntegrationRule(load->giveApproxOrder(), boundary));
+
+    for (GaussPoint* gp : *iRule) {
+        const FloatArray& lcoords = gp->giveNaturalCoordinates();
+
+        if (load->giveFormulationType() == Load::FT_Entity) {
+            load->computeValueAt(force, tStep, lcoords, mode);
+        }
+        else {
+            fei->boundaryLocal2Global(globalIPcoords, boundary, lcoords, *giveCellGeometryWrapper());
+            load->computeValueAt(force, tStep, globalIPcoords, mode);
+        }
+
+        ///@todo Make sure this part is correct.
+        // We always want the global values in the end, so we might as well compute them here directly:
+        // transform force
+        if (load->giveCoordSystMode() == Load::CST_Global) {
+            // then just keep it in global c.s
+        }
+        else {
+            ///@todo Support this...
+            // transform from local boundary to element local c.s
+            // uncommented since the other (now commented) approach did not work correctly
+            if (this->computeLoadLSToLRotationMatrix(T, boundary, gp)) {
+                force.rotatedWith(T, 'n');
+            }
+            // then to global c.s
+            //if ( this->computeLoadGToLRotationMtrx(T) ) {
+            //    force.rotatedWith(T, 't');
+            //}
+        }
+
+        // Construct n-matrix
+        this->computeSurfaceNMatrix(n, boundary, lcoords); // to allow adaptation on element level
+
+        ///@todo Some way to ask for the thickness at a global coordinate maybe?
+        double thickness = 1.0; // Should be the circumference for axisymm-elements.
+        double dV = thickness * this->computeSurfaceVolumeAround(gp, boundary);
+        answer.plusProduct(n, force, dV);
+    }
+
+    if (load->giveCoordSystMode() == Load::CST_Local) {
+        FloatMatrix transMat, transMatTemp;
+        computeLoadGToLRotationMtrx(transMatTemp);
+        transMat.resize(6, 6);
+        transMat.beTranspositionOf(transMatTemp);
+
+        FloatArray firstNodeLoads, secondNodeLoads, thirdNodeLoads, fourthNodeLoads;
+        firstNodeLoads.resize(6), secondNodeLoads.resize(6), thirdNodeLoads.resize(6), fourthNodeLoads.resize(6);
+        for (int i = 1; i <= 6; i++) {
+            firstNodeLoads.at(i) = answer.at(i);
+            secondNodeLoads.at(i) = answer.at(i + 6);
+            thirdNodeLoads.at(i) = answer.at(i + 12);
+            fourthNodeLoads.at(i) = answer.at(i + 18);
+        }
+
+        FloatArray firstNodeLoadsTemp, secondNodeLoadsTemp, thirdNodeLoadsTemp, fourthNodeLoadsTemp;
+        firstNodeLoadsTemp.resize(6), secondNodeLoadsTemp.resize(6), thirdNodeLoadsTemp.resize(6), fourthNodeLoadsTemp.resize(6);
+        firstNodeLoadsTemp.beProductOf(transMat, firstNodeLoads);
+        secondNodeLoadsTemp.beProductOf(transMat, secondNodeLoads);
+        thirdNodeLoadsTemp.beProductOf(transMat, thirdNodeLoads);
+        fourthNodeLoadsTemp.beProductOf(transMat, fourthNodeLoads);
+
+        for (int i = 1; i <= 6; i++) {
+            answer.at(i) = firstNodeLoadsTemp.at(i);
+            answer.at(i + 6) = secondNodeLoadsTemp.at(i);
+            answer.at(i + 12) = thirdNodeLoadsTemp.at(i);
+            answer.at(i + 18) = fourthNodeLoadsTemp.at(i);
+        }
+    }
 }
 
 void
@@ -167,6 +311,14 @@ ShellQd42::computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, cons
         OOFEM_ERROR("Something went wrong. An unknown output category requested for element %d.", giveGlobalNumber());
         break;
     }
+}
+
+void
+ShellQd42::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords)
+{
+    FloatArray n_vec;
+    this->giveInterpolation()->boundarySurfaceEvalN(n_vec, boundaryID, lcoords, *giveCellGeometryWrapper());
+    answer.beNMatrixOf(n_vec, 6);
 }
 
 void
