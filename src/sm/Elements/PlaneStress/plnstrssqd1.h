@@ -54,6 +54,7 @@ namespace oofem {
 
 	class PlnStrssQd1 : public QdMembrane
 	{
+		friend class ShellQd41;
 	protected:
 		static FEI2dQuadLin interpolation;
 
@@ -72,7 +73,7 @@ namespace oofem {
 		void initializeFrom(InputRecord& ir) override;
 
 		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(8); }
+		//void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(8); }
 	};
 }
 #endif

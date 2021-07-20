@@ -35,9 +35,18 @@
 #ifndef shellqd41_h
 #define shellqd41_h
 
-#include "sm/Elements/nlstructuralelement.h"
-#include "sm/Elements/PlaneStress/linquad3d_planestress.h"
-#include "sm/Elements/Plates/qdkt.h"
+#include "sm/Elements/PlaneStress/plnstrssqd1.h"
+#include "sm/Elements/Plates/pltqd4dkt.h"
+
+#include "qdshell.h"
+#include "femcmpnn.h"
+#include "error.h"
+#include "floatmatrix.h"
+#include "floatarray.h"
+
+#include <cstdio>
+#include <vector>
+#include <memory>
 
 #define _IFT_ShellQd41_Name "shellqd41"
 #define _IFT_ShellQd41_outputAtXY "outputatxy"
@@ -46,91 +55,49 @@
 #define _IFT_ShellQd41_outputCategory "outputcategory"
 
 namespace oofem {
-    // Enumeration for output location of strains and stresses in element's x-y plane.
-    enum class OutputLocationXY {
-        GaussPoints,
-        Centroid,
-        Corners,
-        All
-    };
-    // Enumeration for output category of strains and stresses.
-    enum class OutputCategory {
-        Membrane,
-        Plate,
-        Combined,
-        All
-    };
-    // Enumeration for output type of strains and stresses.
-    enum class OutputType {
-        Standard,
-        Principal,
-        VM,
-        All
-    };
+	class ShellQd41 : public QdShell
+	{
+		PlnStrssQd1* membrane;
+		PltQd4DKT* plate;
 
-class ShellQd41 : public NLStructuralElement
-{
-    LinQuad3DPlaneStress* membrane;
-    QDKTPlate* plate;
+	private:
+		IntArray positionVectorMemb, positionVectorPlate;
+		double drillCoeff;
 
-public:
-    ShellQd41(int n, Domain* d);
-    virtual ~ShellQd41() { }
+	protected:
+		// This should be moved to the QdShell class (with casted plate and membrane objects).
+		void computeGaussPoints() override;
 
-    void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) { }
-    // Computes B matrix for the plate part of the element at natural coordinates (xi, eta).
-    void computeBmatrixPlateAt(double xi, double eta, FloatMatrix& answer);
-    void computeBmatrixPlateAt(GaussPoint* gp, FloatMatrix& answer);
-    void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
-    void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
-    void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override { }
-    void computeGaussPoints() override;
-    bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
-    int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
-    int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }
-    void computeMembraneStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
-    void computePlateCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
-    void computePlateStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep);
-    double computePlateVolumeAround(GaussPoint* gp);
-    int computeNumberOfDofs() override { return 24; }
-    void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
-    void computeStrainVector(FloatArray& answer, GaussPoint* gp, TimeStep* tStep) override;
-    void computeStrainVectorAtCentroid(FloatArray& answer, TimeStep* tStep);
-    void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
-    void computeStressVectorAtCentroid(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0);
-    void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
-    double computeSurfaceVolumeAround(GaussPoint* gp, int iSurf) override { return computePlateVolumeAround(gp); }
-    double computeVolumeAround(GaussPoint* gp) override;
-    OutputCategory getOutputCategory() { return outputCategory; }
-    OutputLocationXY getOutputLocationInXYPlane() { return outputAtXY; }
-    double getOutputLocationInZ() { return outputAtZ; }
-    OutputType getOutputType() { return outputType; }
-    const char* giveClassName() const override { return "ShellQd41"; }
-    int giveDefaultIntegrationRule() const override { return plate->giveDefaultIntegrationRule(); }
-    void giveDofManDofIDMask(int inode, IntArray&) const override;
-    const char* giveInputRecordName() const override { return _IFT_ShellQd41_Name; }
-    integrationDomain giveIntegrationDomain() const override { return _Square; }
-    IntegrationRule* giveIntegrationRule(int i) override { return plate->giveIntegrationRule(i); }
-    // giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-    void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(24); }
-    FEInterpolation* giveInterpolation() const override { return plate->giveInterpolation(); }
-    MaterialMode giveMaterialMode() override { return _PlaneStress; }
-    std::vector< FloatArray > giveNodeCoordinates();
-    void giveCharacteristicOutput( FloatArray &answer, TimeStep *tStep ) override { this->getStressesTopBottom( answer, tStep ); }
-    void getStressesTopBottom(FloatArray& answer, TimeStep* tStep);
-    void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;
-    void initializeFrom(InputRecord& ir) override;
-    void printOutputAt(FILE* file, TimeStep* tStep) override;
-    void setCrossSection(int csIndx) override;
-    void updateInternalState(TimeStep* tStep) override;
-    void updateLocalNumbering(EntityRenumberingFunctor& f) override;
+	public:
+		ShellQd41(int n, Domain* d);
+		virtual ~ShellQd41() { delete[] membrane; delete[] plate; }
 
-private:
-    OutputLocationXY outputAtXY;
-    OutputCategory outputCategory;
-    OutputType outputType;
-    double outputAtZ = 0.0;
-    double drillCoeff = 100.0;
-};
+		void computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep) override;
+		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
+		// This method is used for stress calculation at Gauss points only for this element.
+		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
+		void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) override;
+		void getStressesTopBottom(FloatArray& answer, TimeStep* tStep) override;
+		const char* giveClassName() const override { return "ShellQd41"; }
+		int giveDefaultIntegrationRule() const override { return plate->giveDefaultIntegrationRule(); }
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override;
+		FEInterpolation* giveInterpolation() const override { return plate->giveInterpolation(); }
+		const char* giveInputRecordName() const override { return _IFT_ShellQd41_Name; }
+		MaterialMode giveMaterialMode() override { return _PlaneStress; }
+		void initializeFrom(InputRecord& ir) override;
+		void setCrossSection(int csIndx) override;
+		void updateLocalNumbering(EntityRenumberingFunctor& f) override;
+
+		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
+		void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
+		int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
+		int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }
+		void computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords) override;
+
+		// This method should never be called.
+		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
+		// This method should never be called.
+		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
+	};
 }
 #endif

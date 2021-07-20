@@ -49,10 +49,10 @@
 #include <memory>
 
 #define _IFT_ShellQd42_Name "shellqd42"
-#define _IFT_ShellQd41_outputAtXY "outputatxy"
-#define _IFT_ShellQd41_outputType "outputtype"
-#define _IFT_ShellQd41_outputAtZ "outputatz"
-#define _IFT_ShellQd41_outputCategory "outputcategory"
+#define _IFT_ShellQd42_outputAtXY "outputatxy"
+#define _IFT_ShellQd42_outputType "outputtype"
+#define _IFT_ShellQd42_outputAtZ "outputatz"
+#define _IFT_ShellQd42_outputCategory "outputcategory"
 
 namespace oofem {
 	class ShellQd42 : public QdShell
@@ -60,6 +60,9 @@ namespace oofem {
 		PlnStrssQd1Rot* membrane;
 		PltQd4DKT* plate;
 
+	private:
+		IntArray positionVectorMemb, positionVectorPlate;
+	
 	protected:
 		// This should be moved to the QdShell class (with casted plate and membrane objects).
 		void computeGaussPoints() override;
@@ -73,8 +76,10 @@ namespace oofem {
 		// This method is used for stress calculation at Gauss points only for this element.
 		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
 		void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) override;
+		void getStressesTopBottom(FloatArray& answer, TimeStep* tStep) override;
 		const char* giveClassName() const override { return "ShellQd42"; }
 		int giveDefaultIntegrationRule() const override { return plate->giveDefaultIntegrationRule(); }
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override;
 		FEInterpolation* giveInterpolation() const override { return plate->giveInterpolation(); }
 		const char* giveInputRecordName() const override { return _IFT_ShellQd42_Name; }
 		MaterialMode giveMaterialMode() override { return _PlaneStress; }
@@ -92,8 +97,6 @@ namespace oofem {
 		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override { }
 		// This method should never be called.
 		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override {};
-		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(24); }
 	};
 }
 #endif

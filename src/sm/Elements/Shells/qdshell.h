@@ -69,7 +69,7 @@ namespace oofem {
         virtual void computeStressVector(FloatArray& answer, const FloatArray& strain, TimeStep* tStep) { }
         OutputCategory getOutputCategory() { return outputCategory; }
         double getOutputLocationInZ() { return outputAtZ; }
-        void getStressesTopBottom(FloatArray& answer, TimeStep* tStep);
+        virtual void getStressesTopBottom(FloatArray& answer, TimeStep* tStep) = 0;
         void giveCharacteristicOutput(FloatArray& answer, TimeStep* tStep) override { this->getStressesTopBottom(answer, tStep); }
         void giveDofManDofIDMask(int inode, IntArray&) const override;
         void giveSurfaceDofMapping(IntArray& answer, int iSurf) const override;

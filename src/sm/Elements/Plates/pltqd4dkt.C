@@ -325,6 +325,44 @@ PltQd4DKT::giveInterpolation() const {
     return &interp_lin;
 }
 
+void
+PltQd4DKT::giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord)
+{
+    FloatMatrix B;
+    FloatArray vStress, vStrain, u;
+
+    // This function can be quite costly to do inside the loops when one has many slave dofs.
+    this->computeVectorOf(VM_Total, tStep, u);
+    // subtract initial displacements, if defined
+    if (initialDisplacements) {
+        u.subtract(*initialDisplacements);
+    }
+
+    // zero answer will resize accordingly when adding first contribution
+    answer.clear();
+    FloatArray curvatures;
+    for (auto& gp : *this->giveDefaultIntegrationRulePtr()) {
+        StructuralMaterialStatus* matStat = static_cast<StructuralMaterialStatus*>(gp->giveMaterialStatus());
+
+        this->computeBmatrixAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), B);
+        computeCurvaturesAt(curvatures, gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), tStep);
+
+        auto mat = dynamic_cast<StructuralMaterial*>(giveStructuralCrossSection()->giveMaterial(gp));
+        vStress = mat->giveRealStressVector_KirchhoffPlate(curvatures, gp, tStep, giveStructuralCrossSection()->giveKirchhoffPlateStiffMtrx(ElasticStiffness, gp, tStep));
+
+        // Compute nodal internal forces at nodes as f = B^T*Stress dV
+        double dV = this->computeVolumeAround(gp);
+
+        answer.plusProduct(B, vStress, dV);
+    }
+
+    // If inactive: update fields but do not give any contribution to the internal forces
+    if (!this->isActivated(tStep)) {
+        answer.zero();
+        return;
+    }
+}
+
 bool
 PltQd4DKT::giveRotationMatrix(FloatMatrix& answer)
 {

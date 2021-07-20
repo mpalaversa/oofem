@@ -56,6 +56,7 @@ namespace oofem {
 
 	class PltQd4DKT : public QdPlate
 	{
+		friend class ShellQd41;
 		friend class ShellQd42;
 	protected:
 		static FEI2dQuadLin interp_lin;
@@ -83,8 +84,7 @@ namespace oofem {
 		void initializeFrom(InputRecord& ir) override;
 		void printOutputAt(FILE* file, TimeStep* tStep) override;
 
-		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(12); }
+		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override;
 	};
 }
 #endif

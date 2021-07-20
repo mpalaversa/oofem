@@ -75,7 +75,7 @@ namespace oofem {
 		MaterialMode giveMaterialMode() override { return _PlaneStress; }
 
 		// giveInternalForcesVector is used only in non-linear analysis. This should be changed when non-linear analysis capabilities are implemented.
-		void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(12); }
+		//void giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) override { answer.resize(12); }
 	};
 }
 #endif

@@ -52,6 +52,11 @@ ShellQd42 :: ShellQd42(int n, Domain* aDomain) : QdShell(n, aDomain)
 
     membrane = new PlnStrssQd1Rot(n, aDomain);
     plate = new PltQd4DKT(n, aDomain);
+
+    positionVectorMemb.resize(12);
+    positionVectorMemb = { 1, 2, 6, 7, 8, 12, 13, 14, 18, 19, 20, 24 };
+    positionVectorPlate.resize(12);
+    positionVectorPlate = { 3, 4, 5, 9, 10, 11, 15, 16, 17, 21, 22, 23 };
 }
 
 void
@@ -220,12 +225,6 @@ ShellQd42::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Ti
     plate->computeStiffnessMatrix(stiffMatPlate, rMode, tStep);
     FloatMatrix stiffMatMembrane;
     membrane->computeStiffnessMatrix(stiffMatMembrane, rMode, tStep);
-
-    IntArray positionVectorMemb, positionVectorPlate;
-    positionVectorMemb.resize(12);
-    positionVectorMemb = { 1, 2, 6, 7, 8, 12, 13, 14, 18, 19, 20, 24 };
-    positionVectorPlate.resize(12);
-    positionVectorPlate = { 3, 4, 5, 9, 10, 11, 15, 16, 17, 21, 22, 23 };
     
     answer.clear();
     answer.resize(24, 24);
@@ -322,6 +321,38 @@ ShellQd42::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const Floa
 }
 
 void
+ShellQd42::getStressesTopBottom(FloatArray& answer, TimeStep* tStep) {
+    // Remove the following 4 lines of code when the method is considered generic.
+    outputAtXY = OutputLocationXY::Centre;
+    outputCategory = OutputCategory::Combined;
+    outputType = OutputType::Standard;
+    outputAtZ = this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2;
+
+    // Initialise output options for the membrane and the plate part.
+    membrane->outputAtXY = outputAtXY;
+    membrane->outputType = outputType;
+    plate->outputAtXY = outputAtXY;
+    plate->outputType = outputType;
+    plate->outputAtZ = outputAtZ;
+
+    computeStressVectorAtCentre(answer, tStep);
+}
+
+void
+ShellQd42::giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) {
+    FloatArray internalForcesMemb, internalForcesPlate;
+
+    membrane->giveInternalForcesVector(internalForcesMemb, tStep, 0);
+    plate->giveInternalForcesVector(internalForcesPlate, tStep, 0);
+
+    answer.resize(24);
+    for (int i = 1; i <= 12; i++) {
+        answer.at(positionVectorMemb.at(i)) = internalForcesMemb.at(i);
+        answer.at(positionVectorPlate.at(i)) = internalForcesPlate.at(i);
+    }
+}
+
+void
 ShellQd42::initializeFrom(InputRecord& ir)
 {
     StructuralElement::initializeFrom(ir);
@@ -330,10 +361,10 @@ ShellQd42::initializeFrom(InputRecord& ir)
 
     int outputAtXYTemp, outputTypeTemp, outputAtZTemp, outputCategoryTemp;
     outputAtXYTemp = outputTypeTemp = outputAtZTemp = outputCategoryTemp = 0;
-    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd41_outputAtXY);
-    IR_GIVE_OPTIONAL_FIELD(ir, outputTypeTemp, _IFT_ShellQd41_outputType);
-    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
-    IR_GIVE_OPTIONAL_FIELD(ir, outputAtZ, _IFT_ShellQd41_outputAtZ);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd42_outputAtXY);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputTypeTemp, _IFT_ShellQd42_outputType);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd42_outputCategory);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtZ, _IFT_ShellQd42_outputAtZ);
 
     switch (outputAtXYTemp) {
     case 1:

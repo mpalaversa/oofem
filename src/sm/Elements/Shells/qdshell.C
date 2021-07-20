@@ -73,17 +73,6 @@ namespace oofem {
 	}
 
 	void
-	QdShell::getStressesTopBottom(FloatArray& answer, TimeStep* tStep) {
-		// Remove the following 4 lines of code when the method is considered generic.
-		outputAtXY = OutputLocationXY::Centre;
-		outputCategory = OutputCategory::Combined;
-		outputType = OutputType::Standard;
-		outputAtZ = this->giveStructuralCrossSection()->give(CS_Thickness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0)) / 2;
-
-        computeStressVectorAtCentre(answer, tStep);
-	}
-
-	void
 	QdShell::giveSurfaceDofMapping(IntArray& answer, int iSurf) const
 	{
 		if (iSurf == 1 || iSurf == 2) {
