@@ -248,6 +248,10 @@ namespace oofem {
         answer.clear();
         answer.resize(24, 24);
 
+        auto tempDrillCoeff = this->giveStructuralCrossSection()->give(CS_RelDrillingStiffness, this->giveDefaultIntegrationRulePtr()->getIntegrationPoint(0));
+        if (tempDrillCoeff != 0.0)
+            drillCoeff = tempDrillCoeff;
+
         int startCol{ 1 };
         for (int i = 1; i <= 12; i++) {
             for (int j = startCol; j <= 12; j++) {
