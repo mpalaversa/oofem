@@ -93,7 +93,7 @@ namespace oofem {
             for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
                 giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
                 NMatrix.beNMatrixOf(NMatrixTemp, 3);
-                dV = computeVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
+                dV = plate->computeVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
                 dens = this->giveCrossSection()->give('d', gp);
                 ntf.beTProductOf(NMatrix, loadVector);
                 loadVectorFromPlate.add(dV * dens, ntf);
