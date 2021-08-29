@@ -455,9 +455,25 @@ namespace oofem {
             break;
         }
 
+        int csClassTemp = 0;
+        IR_GIVE_OPTIONAL_FIELD(ir, csClassTemp, _IFT_ShellQd41_csClass);
+        switch (csClassTemp) {
+        case 1:
+            csClass = CSClass::OOFEM;
+            break;
+        case 2:
+            csClass = CSClass::Nastran;
+            break;
+        default:
+            csClass = CSClass::OOFEM;
+            break;
+        }
+
         // Initialise output options for the membrane and the plate part.
+        membrane->csClass = csClass;
         membrane->outputAtXY = outputAtXY;
         membrane->outputType = outputType;
+        plate->csClass = csClass;
         plate->outputAtXY = outputAtXY;
         plate->outputType = outputType;
         plate->outputAtZ = outputAtZ;

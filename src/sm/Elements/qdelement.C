@@ -32,6 +32,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
  
+#include <cmath>
+
 #include "sm/Elements/qdelement.h"
 
 #include "classfactory.h"
@@ -42,6 +44,7 @@ QdElement::QdElement(int n, Domain* aDomain) : NLStructuralElement(n, aDomain)
 {
         outputAtXY = OutputLocationXY::GaussPoints;
         outputType = OutputType::Standard;
+        csClass = CSClass::OOFEM;
 
         GtoLRotationMatrix = NULL;
         cellGeometryWrapper = NULL;
@@ -54,10 +57,10 @@ QdElement::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx, 
 
 const FloatMatrix*
 QdElement::computeGtoLRotationMatrix()
-// Returns the rotation matrix of the receiver of the size [3,3]
+// Returns the translation matrix of the receiver of the size [3,3]
 // coords(local) = T * coords(global)
 //
-// local coordinate (described by vector triplet e1',e2',e3') is defined as follows:
+// OOFEM's local coordinate system (described by vector triplet e1',e2',e3') is defined as follows (for Nastran's coordinate system description, see the header file):
 //
 // e1'    : [N2-N1]    Ni - means i - th node
 // help   : [N3-N1]
@@ -65,29 +68,96 @@ QdElement::computeGtoLRotationMatrix()
 // e2'    : e3' x e1'
 {
     if (GtoLRotationMatrix == NULL) {
-        FloatArray e1, e2, e3, help;
-        
-        // compute e1' = [N2-N1]  and  help = [N3-N1]
-        e1.beDifferenceOf(this->giveNode(2)->giveCoordinates(), this->giveNode(1)->giveCoordinates());
-        help.beDifferenceOf(this->giveNode(3)->giveCoordinates(), this->giveNode(1)->giveCoordinates());
+        FloatArray node1 = this->giveNode(1)->giveCoordinates();
+        FloatArray node2 = this->giveNode(2)->giveCoordinates();
+        FloatArray node3 = this->giveNode(3)->giveCoordinates();
+        FloatArray node4 = this->giveNode(4)->giveCoordinates();
+        FloatArray e1, e2, e3;
 
-        // let us normalize e1'
-        e1.normalize();
+        switch (csClass)
+        {
+        case CSClass::Nastran:
+        {
+            // Vectors spanned bewteen nodes 1 and 2, 1 and 3 and 2 and 4 respectively.
+            FloatArray v12, v13, v24;
+            v12.beDifferenceOf(node2, node1);
+            v13.beDifferenceOf(node3, node1);
+            v24.beDifferenceOf(node4, node2);
 
-        // compute e3' : vector product of e1' x help
-        e3.beVectorProductOf(e1, help);
-        // let us normalize
-        e3.normalize();
+            // Find angles between vectors v12 and v13 (beta) and between vectors v12 and v24 (gamma).
+            double cosBeta{ 0.0 }, cosGamma{ 0.0 };
+            FloatArray v12Temp;
+            v12Temp.beScaled(-1.0, v12);
+            cosBeta = (v12.dotProduct(v13)) / (v12.computeNorm() * v13.computeNorm());
+            cosGamma = (v12Temp.dotProduct(v24)) / (v12.computeNorm() * v24.computeNorm());
 
-        // now from e3' x e1' compute e2'
-        e2.beVectorProductOf(e3, e1);
+            // Calculate angle between the x-axis and vC3.
+            double alpha = (acos(cosBeta) + acos(cosGamma)) / 2;
+
+            // Calculate vector that is coincident with the x-axis.
+            FloatMatrix rotMat;
+            rotMat.resize(3, 3);
+            rotMat.at(1, 1) = cos(-alpha);
+            rotMat.at(1, 2) = -sin(-alpha);
+            rotMat.at(1, 3) = 0.0;
+            rotMat.at(2, 1) = sin(-alpha);
+            rotMat.at(2, 2) = cos(-alpha);
+            rotMat.at(2, 3) = 0.0;
+            rotMat.at(3, 1) = 0.0;
+            rotMat.at(3, 2) = 0.0;
+            rotMat.at(3, 3) = 1.0;
+
+            FloatArray vX;
+            vX.beProductOf(rotMat, v13);
+
+            // Calculate vector coincident with the z-axis.
+            FloatArray vZ;
+            vX.resizeWithValues(3);
+            vZ.beVectorProductOf(vX, v13);
+
+            // Calculate vector coincident with th y-axis.
+            FloatArray vY;
+            vY.beVectorProductOf(vZ, vX);
+
+            // Calculate unit vectors in the direction of the x, y and z axis.
+            vX.normalize();
+            e1.copySubVector(vX, 1);
+            vY.normalize();
+            e2.copySubVector(vY, 1);
+            vZ.normalize();
+            e3.copySubVector(vZ, 1);
+
+            break;
+        }
+        default:
+        {
+            FloatArray help;
+
+            // compute e1' = [N2-N1]  and  help = [N3-N1]
+            e1.beDifferenceOf(node2, node1);
+            help.beDifferenceOf(node3, node1);
+
+            // let us normalize e1'
+            e1.normalize();
+
+            // compute e3' : vector product of e1' x help
+            e3.beVectorProductOf(e1, help);
+            // let us normalize
+            e3.normalize();
+
+            // now from e3' x e1' compute e2'
+            e2.beVectorProductOf(e3, e1);
+
+            break;
+        }
+        }
 
         GtoLRotationMatrix = new FloatMatrix(3, 3);
 
         for (int i = 1; i <= 3; i++) {
-            GtoLRotationMatrix->at(1, i) = e1.at(i);
-            GtoLRotationMatrix->at(2, i) = e2.at(i);
-            GtoLRotationMatrix->at(3, i) = e3.at(i);
+                GtoLRotationMatrix->at(1, i) = e1.at(i);
+                GtoLRotationMatrix->at(2, i) = e2.at(i);
+                GtoLRotationMatrix->at(3, i) = e3.at(i);
         }
     }
 

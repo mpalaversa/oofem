@@ -47,6 +47,7 @@
 #include <memory>
 
 #define _IFT_PltQd4DKT_Name "pltqd4dkt"
+#define _IFT_PltQd4DKT_csClass "csclass"
 #define _IFT_PltQd4DKT_outputAtXY "outputatxy"
 #define _IFT_PltQd4DKT_outputType "outputtype"
 #define _IFT_PltQd4DKT_outputAtZ "outputatz"

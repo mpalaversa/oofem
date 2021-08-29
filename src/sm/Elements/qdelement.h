@@ -66,6 +66,12 @@ namespace oofem {
             All
         };
 
+        // Enumeration for the element coordinate system class.
+        enum class CSClass {
+            OOFEM, // OOFEM's native coord. sys.
+            Nastran // Nastran's coord. sys. (see MacNeal, RH. Finite Elements: Their Design and Performance. Marcel Dekker, NY (USA), 1994.) 
+        };
+
         FEICellGeometry* cellGeometryWrapper;
         /**
         * Transformation Matrix form GtoL(3,3) is stored
@@ -77,6 +83,7 @@ namespace oofem {
 
         OutputLocationXY outputAtXY;
 		OutputType outputType;
+        CSClass csClass;
 
         virtual void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) = 0;
         void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;

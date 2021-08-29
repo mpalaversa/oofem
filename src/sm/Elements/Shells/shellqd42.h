@@ -49,6 +49,7 @@
 #include <memory>
 
 #define _IFT_ShellQd42_Name "shellqd42"
+#define _IFT_ShellQd42_csClass "csclass"
 #define _IFT_ShellQd42_outputAtXY "outputatxy"
 #define _IFT_ShellQd42_outputType "outputtype"
 #define _IFT_ShellQd42_outputAtZ "outputatz"

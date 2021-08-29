@@ -46,6 +46,7 @@
 #include <memory>
 
 #define _IFT_PlnStrssQd1_Name "plnstrssqd1"
+#define _IFT_PlnStrssQd1_csClass "csclass"
 #define _IFT_PlnStrssQd1_outputAtXY "outputatxy"
 #define _IFT_PlnStrssQd1_outputType "outputtype"
 

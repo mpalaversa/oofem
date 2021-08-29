@@ -150,5 +150,19 @@ PlnStrssQd1::initializeFrom(InputRecord& ir)
         outputType = OutputType::Standard;
         break;
     }
+
+    int csClassTemp = 0;
+    IR_GIVE_OPTIONAL_FIELD(ir, csClassTemp, _IFT_PlnStrssQd1_csClass);
+    switch (csClassTemp) {
+    case 1:
+        csClass = CSClass::OOFEM;
+        break;
+    case 2:
+        csClass = CSClass::Nastran;
+        break;
+    default:
+        csClass = CSClass::OOFEM;
+        break;
+    }
 }
 }
