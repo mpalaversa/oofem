@@ -60,8 +60,8 @@ QdElement::computeGtoLRotationMatrix()
 // Returns the translation matrix of the receiver of the size [3,3]
 // coords(local) = T * coords(global)
 //
-// OOFEM's local coordinate system (described by vector triplet e1',e2',e3') is defined as follows (for Nastran's coordinate system description, see the header file):
-//
+// OOFEM's local coordinate system (described by vector triplet e1',e2',e3') is defined as follows (for a detailed description of
+// the Nastran's coordinate system, see the header file):
 // e1'    : [N2-N1]    Ni - means i - th node
 // help   : [N3-N1]
 // e3'    : e1' x help
@@ -74,8 +74,6 @@ QdElement::computeGtoLRotationMatrix()
         FloatArray node4 = this->giveNode(4)->giveCoordinates();
         FloatArray e1, e2, e3;
 
-        //std::vector< FloatArray > locCoords = giveNodeCoordinates();
-
         switch (csClass)
         {
         case CSClass::Nastran:
@@ -83,7 +81,7 @@ QdElement::computeGtoLRotationMatrix()
             /*
                 In order to obtain three unit vectors (e1, e2 and e3) according to definition of the "Nastran's coordinate system", we start by first defining
                 an element coordinate system in the "standard OOFEM" manner. This coord. sys. will be referred to as the "native OOFEM" coord. sys. and all variables
-                related with such a system will be denoted by "O".
+                related to that system will be denoted by "O".
             */
             // Vectors spanned bewteen nodes 1 and 2 and 1 and 3 respectively.
             FloatArray v12, v13;
@@ -91,7 +89,7 @@ QdElement::computeGtoLRotationMatrix()
             v12.beDifferenceOf(node2, node1);
             v13.beDifferenceOf(node3, node1);
 
-            // Vectors in direction of y and z axes of the element coord. sys. fixed to the plane of the element and defined as the native OOFEM coord. sys.
+            // Vectors in direction of y and z axes of the native OOFEM's element coord. sys. (fixed to the plane of the element).
             FloatArray vZO, vYO;
             vZO.beVectorProductOf(v12, v13);
             vYO.beVectorProductOf(vZO, v12);
@@ -110,7 +108,7 @@ QdElement::computeGtoLRotationMatrix()
             z.resize(3);
             z.at(3) = 1.0;
 
-            // Transformation matrix from the global to the coord. sys. fixed to the element's plane.
+            // Transformation matrix from the global to the native OOFEM's elem. coord. sys.
             FloatMatrix transMatGlobToEl;
             transMatGlobToEl.resize(3, 3);
             transMatGlobToEl.at(1, 1) = v12.dotProduct(x) / v12.computeNorm();
@@ -123,12 +121,9 @@ QdElement::computeGtoLRotationMatrix()
             transMatGlobToEl.at(3, 2) = vZO.dotProduct(y) / vZO.computeNorm();
             transMatGlobToEl.at(3, 3) = vZO.dotProduct(z) / vZO.computeNorm();
 
-            /*
-                The third set of variable names that we will be using here is related to vectors given in the element's coordinate system when it is defined
-                according to the native OOFEM coord. sys. These will end with "El".
-            */
+            // The third set of variable names that we will be using here is related to vectors given in the native OOFEM's element coordinate system. These will end with "El".
             
-            // Vectors spanned bewteen nodes 1 and 2, 1 and 3 and 2 and 4 respectively in the coord. sys. fixed to the element's plane.
+            // Vectors spanned bewteen nodes 1 and 2, 1 and 3 and 2 and 4 respectively in the native OOFEM's coord. sys.
             FloatArray v12El, v13El, v24, v24El;
             v12El.beProductOf(transMatGlobToEl, v12);
             v13El.beProductOf(transMatGlobToEl, v13);
@@ -142,10 +137,10 @@ QdElement::computeGtoLRotationMatrix()
             cosBeta = (v12El.dotProduct(v13El)) / (v12El.computeNorm() * v13El.computeNorm());
             cosGamma = (v12ElTemp.dotProduct(v24El)) / (v12El.computeNorm() * v24El.computeNorm());
 
-            // Calculate angle between the x-axis of the elment coord. sys. and vC3El.
+            // Calculate angle between the x-axis of the new "Nastran's" elment coord. sys. and vC3El.
             double alpha = (acos(cosBeta) + acos(cosGamma)) / 2;
 
-            // Calculate vector that is coincident with the x-axis of the element coord. sys.
+            // Calculate rotation matrix for the vector v13El that will be rotated for the foregoing angle.
             FloatMatrix rotMat;
             rotMat.resize(3, 3);
             rotMat.at(1, 1) = cos(-alpha);
@@ -170,13 +165,16 @@ QdElement::computeGtoLRotationMatrix()
             FloatArray vYEl;
             vYEl.beVectorProductOf(vZEl, vXEl);
 
-            // Vectors in direction of the element ("Nastran's") coord. sys. axes given in the global coordinate system.
+            /*
+                Note that vectors vXEl, vYEl and vZEl, although coincident with the axes of the "Nastran's" coord. sys., are defined in the native OOFEM's element
+                coord. sys. This is why they have the "El" endings! We have to transform them to the global coord. sys. now.
+            */
             FloatArray vX, vY, vZ;
             vX.beTProductOf(transMatGlobToEl, vXEl);
             vY.beTProductOf(transMatGlobToEl, vYEl);
             vZ.beTProductOf(transMatGlobToEl, vZEl);
 
-            // Calculate unit vectors in the direction of the x, y and z axis of the element.
+            // Calculate unit vectors in the direction of the x, y and z axis of the element (in the "Nastran's" coord. sys.).
             vX.normalize();
             e1.copySubVector(vX, 1);
             vY.normalize();
