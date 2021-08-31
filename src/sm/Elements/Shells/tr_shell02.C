@@ -60,6 +60,9 @@ TR_SHELL02 :: TR_SHELL02(int n, Domain *aDomain) : StructuralElement(n, aDomain)
     membrane(std::make_unique<TrPlanestressRotAllman3d>(-1, aDomain))
 {
     numberOfDofMans = 3;
+
+    outputAtXY = OutputLocationXY::GaussPoints;
+    outputCategory = OutputCategory::Combined;
 }
 
 
@@ -73,8 +76,8 @@ TR_SHELL02 :: initializeFrom(InputRecord &ir)
 
     int outputAtXYTemp, outputCategoryTemp;
     outputAtXYTemp = outputCategoryTemp = 0;
-    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_ShellQd41_outputAtXY);
-    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_ShellQd41_outputCategory);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputAtXYTemp, _IFT_TR_SHELL02_outputAtXY);
+    IR_GIVE_OPTIONAL_FIELD(ir, outputCategoryTemp, _IFT_TR_SHELL02_outputCategory);
 
     switch (outputAtXYTemp) {
     case 1:

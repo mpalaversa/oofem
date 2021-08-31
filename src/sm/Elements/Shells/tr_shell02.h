@@ -45,8 +45,8 @@
 #include <memory>
 
 #define _IFT_TR_SHELL02_Name "tr_shell02"
-#define _IFT_ShellQd41_outputAtXY "outputatxy"
-#define _IFT_ShellQd41_outputCategory "outputcategory"
+#define _IFT_TR_SHELL02_outputAtXY "outputatxy"
+#define _IFT_TR_SHELL02_outputCategory "outputcategory"
 
 namespace oofem {
     // Enumeration for output location of strains and stresses in element's x-y plane.
