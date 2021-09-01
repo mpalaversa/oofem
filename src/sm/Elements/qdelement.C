@@ -57,7 +57,7 @@ QdElement::computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx, 
 
 const FloatMatrix*
 QdElement::computeGtoLRotationMatrix()
-// Returns the translation matrix of the receiver of the size [3,3]
+// Returns the rotation matrix of the receiver of the size [3,3]
 // coords(local) = T * coords(global)
 //
 // OOFEM's local coordinate system (described by vector triplet e1',e2',e3') is defined as follows (for a detailed description of
