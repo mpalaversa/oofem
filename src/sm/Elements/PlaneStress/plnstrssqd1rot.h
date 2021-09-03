@@ -57,7 +57,11 @@ namespace oofem {
 	{
 		friend class ShellQd42;
 	private:
+		// Matrix that transforms the displacement vector of the 8-node quad to the displacement vector of the 4-node quad with rotational DOFs.
+		FloatMatrix TMatrix;
+
 		void getVertexNodes(IntArray &answer, int midsideNode);
+		void getTransformationMatrix();
 
 	protected:
 		static FEI2dQuadQuad interpolation;
@@ -67,6 +71,7 @@ namespace oofem {
 		virtual ~PlnStrssQd1Rot() {}
 
 		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override;
+		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
 		bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
 		const char* giveClassName() const override { return "PlnStrssQd1Rot"; }
 		void giveDofManDofIDMask(int inode, IntArray&) const override;

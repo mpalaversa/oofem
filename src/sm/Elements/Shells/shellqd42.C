@@ -61,53 +61,23 @@ ShellQd42 :: ShellQd42(int n, Domain* aDomain) : QdShell(n, aDomain)
 
 void
 ShellQd42::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
-    double dens, dV;
-    FloatArray force, ntf, loadVectorFromPlate;
-    FloatMatrix T;
+    FloatArray loadFromMembrane, loadFromPlate;
+    FloatMatrix rotMat;
 
-    if ((forLoad->giveBCGeoType() != BodyLoadBGT) || (forLoad->giveBCValType() != ForceLoadBVT)) {
-        OOFEM_ERROR("unknown load type");
-    }
+    // Calculate distribution of loads for the membrane and plate part. Note that they are all given in the element coord. sys.
+    membrane->computeBodyLoadVectorAt(loadFromMembrane, forLoad, tStep, mode);
+    plate->computeBodyLoadVectorAt(loadFromPlate, forLoad, tStep, mode);
 
-    // note: force is assumed to be in global coordinate system.
-    forLoad->computeComponentArrayAt(force, tStep, mode);
-    // transform from global to element local c.s
-    if (this->computeLoadGToLRotationMtrx(T)) {
-        force.rotatedWith(T, 'n');
-    }
-    FloatArray loadVector;
-    loadVector.resize(3);
-    int j{ 1 };
-    for (int i = 1; i <= force.giveSize(); i++)
-        if (force.at(i) != double(0)) {
-            loadVector.at(1) = force.at(i);
-            j = i;
-        }
-
-    loadVectorFromPlate.clear();
-    FloatArray NMatrixTemp;
-    FloatMatrix NMatrix;
-    if (loadVector.giveSize()) {
-        for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
-            giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
-            NMatrix.beNMatrixOf(NMatrixTemp, 3);
-            dV = plate->computeVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
-            dens = this->giveCrossSection()->give('d', gp);
-            ntf.beTProductOf(NMatrix, loadVector);
-            loadVectorFromPlate.add(dV * dens, ntf);
-        }
-    }
-    else {
-        return;
-    }
-
+    // Assemble shell load vector from the membrane and plate parts.
     answer.resize(24);
-    answer.zero();
+    int j = 1;
     for (int i = 1; i <= 12; i += 3) {
-        // takes into account only local w-displacement (add \theta_x and \theta_y in the future)
-        answer.at(j) = loadVectorFromPlate.at(i);
-        //answer.at(j+1) = loadVectorFromPlate.at(i+1);
-        //answer.at(j+2) = loadVectorFromPlate.at(i+2);
+        answer.at(j) = loadFromMembrane.at(i);
+        answer.at(j + 1) = loadFromMembrane.at(i + 1);
+        answer.at(j + 2) = loadFromPlate.at(i);
+        answer.at(j + 3) = loadFromPlate.at(i + 1);
+        answer.at(j + 4) = loadFromPlate.at(i + 2);
+        answer.at(j + 5) = loadFromMembrane.at(i + 2);
         j += 6;
     }
 }

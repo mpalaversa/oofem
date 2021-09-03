@@ -57,6 +57,7 @@ namespace oofem {
 		QdPlate(int n, Domain* d);
 		virtual ~QdPlate() = default;
 
+		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
 		virtual void computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) = 0;
 		void computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain = 0) override;
 		double getOutputLocationInZ() { return outputAtZ; }

@@ -62,60 +62,31 @@ namespace oofem {
     }
 
     void
-        ShellQd41::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
-        double dens, dV;
-        FloatArray force, ntf, loadVectorFromPlate;
-        FloatMatrix T;
+    ShellQd41::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
+        FloatArray loadFromMembrane, loadFromPlate;
+        FloatMatrix rotMat;
 
-        if ((forLoad->giveBCGeoType() != BodyLoadBGT) || (forLoad->giveBCValType() != ForceLoadBVT)) {
-            OOFEM_ERROR("unknown load type");
-        }
+        // Calculate distribution of loads for the membrane and plate part. Note that they are all given in the element coord. sys.
+        membrane->computeBodyLoadVectorAt(loadFromMembrane, forLoad, tStep, mode);
+        plate->computeBodyLoadVectorAt(loadFromPlate, forLoad, tStep, mode);
 
-        // note: force is assumed to be in global coordinate system.
-        forLoad->computeComponentArrayAt(force, tStep, mode);
-        // transform from global to element local c.s
-        if (this->computeLoadGToLRotationMtrx(T)) {
-            force.rotatedWith(T, 'n');
-        }
-        FloatArray loadVector;
-        loadVector.resize(3);
-        int j{ 1 };
-        for (int i = 1; i <= force.giveSize(); i++)
-            if (force.at(i) != double(0)) {
-                loadVector.at(1) = force.at(i);
-                j = i;
-            }
-
-        loadVectorFromPlate.clear();
-        FloatArray NMatrixTemp;
-        FloatMatrix NMatrix;
-        if (loadVector.giveSize()) {
-            for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
-                giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
-                NMatrix.beNMatrixOf(NMatrixTemp, 3);
-                dV = plate->computeVolumeAround(gp) * this->giveCrossSection()->give(CS_Thickness, gp);
-                dens = this->giveCrossSection()->give('d', gp);
-                ntf.beTProductOf(NMatrix, loadVector);
-                loadVectorFromPlate.add(dV * dens, ntf);
-            }
-        }
-        else {
-            return;
-        }
-
+        // Assemble shell load vector from the membrane and plate parts.
         answer.resize(24);
-        answer.zero();
+        int j = 1;
+        int k = 1;
         for (int i = 1; i <= 12; i += 3) {
-            // takes into account only local w-displacement (add \theta_x and \theta_y in the future)
-            answer.at(j) = loadVectorFromPlate.at(i);
-            //answer.at(j+1) = loadVectorFromPlate.at(i+1);
-            //answer.at(j+2) = loadVectorFromPlate.at(i+2);
+            answer.at(j) = loadFromMembrane.at(k);
+            answer.at(j + 1) = loadFromMembrane.at(k + 1);
+            answer.at(j + 2) = loadFromPlate.at(i);
+            answer.at(j + 3) = loadFromPlate.at(i + 1);
+            answer.at(j + 4) = loadFromPlate.at(i + 2);
             j += 6;
+            k += 2;
         }
     }
 
     void
-        ShellQd41::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
+    ShellQd41::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
     {
         answer.clear();
         if (type != ExternalForcesVector) {
@@ -205,7 +176,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::computeGaussPoints()
+    ShellQd41::computeGaussPoints()
     {
         // Sets up the integration rule array which contains all the Gauss points
         // Default: create one integration rule
@@ -221,7 +192,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep)
+    ShellQd41::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, TimeStep* tStep)
     {        
         FloatMatrix stiffMatMembrane, stiffMatMembraneTemp;
         membrane->computeStiffnessMatrix(stiffMatMembraneTemp, rMode, tStep);
@@ -269,7 +240,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
+    ShellQd41::computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) {
         FloatArray membraneStrains, plateStrains;
 
         switch (outputCategory) {
@@ -293,7 +264,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) {
+    ShellQd41::computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) {
         FloatArray membraneStrains, membraneStresses, plateStrains, plateStresses;
         switch (outputCategory) {
         case OutputCategory::Membrane:
@@ -318,7 +289,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
+    ShellQd41::computeStressVectorAtCentre(FloatArray& answer, TimeStep* tStep, const FloatArray& strain) {
         FloatArray membraneStrains, plateStrains, membraneStresses, plateStresses;
 
         switch (outputCategory) {
@@ -340,7 +311,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords)
+    ShellQd41::computeSurfaceNMatrix(FloatMatrix& answer, int boundaryID, const FloatArray& lcoords)
     {
         FloatArray n_vec;
         this->giveInterpolation()->boundarySurfaceEvalN(n_vec, boundaryID, lcoords, *giveCellGeometryWrapper());
@@ -348,7 +319,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::getStressesTopBottom(FloatArray& answer, TimeStep* tStep) {
+    ShellQd41::getStressesTopBottom(FloatArray& answer, TimeStep* tStep) {
         // Remove the following 4 lines of code when the method is considered generic.
         outputAtXY = OutputLocationXY::Centre;
         outputCategory = OutputCategory::Combined;
@@ -366,7 +337,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) {
+    ShellQd41::giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) {
         FloatArray internalForcesMemb, internalForcesMembTemp, internalForcesPlate;
 
         membrane->giveInternalForcesVector(internalForcesMembTemp, tStep, 0);
@@ -390,7 +361,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::initializeFrom(InputRecord& ir)
+    ShellQd41::initializeFrom(InputRecord& ir)
     {
         StructuralElement::initializeFrom(ir);
         plate->initializeFrom(ir);
@@ -480,7 +451,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::setCrossSection(int csIndx)
+    ShellQd41::setCrossSection(int csIndx)
     {
         StructuralElement::setCrossSection(csIndx);
         plate->setCrossSection(csIndx);
@@ -488,7 +459,7 @@ namespace oofem {
     }
 
     void
-        ShellQd41::updateLocalNumbering(EntityRenumberingFunctor& f)
+    ShellQd41::updateLocalNumbering(EntityRenumberingFunctor& f)
     {
         // Update numbering of the related DOFs for the membrane and plate part.
         membrane->updateLocalNumbering(f);

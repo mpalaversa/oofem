@@ -36,6 +36,7 @@
 
 #include "classfactory.h"
 #include "gaussintegrationrule.h"
+#include "load.h"
 #include "sm/CrossSections/structuralcrosssection.h"
 
 namespace oofem {
@@ -44,6 +45,42 @@ namespace oofem {
         outputAtZ = 0.0;
     }
 
+    void
+    QdPlate::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
+        double density, dV;
+        FloatArray acceleration, distributedAcceleration;
+        FloatMatrix T;
+
+        if ((forLoad->giveBCGeoType() != BodyLoadBGT) || (forLoad->giveBCValType() != ForceLoadBVT)) {
+            OOFEM_ERROR("Unknown load type.");
+        }
+
+        forLoad->computeComponentArrayAt(acceleration, tStep, mode);
+        // The acceleration vector is given in the global coordinate system and needs to be transformed to the element local c.s.
+        if (this->computeLoadGToLRotationMtrx(T))
+            acceleration.rotatedWith(T, 'n');
+
+        // A general membrane element can take up two forces (only forces in plane of the element).
+        FloatArray localAccelerationVector;
+        localAccelerationVector.resize(3);
+        int j = 3;
+        for (int i = 1; i <= 3; i++) {
+            localAccelerationVector.at(i) = acceleration.at(j);
+            j++;
+        }
+
+        FloatArray NMatrixTemp;
+        FloatMatrix NMatrix;
+        for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
+            giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
+            NMatrix.beNMatrixOf(NMatrixTemp, 3);
+            dV = computeSurfaceVolumeAround(gp, 1) * this->giveCrossSection()->give(CS_Thickness, gp);
+            density = this->giveCrossSection()->give('d', gp);
+            distributedAcceleration.beTProductOf(NMatrix, localAccelerationVector);
+            answer.add(dV * density, distributedAcceleration);
+        }
+    }
+    
     void
     QdPlate::computeGaussPoints()
         // Sets up the array containing the four Gauss points of the receiver.

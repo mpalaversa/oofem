@@ -37,6 +37,7 @@
 #include "classfactory.h"
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
+#include "load.h"
 #include "sm/Materials/structuralms.h"
 #include "sm/CrossSections/structuralcrosssection.h"
 
@@ -44,6 +45,39 @@ namespace oofem {
 QdMembrane::QdMembrane(int n, Domain* aDomain) : QdElement(n, aDomain)
 {
 
+}
+
+void
+QdMembrane::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
+    double density, dV;
+    FloatArray acceleration, distributedAcceleration;
+    FloatMatrix T;
+
+    if ((forLoad->giveBCGeoType() != BodyLoadBGT) || (forLoad->giveBCValType() != ForceLoadBVT)) {
+        OOFEM_ERROR("Unknown load type.");
+    }
+
+    forLoad->computeComponentArrayAt(acceleration, tStep, mode);
+    // The acceleration vector is given in the global coordinate system and needs to be transformed to the element local c.s.
+    if (this->computeLoadGToLRotationMtrx(T))
+        acceleration.rotatedWith(T, 'n');
+
+    // A general membrane element can take up two forces (only forces in plane of the element).
+    FloatArray localAccelerationVector;
+    localAccelerationVector.resize(2);
+    localAccelerationVector.at(1) = acceleration.at(1);
+    localAccelerationVector.at(2) = acceleration.at(2);
+    
+    FloatArray NMatrixTemp;
+    FloatMatrix NMatrix;
+    for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
+        giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
+        NMatrix.beNMatrixOf(NMatrixTemp, 2);
+        dV = computeSurfaceVolumeAround(gp, 1) * this->giveCrossSection()->give(CS_Thickness, gp);
+        density = this->giveCrossSection()->give('d', gp);
+        distributedAcceleration.beTProductOf(NMatrix, localAccelerationVector);
+        answer.add(dV * density, distributedAcceleration);
+    }
 }
 
 void

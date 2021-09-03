@@ -35,6 +35,8 @@
 #include "sm/Elements/PlaneStress/plnstrssqd1rot.h"
 #include "classfactory.h"
 #include "fei2dquadquad.h"
+#include "load.h"
+#include "sm/CrossSections/structuralcrosssection.h"
 
 namespace oofem {
 REGISTER_Element(PlnStrssQd1Rot);
@@ -70,34 +72,47 @@ PlnStrssQd1Rot::computeBmatrixAt(double xi, double eta, FloatMatrix& answer)
         BMatrix8.at(3, 2 * i - 0) = dNdx.at(i, 1);
     }
 
-    // Fetch nodes coordinates in element's coord. system.
-    std::vector< FloatArray > locCoords = giveNodeCoordinates();
-
-    // Matrix that transforms the displacement vector of the 8-node quad to the displacement vector of the 4-node quad with rotational DOFs.
-    FloatMatrix TMatrix;
-    TMatrix.resize(16, 12);
-    // u and v at the vertices of the 8-node element correspond to those of the 4-node element.
-    TMatrix.at(1, 1) = TMatrix.at(2, 2) = TMatrix.at(3, 4) = TMatrix.at(4, 5) = TMatrix.at(5, 7) = TMatrix.at(6, 8) = TMatrix.at(7, 10) = TMatrix.at(8, 11) = 1;
-    
-    // Set transformation coefficients for the DOFs at the midside nodes.
-    int midsideNode{ 5 };
-    IntArray vertexNodes;
-    for (int i = 9; i <= 16; i+=2) {
-        getVertexNodes(vertexNodes, midsideNode);
-        // Set values for transformation of u at a midside node.
-        TMatrix.at(i, (vertexNodes.at(1) - 1) * 3 + 1) = 0.5;
-        TMatrix.at(i, (vertexNodes.at(1) - 1) * 3 + 3) = - (locCoords.at(vertexNodes.at(2) - 1)[1] - locCoords.at(vertexNodes.at(1) - 1)[1])/8;
-        TMatrix.at(i, (vertexNodes.at(2) - 1) * 3 + 1) = 0.5;
-        TMatrix.at(i, (vertexNodes.at(2) - 1) * 3 + 3) = (locCoords.at(vertexNodes.at(2) - 1)[1] - locCoords.at(vertexNodes.at(1) - 1)[1]) / 8;
-        // Set values for transformation of v at a midside node.
-        TMatrix.at(i + 1, (vertexNodes.at(1) - 1) * 3 + 2) = 0.5;
-        TMatrix.at(i + 1, (vertexNodes.at(1) - 1) * 3 + 3) = (locCoords.at(vertexNodes.at(2) - 1)[0] - locCoords.at(vertexNodes.at(1) - 1)[0]) / 8;
-        TMatrix.at(i + 1, (vertexNodes.at(2) - 1) * 3 + 2) = 0.5;
-        TMatrix.at(i + 1, (vertexNodes.at(2) - 1) * 3 + 3) = - (locCoords.at(vertexNodes.at(2) - 1)[0] - locCoords.at(vertexNodes.at(1) - 1)[0]) / 8;
-        midsideNode++;
-    }
+    if(!TMatrix.isNotEmpty())
+        getTransformationMatrix();
 
     answer.beProductOf(BMatrix8, TMatrix);
+}
+
+void
+PlnStrssQd1Rot::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) {
+    double density, dV;
+    FloatArray acceleration, distributedAcceleration, loadVector;
+    FloatMatrix T;
+
+    if ((forLoad->giveBCGeoType() != BodyLoadBGT) || (forLoad->giveBCValType() != ForceLoadBVT)) {
+        OOFEM_ERROR("Unknown load type.");
+    }
+
+    forLoad->computeComponentArrayAt(acceleration, tStep, mode);
+    // The acceleration vector is given in the global coordinate system and needs to be transformed to the element local c.s.
+    if (this->computeLoadGToLRotationMtrx(T))
+        acceleration.rotatedWith(T, 'n');
+
+    // A general membrane element can take up two forces in its own plane only.
+    FloatArray localAccelerationVector;
+    localAccelerationVector.resize(2);
+    localAccelerationVector.at(1) = acceleration.at(1);
+    localAccelerationVector.at(2) = acceleration.at(2);
+
+    if (!TMatrix.isNotEmpty())
+        getTransformationMatrix();
+    
+    FloatArray NMatrixTemp;
+    FloatMatrix NMatrix, NMatrixTransformed;
+    for (GaussPoint* gp : *this->giveDefaultIntegrationRulePtr()) {
+        giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
+        NMatrix.beNMatrixOf(NMatrixTemp, 2);
+        NMatrixTransformed.beProductOf(NMatrix, TMatrix);
+        dV = computeSurfaceVolumeAround(gp, 1) * this->giveCrossSection()->give(CS_Thickness, gp);
+        density = this->giveCrossSection()->give('d', gp);
+        distributedAcceleration.beTProductOf(NMatrixTransformed, localAccelerationVector);
+        answer.add(dV * density, distributedAcceleration);
+    }
 }
 
 bool
@@ -119,6 +134,35 @@ PlnStrssQd1Rot::computeGtoLRotationMatrix(FloatMatrix& answer)
     }
 
     return 1;
+}
+
+void
+PlnStrssQd1Rot::getTransformationMatrix() {
+    // Fetch nodes coordinates in element's coord. system.
+    std::vector< FloatArray > locCoords = giveNodeCoordinates();
+
+    TMatrix.resize(16, 12);
+
+    // u and v at the vertices of the 8-node element correspond to those of the 4-node element.
+    TMatrix.at(1, 1) = TMatrix.at(2, 2) = TMatrix.at(3, 4) = TMatrix.at(4, 5) = TMatrix.at(5, 7) = TMatrix.at(6, 8) = TMatrix.at(7, 10) = TMatrix.at(8, 11) = 1;
+
+    // Set transformation coefficients for the DOFs at the midside nodes.
+    int midsideNode{ 5 };
+    IntArray vertexNodes;
+    for (int i = 9; i <= 16; i += 2) {
+        getVertexNodes(vertexNodes, midsideNode);
+        // Set values for transformation of u at a midside node.
+        TMatrix.at(i, (vertexNodes.at(1) - 1) * 3 + 1) = 0.5;
+        TMatrix.at(i, (vertexNodes.at(1) - 1) * 3 + 3) = -(locCoords.at(vertexNodes.at(2) - 1)[1] - locCoords.at(vertexNodes.at(1) - 1)[1]) / 8;
+        TMatrix.at(i, (vertexNodes.at(2) - 1) * 3 + 1) = 0.5;
+        TMatrix.at(i, (vertexNodes.at(2) - 1) * 3 + 3) = (locCoords.at(vertexNodes.at(2) - 1)[1] - locCoords.at(vertexNodes.at(1) - 1)[1]) / 8;
+        // Set values for transformation of v at a midside node.
+        TMatrix.at(i + 1, (vertexNodes.at(1) - 1) * 3 + 2) = 0.5;
+        TMatrix.at(i + 1, (vertexNodes.at(1) - 1) * 3 + 3) = (locCoords.at(vertexNodes.at(2) - 1)[0] - locCoords.at(vertexNodes.at(1) - 1)[0]) / 8;
+        TMatrix.at(i + 1, (vertexNodes.at(2) - 1) * 3 + 2) = 0.5;
+        TMatrix.at(i + 1, (vertexNodes.at(2) - 1) * 3 + 3) = -(locCoords.at(vertexNodes.at(2) - 1)[0] - locCoords.at(vertexNodes.at(1) - 1)[0]) / 8;
+        midsideNode++;
+    }
 }
 
 void
