@@ -72,7 +72,10 @@ namespace oofem {
 
 		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override;
 		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
+		// This method is implemented and tested for surface loads only.
+		void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
 		bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
+		IntArray giveBoundarySurfaceNodes(int boundary) const override;
 		const char* giveClassName() const override { return "PlnStrssQd1Rot"; }
 		void giveDofManDofIDMask(int inode, IntArray&) const override;
 		const char* giveInputRecordName() const override { return _IFT_PlnStrssQd1Rot_Name; }

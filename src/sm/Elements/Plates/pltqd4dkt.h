@@ -66,6 +66,8 @@ namespace oofem {
 		virtual ~PltQd4DKT() {}
 
 		void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) override;
+		// This method is implemented and tested for surface loads only.
+		void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
 		//This method should be implemented at the Kirchhoff/Mindlin plate level.
 		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
 		//This method should be implemented at the Kirchhoff/Mindlin plate level.

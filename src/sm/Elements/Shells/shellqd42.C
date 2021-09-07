@@ -85,91 +85,14 @@ ShellQd42::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* 
 void
 ShellQd42::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
 {
-    answer.clear();
-    if (type != ExternalForcesVector) {
-        return;
-    }
+    FloatArray loadFromMembrane, loadFromPlate;
+    // Calculate loads from the membrane and plate part.
+    membrane->computeBoundarySurfaceLoadVector(loadFromMembrane, load, boundary, type, mode, tStep, global);
+    plate->computeBoundarySurfaceLoadVector(loadFromPlate, load, boundary, type, mode, tStep, global);
 
-    FEInterpolation* fei = this->giveInterpolation();
-    if (!fei) {
-        OOFEM_ERROR("No interpolator available");
-    }
-
-    FloatArray n_vec;
-    FloatMatrix n, T;
-    FloatArray force, globalIPcoords;
-    //int nsd = fei->giveNsd();
-
-    std::unique_ptr< IntegrationRule >iRule(this->giveBoundarySurfaceIntegrationRule(load->giveApproxOrder(), boundary));
-
-    for (GaussPoint* gp : *iRule) {
-        const FloatArray& lcoords = gp->giveNaturalCoordinates();
-
-        if (load->giveFormulationType() == Load::FT_Entity) {
-            load->computeValueAt(force, tStep, lcoords, mode);
-        }
-        else {
-            fei->boundaryLocal2Global(globalIPcoords, boundary, lcoords, *giveCellGeometryWrapper());
-            load->computeValueAt(force, tStep, globalIPcoords, mode);
-        }
-
-        ///@todo Make sure this part is correct.
-        // We always want the global values in the end, so we might as well compute them here directly:
-        // transform force
-        if (load->giveCoordSystMode() == Load::CST_Global) {
-            // then just keep it in global c.s
-        }
-        else {
-            ///@todo Support this...
-            // transform from local boundary to element local c.s
-            // uncommented since the other (now commented) approach did not work correctly
-            if (this->computeLoadLSToLRotationMatrix(T, boundary, gp)) {
-                force.rotatedWith(T, 'n');
-            }
-            // then to global c.s
-            //if ( this->computeLoadGToLRotationMtrx(T) ) {
-            //    force.rotatedWith(T, 't');
-            //}
-        }
-
-        // Construct n-matrix
-        this->computeSurfaceNMatrix(n, boundary, lcoords); // to allow adaptation on element level
-
-        ///@todo Some way to ask for the thickness at a global coordinate maybe?
-        double thickness = 1.0; // Should be the circumference for axisymm-elements.
-        double dV = thickness * this->computeSurfaceVolumeAround(gp, boundary);
-        answer.plusProduct(n, force, dV);
-    }
-
-    if (load->giveCoordSystMode() == Load::CST_Local) {
-        FloatMatrix transMat, transMatTemp;
-        computeLoadGToLRotationMtrx(transMatTemp);
-        transMat.resize(6, 6);
-        transMat.beTranspositionOf(transMatTemp);
-
-        FloatArray firstNodeLoads, secondNodeLoads, thirdNodeLoads, fourthNodeLoads;
-        firstNodeLoads.resize(6), secondNodeLoads.resize(6), thirdNodeLoads.resize(6), fourthNodeLoads.resize(6);
-        for (int i = 1; i <= 6; i++) {
-            firstNodeLoads.at(i) = answer.at(i);
-            secondNodeLoads.at(i) = answer.at(i + 6);
-            thirdNodeLoads.at(i) = answer.at(i + 12);
-            fourthNodeLoads.at(i) = answer.at(i + 18);
-        }
-
-        FloatArray firstNodeLoadsTemp, secondNodeLoadsTemp, thirdNodeLoadsTemp, fourthNodeLoadsTemp;
-        firstNodeLoadsTemp.resize(6), secondNodeLoadsTemp.resize(6), thirdNodeLoadsTemp.resize(6), fourthNodeLoadsTemp.resize(6);
-        firstNodeLoadsTemp.beProductOf(transMat, firstNodeLoads);
-        secondNodeLoadsTemp.beProductOf(transMat, secondNodeLoads);
-        thirdNodeLoadsTemp.beProductOf(transMat, thirdNodeLoads);
-        fourthNodeLoadsTemp.beProductOf(transMat, fourthNodeLoads);
-
-        for (int i = 1; i <= 6; i++) {
-            answer.at(i) = firstNodeLoadsTemp.at(i);
-            answer.at(i + 6) = secondNodeLoadsTemp.at(i);
-            answer.at(i + 12) = thirdNodeLoadsTemp.at(i);
-            answer.at(i + 18) = fourthNodeLoadsTemp.at(i);
-        }
-    }
+    // Add the membrane and the plate contribution.
+    answer.add(loadFromMembrane);
+    answer.add(loadFromPlate);
 }
 
 void

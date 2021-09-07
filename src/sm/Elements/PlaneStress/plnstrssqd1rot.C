@@ -33,6 +33,7 @@
  */
  
 #include "sm/Elements/PlaneStress/plnstrssqd1rot.h"
+#include "boundaryload.h"
 #include "classfactory.h"
 #include "fei2dquadquad.h"
 #include "load.h"
@@ -115,6 +116,64 @@ PlnStrssQd1Rot::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeS
     }
 }
 
+void
+PlnStrssQd1Rot::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
+{
+    // For comments that explain steps in this method, see a similar method in QdMembrane class.
+    if (type != ExternalForcesVector)
+        return;
+
+    FEInterpolation* fei = this->giveInterpolation();
+    if (!fei)
+        OOFEM_ERROR("No interpolator available");
+
+    double dS;
+    FloatArray n_vec;
+    FloatMatrix NMatrix, NMatrixTransformed;
+    FloatArray force, globalIPcoords, NMatrixTemp, distributedForceTotal;
+
+    std::unique_ptr< IntegrationRule >iRule(this->giveBoundarySurfaceIntegrationRule(load->giveApproxOrder(), boundary));
+
+    if (!TMatrix.isNotEmpty())
+        getTransformationMatrix();
+
+    for (GaussPoint* gp : *iRule) {
+        const FloatArray& lcoords = gp->giveNaturalCoordinates();
+
+        if (load->giveFormulationType() == Load::FT_Entity) {
+            load->computeValueAt(force, tStep, lcoords, mode);
+        }
+        else {
+            fei->boundaryLocal2Global(globalIPcoords, boundary, lcoords, *giveCellGeometryWrapper());
+            load->computeValueAt(force, tStep, globalIPcoords, mode);
+        }
+
+        if (load->giveCoordSystMode() == Load::CST_Global) {
+            FloatMatrix loadTransformMat;
+            computeLoadGToLRotationMtrx(loadTransformMat);
+            force.beProductOf(loadTransformMat, force);
+        }
+        else if (load->giveCoordSystMode() == Load::CST_UpdatedGlobal)
+            OOFEM_ERROR("Definition of loads is permitted only in local and global coordinate system for this element.");
+
+        FloatArray localForce, distributedForce;
+        localForce.resize(2);
+        localForce.at(1) = force.at(1);
+        localForce.at(2) = force.at(2);
+
+        giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
+        NMatrix.beNMatrixOf(NMatrixTemp, 2);
+        NMatrixTransformed.beProductOf(NMatrix, TMatrix);
+        dS = computeSurfaceVolumeAround(gp, 1);
+        distributedForce.beTProductOf(NMatrixTransformed, localForce);
+        distributedForceTotal.add(dS, distributedForce);
+    }
+
+    FloatMatrix transformMat;
+    computeGtoLRotationMatrix(transformMat);
+    answer.beTProductOf(transformMat, distributedForceTotal);
+}
+
 bool
 PlnStrssQd1Rot::computeGtoLRotationMatrix(FloatMatrix& answer)
 // Returns the rotation matrix of the receiver of the size [24,24]
@@ -178,6 +237,14 @@ PlnStrssQd1Rot::getVertexNodes(IntArray &answer, int midsideNode)
 
     answer.at(1) = smallerVertex;
     answer.at(2) = greaterVertex;
+}
+
+IntArray
+PlnStrssQd1Rot::giveBoundarySurfaceNodes(int boundary) const
+{
+    IntArray nodes = this->giveInterpolation()->boundarySurfaceGiveNodes(boundary);
+    nodes.resizeWithValues(4);
+    return nodes;
 }
 
 void

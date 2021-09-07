@@ -54,6 +54,8 @@ namespace oofem {
 
 		// This method is intended for a general membrane element (2 translations per node in a 2D case).
 		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
+		// This method is intended for a general membrane element (2 translations per node in a 2D case) loaded with a constant surface load. 
+		void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
 		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
 		virtual bool computeGtoLRotationMatrix(FloatMatrix& answer) override = 0;
 		void computeStrainVectorAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;

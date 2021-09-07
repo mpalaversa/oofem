@@ -90,6 +90,7 @@ namespace oofem {
 		void updateLocalNumbering(EntityRenumberingFunctor& f) override;
 
 		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
+		// This method is implemented and tested for surface loads only.
 		void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
 		int computeLoadGToLRotationMtrx(FloatMatrix& answer) override { return membrane->computeLoadGToLRotationMtrx(answer); }
 		int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }

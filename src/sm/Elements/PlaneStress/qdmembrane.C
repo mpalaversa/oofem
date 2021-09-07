@@ -34,6 +34,7 @@
  
 #include "sm/Elements/PlaneStress/qdmembrane.h"
 
+#include "boundaryload.h"
 #include "classfactory.h"
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
@@ -78,6 +79,63 @@ QdMembrane::computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep*
         distributedAcceleration.beTProductOf(NMatrix, localAccelerationVector);
         answer.add(dV * density, distributedAcceleration);
     }
+}
+
+void
+QdMembrane::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
+{
+    if (type != ExternalForcesVector)
+        return;
+
+    FEInterpolation* fei = this->giveInterpolation();
+    if (!fei)
+        OOFEM_ERROR("No interpolator available");
+
+    double dS;
+    FloatArray n_vec;
+    FloatMatrix NMatrix;
+    FloatArray force, globalIPcoords, NMatrixTemp, distributedForceTotal;
+
+    std::unique_ptr< IntegrationRule >iRule(this->giveBoundarySurfaceIntegrationRule(load->giveApproxOrder(), boundary));
+
+    for (GaussPoint* gp : *iRule) {
+        const FloatArray& lcoords = gp->giveNaturalCoordinates();
+
+        if (load->giveFormulationType() == Load::FT_Entity) {
+            load->computeValueAt(force, tStep, lcoords, mode);
+        }
+        else {
+            fei->boundaryLocal2Global(globalIPcoords, boundary, lcoords, *giveCellGeometryWrapper());
+            load->computeValueAt(force, tStep, globalIPcoords, mode);
+        }
+
+        if (load->giveCoordSystMode() == Load::CST_Global) {
+            // loadTransformMat is used to transform the load vector from the global to the element's coord. sys.
+            FloatMatrix loadTransformMat;
+            computeLoadGToLRotationMtrx(loadTransformMat);
+            force.beProductOf(loadTransformMat, force);
+        }
+        else if (load->giveCoordSystMode() == Load::CST_UpdatedGlobal)
+            OOFEM_ERROR("Definition of loads is permitted only in local and global coordinate system for this element.");
+
+        // localForce comprises load components in the element's coordinate system related with its DOFs.
+        // distributedForce comprises load components distributed as per the element's shape functions.
+        FloatArray localForce, distributedForce;
+        localForce.resize(2);
+        localForce.at(1) = force.at(1);
+        localForce.at(2) = force.at(2);
+
+        giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
+        NMatrix.beNMatrixOf(NMatrixTemp, 2);
+        dS = computeSurfaceVolumeAround(gp, 1);
+        distributedForce.beTProductOf(NMatrix, localForce);
+        distributedForceTotal.add(dS, distributedForce);
+    }
+
+    // transformMat is used to transform the distributed loads' vector to the global coordinate system.
+    FloatMatrix transformMat;
+    computeGtoLRotationMatrix(transformMat);
+    answer.beTProductOf(transformMat, distributedForceTotal);
 }
 
 void

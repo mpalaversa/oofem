@@ -34,6 +34,7 @@
  
 #include "sm/Elements/Plates/pltqd4dkt.h"
 
+#include "boundaryload.h"
 #include "classfactory.h"
 #include "fei2dquadlin.h"
 #include "gausspoint.h"
@@ -233,6 +234,61 @@ PltQd4DKT::computeBmatrixAt(double ksi, double eta, FloatMatrix& answer)
     answer.at(3, 10) = -T510 * dN114 - T610 * dN213 - T710 * dN116 - T810 * dN215;
     answer.at(3, 11) = -dN108 - T511 * dN114 - T611 * dN213 - T711 * dN116 - T811 * dN215;
     answer.at(3, 12) = -dN207 - T512 * dN114 - T612 * dN213 - T712 * dN116 - T812 * dN215;
+}
+
+void
+PltQd4DKT::computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global)
+{
+    // For comments that explain steps in this method, see a similar method in QdMembrane class.
+    if (type != ExternalForcesVector)
+        return;
+
+    FEInterpolation* fei = this->giveInterpolation();
+    if (!fei)
+        OOFEM_ERROR("No interpolator available");
+
+    double dS;
+    FloatArray n_vec;
+    FloatMatrix NMatrix;
+    FloatArray force, globalIPcoords, NMatrixTemp, distributedForceTotal;
+
+    std::unique_ptr< IntegrationRule >iRule(this->giveBoundarySurfaceIntegrationRule(load->giveApproxOrder(), boundary));
+
+    for (GaussPoint* gp : *iRule) {
+        const FloatArray& lcoords = gp->giveNaturalCoordinates();
+
+        if (load->giveFormulationType() == Load::FT_Entity) {
+            load->computeValueAt(force, tStep, lcoords, mode);
+        }
+        else {
+            fei->boundaryLocal2Global(globalIPcoords, boundary, lcoords, *giveCellGeometryWrapper());
+            load->computeValueAt(force, tStep, globalIPcoords, mode);
+        }
+
+        if (load->giveCoordSystMode() == Load::CST_Global) {
+            FloatMatrix loadTransformMat;
+            computeLoadGToLRotationMtrx(loadTransformMat);
+            force.beProductOf(loadTransformMat, force);
+        }
+        else if (load->giveCoordSystMode() == Load::CST_UpdatedGlobal)
+            OOFEM_ERROR("Definition of loads is permitted only in local and global coordinate system for this element.");
+
+        FloatArray localForce, distributedForce;
+        localForce.resize(3);
+        localForce.at(1) = force.at(3);
+        localForce.at(2) = force.at(4);
+        localForce.at(3) = force.at(5);
+
+        giveInterpolation()->evalN(NMatrixTemp, gp->giveSubPatchCoordinates(), *giveCellGeometryWrapper());
+        NMatrix.beNMatrixOf(NMatrixTemp, 3);
+        dS = computeSurfaceVolumeAround(gp, 1);
+        distributedForce.beTProductOf(NMatrix, localForce);
+        distributedForceTotal.add(dS, distributedForce);
+    }
+
+    FloatMatrix transformMat;
+    computeGtoLRotationMatrix(transformMat);
+    answer.beTProductOf(transformMat, distributedForceTotal);
 }
 
 void
