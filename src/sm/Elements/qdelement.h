@@ -85,6 +85,9 @@ namespace oofem {
 		OutputType outputType;
         CSClass csClass;
 
+        bool nonplanarNode;
+        double distanceToNonplanarNode;
+
         virtual void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) = 0;
         void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;
         const FloatMatrix* computeGtoLRotationMatrix();

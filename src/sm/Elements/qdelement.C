@@ -46,6 +46,9 @@ QdElement::QdElement(int n, Domain* aDomain) : NLStructuralElement(n, aDomain)
         outputType = OutputType::Standard;
         csClass = CSClass::OOFEM;
 
+        nonplanarNode = false;
+        distanceToNonplanarNode = 0.0;
+
         GtoLRotationMatrix = NULL;
         cellGeometryWrapper = NULL;
 }
@@ -202,6 +205,14 @@ QdElement::computeGtoLRotationMatrix()
 
             // now from e3' x e1' compute e2'
             e2.beVectorProductOf(e3, e1);
+
+            // We shall check now wheather there are nonplanar nodes. Due to the definition of the coord. sys., only node no. 4 can be out of the plane.
+            // Calculate vector spanned between nodes 1 and 4.
+            FloatArray v14;
+            v14.beDifferenceOf(node4, node1);
+            distanceToNonplanarNode = (e3.at(1) * v14.at(1) + e3.at(2) * v14.at(2) + e3.at(3) * v14.at(3)) / sqrt(pow(e3.at(1), 2) + pow(e3.at(2), 2) + pow(e3.at(3), 2));
+            if (distanceToNonplanarNode != 0)
+                nonplanarNode = true;
 
             break;
         }

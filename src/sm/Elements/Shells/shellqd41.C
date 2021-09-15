@@ -151,6 +151,9 @@ namespace oofem {
         FloatMatrix stiffMatPlate;
         plate->computeStiffnessMatrix(stiffMatPlate, rMode, tStep);
 
+        FloatMatrix stiffMatShell;
+        stiffMatShell.resize(24, 24);
+
         answer.clear();
         answer.resize(24, 24);
 
@@ -172,6 +175,24 @@ namespace oofem {
         }
 
         answer.symmetrized();
+        
+        if (membrane->nonplanarNode) {
+            FloatMatrix stiffMatShell, nodeTransformMat;
+
+            nodeTransformMat.resize(24, 24);
+            nodeTransformMat.beUnitMatrix();
+            nodeTransformMat.at(19, 23) = -membrane->distanceToNonplanarNode;
+            nodeTransformMat.at(20, 22) = membrane->distanceToNonplanarNode;
+
+            stiffMatShell.resize(24, 24);
+            for (int i = 1; i <= 24; i++)
+                for (int j = 1; j <= 24; j++)
+                    stiffMatShell.at(i, j) = answer.at(i, j);
+
+            FloatMatrix temp;
+            temp.beProductOf(stiffMatShell, nodeTransformMat);
+            answer.beTProductOf(nodeTransformMat, temp);
+        }
     }
 
     void
