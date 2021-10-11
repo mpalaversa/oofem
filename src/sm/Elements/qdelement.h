@@ -86,7 +86,7 @@ namespace oofem {
         CSClass csClass;
 
         bool nonplanarNode;
-        double distanceToNonplanarNode;
+        double distanceToNode1, distanceToNode2, distanceToNode3, distanceToNode4, l12, l23, l34, l41;
 
         virtual void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) = 0;
         void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) override;

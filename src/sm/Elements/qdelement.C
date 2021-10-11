@@ -47,7 +47,12 @@ QdElement::QdElement(int n, Domain* aDomain) : NLStructuralElement(n, aDomain)
         csClass = CSClass::OOFEM;
 
         nonplanarNode = false;
-        distanceToNonplanarNode = 0.0;
+        distanceToNode1 = 0.0;
+        distanceToNode2 = 0.0;
+        distanceToNode3 = 0.0;
+        distanceToNode4 = 0.0;
+        l34 = 0;
+        l41 = 0;
 
         GtoLRotationMatrix = NULL;
         cellGeometryWrapper = NULL;
@@ -189,31 +194,72 @@ QdElement::computeGtoLRotationMatrix()
         }
         default:
         {
-            FloatArray help;
+            FloatArray v31, v42, n, midPlane, midPoint;
+            v31.beDifferenceOf(node3, node1);
+            v42.beDifferenceOf(node4, node2);
+            n.beVectorProductOf(v31, v42);
+            n.normalize();
+            midPoint.resize(3);
+            midPoint.at(1) = (node1.at(1) + node2.at(1) + node3.at(1) + node4.at(1)) / 4;
+            midPoint.at(2) = (node1.at(2) + node2.at(2) + node3.at(2) + node4.at(2)) / 4;
+            midPoint.at(3) = (node1.at(3) + node2.at(3) + node3.at(3) + node4.at(3)) / 4;
 
-            // compute e1' = [N2-N1]  and  help = [N3-N1]
-            e1.beDifferenceOf(node2, node1);
-            help.beDifferenceOf(node3, node1);
+            midPlane.resize(4);
+            for (int i = 1; i <= 3; i++)
+                midPlane.at(i) = n.at(i);
+            midPlane.at(4) = -(midPlane.at(1) * midPoint.at(1) + midPlane.at(2) * midPoint.at(2) + midPlane.at(3) * midPoint.at(3));
 
-            // let us normalize e1'
-            e1.normalize();
+            distanceToNode1 = (midPlane.at(1) * node1.at(1) + midPlane.at(2) * node1.at(2) + midPlane.at(3) * node1.at(3) + midPlane.at(4)) / sqrt(pow(midPlane.at(1), 2) + pow(midPlane.at(2), 2) + pow(midPlane.at(3), 2));
 
-            // compute e3' : vector product of e1' x help
-            e3.beVectorProductOf(e1, help);
-            // let us normalize
-            e3.normalize();
-
-            // now from e3' x e1' compute e2'
-            e2.beVectorProductOf(e3, e1);
-
-            // We shall check now wheather there are nonplanar nodes. Due to the definition of the coord. sys., only node no. 4 can be out of the plane.
-            // Calculate vector spanned between nodes 1 and 4.
-            FloatArray v14;
-            v14.beDifferenceOf(node4, node1);
-            distanceToNonplanarNode = (e3.at(1) * v14.at(1) + e3.at(2) * v14.at(2) + e3.at(3) * v14.at(3)) / sqrt(pow(e3.at(1), 2) + pow(e3.at(2), 2) + pow(e3.at(3), 2));
-            if (distanceToNonplanarNode != 0)
+            if (distanceToNode1 != 0) {
                 nonplanarNode = true;
 
+                distanceToNode2 = (midPlane.at(1) * node2.at(1) + midPlane.at(2) * node2.at(2) + midPlane.at(3) * node2.at(3) + midPlane.at(4)) / sqrt(pow(midPlane.at(1), 2) + pow(midPlane.at(2), 2) + pow(midPlane.at(3), 2));
+                distanceToNode3 = (midPlane.at(1) * node3.at(1) + midPlane.at(2) * node3.at(2) + midPlane.at(3) * node3.at(3) + midPlane.at(4)) / sqrt(pow(midPlane.at(1), 2) + pow(midPlane.at(2), 2) + pow(midPlane.at(3), 2));
+                distanceToNode4 = (midPlane.at(1) * node4.at(1) + midPlane.at(2) * node4.at(2) + midPlane.at(3) * node4.at(3) + midPlane.at(4)) / sqrt(pow(midPlane.at(1), 2) + pow(midPlane.at(2), 2) + pow(midPlane.at(3), 2));
+
+                FloatArray v14, v12, v23, v34;
+                v14.beDifferenceOf(node1, node4);
+                v34.beDifferenceOf(node3, node4);
+                v12.beDifferenceOf(node1, node2);
+                v23.beDifferenceOf(node2, node3);
+                l34 = sqrt(pow(v34.at(1), 2) + pow(v34.at(2), 2) + pow(v34.at(3), 2));
+                l41 = sqrt(pow(v14.at(1), 2) + pow(v14.at(2), 2) + pow(v14.at(3), 2));
+                l12 = sqrt(pow(v12.at(1), 2) + pow(v12.at(2), 2) + pow(v12.at(3), 2));
+                l23 = sqrt(pow(v23.at(1), 2) + pow(v23.at(2), 2) + pow(v23.at(3), 2));
+
+                FloatArray v1MidPlane, v2MidPlane;
+                v1MidPlane.beScaled(-distanceToNode1, n);
+                v2MidPlane.beScaled(-distanceToNode2, n);
+
+                FloatArray node1MidPlane, node2MidPlane;
+                node1MidPlane.add(node1);
+                node1MidPlane.add(v1MidPlane);
+                node2MidPlane.add(node2);
+                node2MidPlane.add(v2MidPlane);
+
+                e1.beDifferenceOf(node2MidPlane, node1MidPlane);
+                e1.normalize();
+
+                e2.beVectorProductOf(n, e1);
+
+                e3.add(n);
+            }
+            else {
+                // compute e1' = [N2-N1]  and  help = [N3-N1]
+                e1.beDifferenceOf(node2, node1);
+
+                // let us normalize e1'
+                e1.normalize();
+
+                // compute e3' : vector product of e1' x help
+                e3.beVectorProductOf(e1, v31);
+                // let us normalize
+                e3.normalize();
+
+                // now from e3' x e1' compute e2'
+                e2.beVectorProductOf(e3, e1);
+            }
             break;
         }
         }
@@ -225,6 +271,7 @@ QdElement::computeGtoLRotationMatrix()
                 GtoLRotationMatrix->at(2, i) = e2.at(i);
                 GtoLRotationMatrix->at(3, i) = e3.at(i);
         }
+        double determ = GtoLRotationMatrix->giveDeterminant();
     }
 
     return GtoLRotationMatrix;

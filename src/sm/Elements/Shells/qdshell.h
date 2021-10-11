@@ -60,6 +60,9 @@ namespace oofem {
         double outputAtZ;
         OutputCategory outputCategory;
 
+        FloatMatrix nodeTransformMatrix;
+        void transformToNonplanarNodes(FloatMatrix& answer, FloatArray distancesToNodes, FloatArray edgeLengths);
+
     public:
         QdShell(int n, Domain* d);
         virtual ~QdShell() = default;

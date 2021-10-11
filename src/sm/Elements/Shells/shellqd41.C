@@ -175,23 +175,24 @@ namespace oofem {
         }
 
         answer.symmetrized();
-        
+
+        //membrane->nonplanarNode = false;
         if (membrane->nonplanarNode) {
-            FloatMatrix stiffMatShell, nodeTransformMat;
+            FloatArray distancesToNodes;
+            distancesToNodes.resize(4);
+            distancesToNodes.at(1) = membrane->distanceToNode1;
+            distancesToNodes.at(2) = membrane->distanceToNode2;
+            distancesToNodes.at(3) = membrane->distanceToNode3;
+            distancesToNodes.at(4) = membrane->distanceToNode4;
 
-            nodeTransformMat.resize(24, 24);
-            nodeTransformMat.beUnitMatrix();
-            nodeTransformMat.at(19, 23) = -membrane->distanceToNonplanarNode;
-            nodeTransformMat.at(20, 22) = membrane->distanceToNonplanarNode;
+            FloatArray edgeLengths;
+            edgeLengths.resize(4);
+            edgeLengths.at(1) = membrane->l12;
+            edgeLengths.at(2) = membrane->l23;
+            edgeLengths.at(3) = membrane->l34;
+            edgeLengths.at(4) = membrane->l41;
 
-            stiffMatShell.resize(24, 24);
-            for (int i = 1; i <= 24; i++)
-                for (int j = 1; j <= 24; j++)
-                    stiffMatShell.at(i, j) = answer.at(i, j);
-
-            FloatMatrix temp;
-            temp.beProductOf(stiffMatShell, nodeTransformMat);
-            answer.beTProductOf(nodeTransformMat, temp);
+            transformToNonplanarNodes(answer, distancesToNodes, edgeLengths);
         }
     }
 

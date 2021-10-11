@@ -287,4 +287,97 @@ namespace oofem {
             }
         }
     }
+
+    void
+    QdShell::transformToNonplanarNodes(FloatMatrix& answer, FloatArray distancesToNodes, FloatArray edgeLengths)
+    {// Transformation is based on displacements.
+        FloatMatrix stiffMatShell, nodeTransformMatT;
+
+        nodeTransformMatrix.resize(24, 24);
+        nodeTransformMatrix.beUnitMatrix();
+        ///*
+        // Basic correction - rigid links
+        nodeTransformMatrix.at(2, 4) = distancesToNodes.at(1);
+        nodeTransformMatrix.at(1, 5) = -distancesToNodes.at(1);
+        nodeTransformMatrix.at(8, 10) = distancesToNodes.at(2);
+        nodeTransformMatrix.at(7, 11) = -distancesToNodes.at(2);
+        nodeTransformMatrix.at(14, 16) = distancesToNodes.at(3);
+        nodeTransformMatrix.at(13, 17) = -distancesToNodes.at(3);
+        nodeTransformMatrix.at(20, 22) = distancesToNodes.at(4);
+        nodeTransformMatrix.at(19, 23) = -distancesToNodes.at(4);
+        //*/
+        stiffMatShell.beProductOf(answer, nodeTransformMatrix);
+        nodeTransformMatT.beTranspositionOf(nodeTransformMatrix);
+        answer.beProductOf(nodeTransformMatT, stiffMatShell);
+    }
+
+    /*
+    void
+    QdShell::transformToNonplanarNodes(FloatMatrix& answer, FloatArray distancesToNodes, FloatArray edgeLengths)
+    {
+        FloatMatrix stiffMatShell, nodeTransformMatT;
+
+        nodeTransformMatT.resize(24, 24);
+        nodeTransformMatT.beUnitMatrix();
+        /*
+        // Basic correction - rigid links
+        nodeTransformMatT.at(4, 2) = distancesToNodes.at(1);
+        nodeTransformMatT.at(5, 1) = -distancesToNodes.at(1);
+        nodeTransformMatT.at(10, 8) = distancesToNodes.at(2);
+        nodeTransformMatT.at(11, 7) = -distancesToNodes.at(2);
+        nodeTransformMatT.at(16, 14) = distancesToNodes.at(3);
+        nodeTransformMatT.at(17, 13) = -distancesToNodes.at(3);
+        nodeTransformMatT.at(22, 20) = distancesToNodes.at(4);
+        nodeTransformMatT.at(23, 19) = -distancesToNodes.at(4);
+        */
+        /*
+        // Second correction - moments replaced by couples
+        nodeTransformMatT.at(3, 7) = -distancesToNodes.at(2) / edgeLengths.at(1);
+        nodeTransformMatT.at(3, 20) = -distancesToNodes.at(4) / edgeLengths.at(4);
+        nodeTransformMatT.at(9, 1) = distancesToNodes.at(1) / edgeLengths.at(1);
+        nodeTransformMatT.at(9, 14) = -distancesToNodes.at(3) / edgeLengths.at(2);
+        nodeTransformMatT.at(15, 8) = distancesToNodes.at(2) / edgeLengths.at(2);
+        nodeTransformMatT.at(15, 19) = distancesToNodes.at(4) / edgeLengths.at(3);
+        nodeTransformMatT.at(21, 2) = distancesToNodes.at(1) / edgeLengths.at(4);
+        nodeTransformMatT.at(21, 13) = -distancesToNodes.at(3) / edgeLengths.at(3);
+        */
+        /*
+        // Third correction - moments replaced by couples (MacNeal)
+        nodeTransformMatT.at(3, 1) = -distancesToNodes.at(1) / edgeLengths.at(1);
+        nodeTransformMatT.at(3, 2) = -distancesToNodes.at(1) / edgeLengths.at(4);
+        nodeTransformMatT.at(3, 7) = -distancesToNodes.at(2) / edgeLengths.at(1);
+        nodeTransformMatT.at(3, 20) = -distancesToNodes.at(4) / edgeLengths.at(4);
+        nodeTransformMatT.at(6, 8) = edgeLengths.at(1);
+        nodeTransformMatT.at(6, 19) = -edgeLengths.at(4);
+        nodeTransformMatT.at(9, 1) = distancesToNodes.at(1) / edgeLengths.at(1);
+        nodeTransformMatT.at(9, 7) = distancesToNodes.at(2) / edgeLengths.at(1);
+        nodeTransformMatT.at(9, 8) = -distancesToNodes.at(2) / edgeLengths.at(2);
+        nodeTransformMatT.at(9, 14) = -distancesToNodes.at(3) / edgeLengths.at(2);
+        nodeTransformMatT.at(12, 2) = -edgeLengths.at(1);
+        nodeTransformMatT.at(12, 13) = -edgeLengths.at(2);
+        nodeTransformMatT.at(15, 8) = distancesToNodes.at(2) / edgeLengths.at(2);
+        nodeTransformMatT.at(15, 13) = distancesToNodes.at(3) / edgeLengths.at(3);
+        nodeTransformMatT.at(15, 14) = distancesToNodes.at(3) / edgeLengths.at(2);
+        nodeTransformMatT.at(15, 19) = distancesToNodes.at(4) / edgeLengths.at(3);
+        nodeTransformMatT.at(18, 7) = edgeLengths.at(2);
+        nodeTransformMatT.at(18, 20) = -edgeLengths.at(3);
+        nodeTransformMatT.at(21, 2) = distancesToNodes.at(1) / edgeLengths.at(4);
+        nodeTransformMatT.at(21, 13) = -distancesToNodes.at(3) / edgeLengths.at(3);
+        nodeTransformMatT.at(21, 19) = -distancesToNodes.at(4) / edgeLengths.at(3);
+        nodeTransformMatT.at(21, 20) = distancesToNodes.at(4) / edgeLengths.at(4);
+        nodeTransformMatT.at(24, 1) = edgeLengths.at(4);
+        nodeTransformMatT.at(24, 14) = edgeLengths.at(3);
+        */
+    /*
+        stiffMatShell.resize(24, 24);
+        for (int i = 1; i <= 24; i++)
+            for (int j = 1; j <= 24; j++)
+                stiffMatShell.at(i, j) = answer.at(i, j);
+
+        FloatMatrix temp, nodeTransformMat;
+        temp.beProductOf(nodeTransformMatT, stiffMatShell);
+        nodeTransformMat.beTranspositionOf(nodeTransformMatT);
+        answer.resize(24, 24);
+        answer.beProductOf(temp, nodeTransformMat);
+    }*/
 }
