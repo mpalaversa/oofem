@@ -202,14 +202,150 @@ namespace oofem {
 
         switch (outputCategory) {
         case OutputCategory::Membrane:
-            membrane->computeStrainVectorAt(answer, xi, eta, tStep);
+            if (membrane->nonplanarNode) {
+                FloatMatrix B;
+                FloatArray uMemb, uMembTemp, uShell;
+
+                // Get nodal displacements for the membrane part.
+                membrane->computeVectorOf(VM_Total, tStep, uMembTemp);
+                /*
+                if (initialDisplacements) {
+                    u.subtract(*initialDisplacements);
+                }*/
+                uMemb.resize(12);
+                int count{ 1 };
+                for (int i = 1; i <= 8; i++) {
+                    uMemb.at(count) = uMembTemp.at(i);
+                    if (i % 2 == 0)
+                        count += 2;
+                    else
+                        count++;
+                }
+                // Combine the membrane and plate displacements into the shell displacements.
+                uShell.resize(24);
+                for (int i = 1; i <= 12; i++)
+                    uShell.at(positionVectorMemb.at(i)) = uMemb.at(i);
+
+                // Vectors of nodal displacements transformed into the element coord. sys. (that lies in element's midplane).
+                FloatArray uMembEl, uShellEl;
+                uShellEl.beProductOf(nodeTransformMatrix, uShell);
+                uMembEl.resize(8);
+                int j = 1;
+                for (int i = 1; i <= 8; i += 2) {
+                    uMembEl.at(i) = uShellEl.at(j);
+                    uMembEl.at(i + 1) = uShellEl.at(j + 1);
+                    j += 6;
+                }
+
+                membrane->computeBmatrixAt(xi, eta, B);
+                answer.beProductOf(B, uMembEl);
+            }
+            else
+                membrane->computeStrainVectorAt(answer, xi, eta, tStep);
+
             break;
         case OutputCategory::Plate:
-            plate->computeStrainVectorAt(answer, xi, eta, tStep);
+            if (membrane->nonplanarNode) {
+                FloatMatrix B;
+                FloatArray uPlate, uShell;
+
+                // Get nodal displacements for the membrane part.
+                plate->computeVectorOf(VM_Total, tStep, uPlate);
+                /*
+                if (initialDisplacements) {
+                    u.subtract(*initialDisplacements);
+                }*/
+                // Combine the membrane and plate displacements into the shell displacements.
+                uShell.resize(24);
+                for (int i = 1; i <= 12; i++)
+                    uShell.at(positionVectorMemb.at(i)) = uPlate.at(i);
+
+                // Vectors of nodal displacements transformed into the element coord. sys. (that lies in element's midplane).
+                FloatArray uPlateEl, uShellEl;
+                uShellEl.beProductOf(nodeTransformMatrix, uShell);
+                uPlateEl.resize(12);
+                int j = 1;
+                for (int i = 1; i <= 12; i += 3) {
+                    uPlateEl.at(i) = uShellEl.at(j + 2);
+                    uPlateEl.at(i + 1) = uShellEl.at(j + 3);
+                    uPlateEl.at(i + 2) = uShellEl.at(j + 4);
+                    j += 6;
+                }
+
+                plate->computeBmatrixAt(xi, eta, B);
+                answer.beProductOf(B, uPlateEl);
+            }
+            else
+                plate->computeStrainVectorAt(answer, xi, eta, tStep);
+
             break;
         case OutputCategory::Combined:
-            membrane->computeStrainVectorAt(membraneStrains, xi, eta, tStep);
-            plate->computeStrainVectorAt(plateStrains, xi, eta, tStep);
+            if (membrane->nonplanarNode) {
+                FloatArray uMemb, uMembTemp, uPlate, uShell;
+
+                // Get nodal displacements for the membrane part.
+                membrane->computeVectorOf(VM_Total, tStep, uMembTemp);
+                /*
+                if (initialDisplacements) {
+                    u.subtract(*initialDisplacements);
+                }*/
+                uMemb.resize(12);
+                int count{ 1 };
+                for (int i = 1; i <= 8; i++) {
+                    uMemb.at(count) = uMembTemp.at(i);
+                    if (i % 2 == 0)
+                        count += 2;
+                    else
+                        count++;
+                }
+                // Get nodal displacements for the plate part.
+                plate->computeVectorOf(VM_Total, tStep, uPlate);
+                /*
+                if (initialDisplacements) {
+                    u.subtract(*initialDisplacements);
+                }*/
+                // Combine the membrane and plate displacements into the shell displacements.
+                uShell.resize(24);
+                for (int i = 1; i <= 12; i++) {
+                    uShell.at(positionVectorMemb.at(i)) = uMemb.at(i);
+                    uShell.at(positionVectorPlate.at(i)) = uPlate.at(i);
+                }
+
+                // Vectors of nodal displacements transformed into the element coord. sys. (that lies in element's midplane).
+                FloatArray uMembEl, uPlateEl, uShellEl;
+                uShellEl.beProductOf(nodeTransformMatrix, uShell);
+
+                uMembEl.resize(8);
+                int j = 1;
+                for (int i = 1; i <= 8; i += 2) {
+                    uMembEl.at(i) = uShellEl.at(j);
+                    uMembEl.at(i + 1) = uShellEl.at(j + 1);
+                    j += 6;
+                }
+
+                uPlateEl.resize(12);
+                j = 1;
+                for (int i = 1; i <= 12; i += 3) {
+                    uPlateEl.at(i) = uShellEl.at(j + 2);
+                    uPlateEl.at(i + 1) = uShellEl.at(j + 3);
+                    uPlateEl.at(i + 2) = uShellEl.at(j + 4);
+                    j += 6;
+                }
+                // Calculates strains for the membrane part.
+                FloatMatrix BMatMemb;
+                membrane->computeBmatrixAt(xi, eta, BMatMemb);
+                membraneStrains.beProductOf(BMatMemb, uMembEl);
+                // Calculates strains for the plate part.
+                FloatMatrix BMatPlate;
+                plate->computeBmatrixAt(xi, eta, BMatPlate);
+                plateStrains.beProductOf(BMatPlate, uPlateEl);
+            }
+            else
+            {
+                membrane->computeStrainVectorAt(membraneStrains, xi, eta, tStep);
+                plate->computeStrainVectorAt(plateStrains, xi, eta, tStep);
+            }
+
             membraneStrains.add(plateStrains);
             answer.resize(3);
             answer = membraneStrains;
@@ -297,7 +433,93 @@ namespace oofem {
     ShellQd41::giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int useUpdatedGpRecord) {
         FloatArray internalForcesMemb, internalForcesMembTemp, internalForcesPlate;
 
-        membrane->giveInternalForcesVector(internalForcesMembTemp, tStep, 0);
+        if (membrane->nonplanarNode) {
+            FloatMatrix B;
+            FloatArray uMemb, uMembTemp, uPlate, uShell;
+
+            // Get nodal displacements for the membrane part.
+            membrane->computeVectorOf(VM_Total, tStep, uMembTemp);
+            /*
+            if (initialDisplacements) {
+                u.subtract(*initialDisplacements);
+            }*/
+            uMemb.resize(12);
+            int count{ 1 };
+            for (int i = 1; i <= 8; i++) {
+                uMemb.at(count) = uMembTemp.at(i);
+                if (i % 2 == 0)
+                    count += 2;
+                else
+                    count++;
+            }
+            // Get nodal displacements for the plate part.
+            plate->computeVectorOf(VM_Total, tStep, uPlate);
+            /*
+            if (initialDisplacements) {
+                u.subtract(*initialDisplacements);
+            }*/
+            // Combine the membrane and plate displacements into the shell displacements.
+            uShell.resize(24);
+            for (int i = 1; i <= 12; i++) {
+                uShell.at(positionVectorMemb.at(i)) = uMemb.at(i);
+                uShell.at(positionVectorPlate.at(i)) = uPlate.at(i);
+            }
+
+            // Vectors of nodal displacements transformed into the element coord. sys. (that lies in element's midplane).
+            FloatArray uMembEl, uPlateEl, uShellEl;
+            uShellEl.beProductOf(nodeTransformMatrix, uShell);
+
+            uMembEl.resize(8);
+            int j = 1;
+            for (int i = 1; i <= 8; i += 2) {
+                uMembEl.at(i) = uShellEl.at(j);
+                uMembEl.at(i + 1) = uShellEl.at(j + 1);
+                j += 6;
+            }
+
+            uPlateEl.resize(12);
+            j = 1;
+            for (int i = 1; i <= 12; i += 3) {
+                uPlateEl.at(i) = uShellEl.at(j + 2);
+                uPlateEl.at(i + 1) = uShellEl.at(j + 3);
+                uPlateEl.at(i + 2) = uShellEl.at(j + 4);
+                j += 6;
+            }
+            // Calculates internal forces for the membrane part.
+            for (auto& gp : *membrane->giveDefaultIntegrationRulePtr()) {
+                FloatMatrix B;
+                FloatArray vStress, vStrain;
+
+                membrane->computeBmatrixAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), B);
+                vStrain.beProductOf(B, uMembEl);
+                membrane->computeStressVector(vStress, vStrain, gp, tStep);
+
+                // Compute nodal internal forces at nodes as f = B^T*Stress dV
+                double dV = membrane->computeVolumeAround(gp);
+
+                internalForcesMembTemp.plusProduct(B, vStress, dV);
+            }
+            // Calculates internal forces for the plate part.
+            for (auto& gp : *plate->giveDefaultIntegrationRulePtr()) {
+                FloatMatrix B;
+                FloatArray vStress, vStrain;
+
+                plate->computeBmatrixAt(gp->giveNaturalCoordinate(1), gp->giveNaturalCoordinate(2), B);
+                vStrain.beProductOf(B, uPlateEl);
+                plate->computeStressVector(vStress, vStrain, gp, tStep);
+
+                // Compute nodal internal forces at nodes as f = B^T*Stress dV
+                double dV = plate->computeVolumeAround(gp);
+
+                internalForcesPlate.plusProduct(B, vStress, dV);
+            }
+        }
+        else
+        {
+            membrane->giveInternalForcesVector(internalForcesMembTemp, tStep, 0);
+            plate->giveInternalForcesVector(internalForcesPlate, tStep, 0);
+        }
+
         internalForcesMemb.resize(12);
         int count{ 1 };
         for (int i = 1; i <= 8; i++) {
@@ -307,8 +529,6 @@ namespace oofem {
             else
                 count++;
         }
-
-        plate->giveInternalForcesVector(internalForcesPlate, tStep, 0);
 
         answer.resize(24);
         for (int i = 1; i <= 12; i++) {
