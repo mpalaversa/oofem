@@ -285,6 +285,37 @@ SimpleCrossSection :: giveGeneralizedStress_Beam3d(const FloatArrayF<6> &strain,
     return answer;
 }
 
+FloatArrayF<6>
+SimpleCrossSection::giveGeneralizedStress_EBBeam(const FloatArrayF<4>& strain, GaussPoint* gp, TimeStep* tStep) const
+{
+    auto tangent = this->giveEBBeamStiffMtrx(ElasticStiffness, gp, tStep);
+    /*
+    auto stress = dot(tangent, strain);
+
+    int orderStress[4] = { 1, 4, 5, 6 };
+    FloatArrayF<6> answer, strainFinal;
+    for (int i = 1; i <= 4; i++) {
+        strainFinal.at(orderStress[i - 1]) = strain.at(i);
+        answer.at(orderStress[i - 1]) = stress.at(i);
+    }
+    
+    auto mat = static_cast<StructuralMaterial*>(this->giveMaterial(gp));
+    auto status = static_cast<StructuralMaterialStatus*>(mat->giveStatus(gp));
+    status->letTempStrainVectorBe(strainFinal);
+    status->letTempStressVectorBe(answer);
+    */
+    int orderStress[4] = { 1, 4, 5, 6 };
+    FloatArrayF<6> answer;
+    FloatArray stress = dot(tangent, strain);
+    for (int i = 1; i <= 4; i++)
+        answer.at(orderStress[i - 1]) = stress.at(i);
+
+    auto mat = static_cast<StructuralMaterial*>(this->giveMaterial(gp));
+    auto status = static_cast<StructuralMaterialStatus*>(mat->giveStatus(gp));
+    status->letTempStrainVectorBe(strain);
+    status->letTempStressVectorBe(answer);
+    return answer;
+}
 
 FloatArrayF<5>
 SimpleCrossSection :: giveGeneralizedStress_Plate(const FloatArrayF<5> &strain, GaussPoint *gp, TimeStep *tStep) const
@@ -458,6 +489,27 @@ SimpleCrossSection :: give3dBeamStiffMtrx(MatResponseMode rMode, GaussPoint *gp,
     return answer;
 }
 
+FloatMatrixF<4, 4>
+SimpleCrossSection::giveEBBeamStiffMtrx(MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) const
+{
+    auto mat = dynamic_cast<StructuralMaterial*>(this->giveMaterial(gp));
+
+    auto mat1d = mat->give1dStressStiffMtrx(rMode, gp, tStep);
+    double E = mat1d.at(1, 1);
+    double G = mat->give('G', gp);
+    double area = this->give(CS_Area, gp);
+    double Iy = this->give(CS_InertiaMomentY, gp);
+    double Iz = this->give(CS_InertiaMomentZ, gp);
+    double Ik = this->give(CS_TorsionMomentX, gp);
+
+    FloatMatrixF<4, 4> answer;
+    answer.at(1, 1) = E * area;
+    answer.at(2, 2) = G * Ik;
+    answer.at(3, 3) = E * Iy;
+    answer.at(4, 4) = E * Iz;
+
+    return answer;
+}
 
 FloatMatrixF<5,5>
 SimpleCrossSection :: give2dPlateStiffMtrx(MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) const

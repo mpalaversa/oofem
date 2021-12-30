@@ -118,6 +118,7 @@ public:
 
     FloatArrayF<3> giveGeneralizedStress_Beam2d(const FloatArrayF<3> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const override;
     FloatArrayF<6> giveGeneralizedStress_Beam3d(const FloatArrayF<6> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const override;
+    FloatArrayF<6> giveGeneralizedStress_EBBeam(const FloatArrayF<4>& generalizedStrain, GaussPoint* gp, TimeStep* tStep) const override { OOFEM_ERROR("Not implemented for fibered cross section."); }
     FloatArrayF<5> giveGeneralizedStress_Plate(const FloatArrayF<5> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const override;
     FloatArrayF<8> giveGeneralizedStress_Shell(const FloatArrayF<8> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const override;
     FloatArrayF<4> giveGeneralizedStress_MembraneRot(const FloatArrayF<4> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const override;
@@ -127,6 +128,7 @@ public:
 
     FloatMatrixF<3,3> give2dBeamStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;
     FloatMatrixF<6,6> give3dBeamStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;
+    FloatMatrixF<4, 4> giveEBBeamStiffMtrx(MatResponseMode mode, GaussPoint* gp, TimeStep* tStep) const override { OOFEM_ERROR("Not implemented for fibered cross section."); }
     FloatMatrixF<5,5> give2dPlateStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;
     FloatMatrixF<3, 3> giveKirchhoffPlateStiffMtrx(MatResponseMode mode, GaussPoint* gp, TimeStep* tStep) const override { OOFEM_ERROR("Not implemented for fibered cross section."); }
     FloatMatrixF<8,8> give3dShellStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;

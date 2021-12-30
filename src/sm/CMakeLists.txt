@@ -42,6 +42,9 @@ set (sm_element
     Elements/Beams/libeam3dboundarybeam.C
     Elements/Beams/libeam3dboundaryplate.C
     Elements/Beams/libeam3dboundaryvoigt.C
+	Elements/Beams/eccbeam.C 
+	Elements/Beams/modeccbeam.C 
+	Elements/Beams/hybbeam.C 
     Elements/Plates/cct.C
     Elements/Plates/dkt.C 
     Elements/Plates/qdkt.C

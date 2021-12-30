@@ -132,6 +132,7 @@ public:
     //@{
     virtual FloatArrayF<3> giveGeneralizedStress_Beam2d(const FloatArrayF<3> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<6> giveGeneralizedStress_Beam3d(const FloatArrayF<6> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
+    virtual FloatArrayF<6> giveGeneralizedStress_EBBeam(const FloatArrayF<4>& generalizedStrain, GaussPoint* gp, TimeStep* tStep) const = 0;
     virtual FloatArrayF<5> giveGeneralizedStress_Plate(const FloatArrayF<5> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<8> giveGeneralizedStress_Shell(const FloatArrayF<8> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<4> giveGeneralizedStress_MembraneRot(const FloatArrayF<4> &generalizedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
@@ -239,6 +240,14 @@ public:
      * @param tStep Time step.
      */
     virtual FloatMatrixF<6,6> give3dBeamStiffMtrx(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const = 0;
+    /**
+    * Computes the stiffness matrix for 3d beams based on Euler-Bernoulli theory.
+    * @param answer The requested matrix.
+    * @param mode Material response mode.
+    * @param gp Integration point.
+    * @param tStep Time step.
+    */
+    virtual FloatMatrixF<4, 4> giveEBBeamStiffMtrx(MatResponseMode mode, GaussPoint* gp, TimeStep* tStep) const = 0;
     /**
      * Method for computing subsoil stiffness matrix for 2d beams.
      * @param answer Stiffness matrix.
