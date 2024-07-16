@@ -62,12 +62,46 @@ NlDEIDynamic :: NlDEIDynamic(int i, EngngModel *_master) : StructuralEngngModel(
     initFlag(1)
 {
     ndomains = 1;
+    calculateEnergyMeasures = false;
+    strainEnergy            = 0.0;
+    kineticEnergy           = 0.0;
+    externalEnergy          = 0.0;
 }
 
 
 NlDEIDynamic :: ~NlDEIDynamic()
 { }
 
+
+void
+NlDEIDynamic::computeExternalEnergy( TimeStep *tStep) {
+    if ( tStep->giveNumber() > 1 ) {
+        // Calculate external energy increment by taking a dot product of the external load increment in the current step and the displacement increment
+        double incrementalExternalEnergy = 0.5 * ( this->currentExternalLoad - this->previousExternalLoad ).dotProduct( this->previousIncrementOfDisplacementVector );
+        // Total external energy in the current step equals the energy introduced to the structure in all the previous steps plus the current energy increment
+        this->externalEnergy = this->externalEnergy + this->previousExternalLoad.dotProduct( this->previousIncrementOfDisplacementVector ) + incrementalExternalEnergy;
+    }
+}
+
+void
+NlDEIDynamic::computeKineticEnergy()
+{
+    this->kineticEnergy = 0.0;
+    for ( int i = 1; i <= massMatrix.giveSize(); i++ ) {
+        this->kineticEnergy = this->kineticEnergy + 0.5 * ( this->massMatrix.at( i ) * this->velocityVector.at( i ) * this->velocityVector.at( i ) );
+    }
+}
+
+void
+NlDEIDynamic::computeStrainEnergy( TimeStep *tStep)
+{
+    if ( tStep->giveNumber() > 1 ) {
+        // Calculate strain energy increment by taking a dot product of the internal forces increment in the current step and the displacement increment
+        double incrementalStrainEnergy = 0.5 * ( this->internalForces - this->previousInternalForces ).dotProduct( this->previousIncrementOfDisplacementVector );
+        // Total strain energy in the current step equals the energy introduced to the structure in all the previous steps plus the current energy increment
+        this->strainEnergy = strainEnergy + this->internalForces.dotProduct( this->previousIncrementOfDisplacementVector ) + incrementalStrainEnergy;
+    }
+}
 
 NumericalMethod *NlDEIDynamic :: giveNumericalMethod(MetaStep *mStep)
 {
@@ -85,6 +119,7 @@ NlDEIDynamic :: initializeFrom(InputRecord &ir)
 
     IR_GIVE_FIELD(ir, dumpingCoef, _IFT_NlDEIDynamic_dumpcoef); // C = dumpingCoef * M
     IR_GIVE_FIELD(ir, deltaT, _IFT_NlDEIDynamic_deltat);
+    IR_GIVE_FIELD( ir, loadDeltaT, _IFT_NlDEIDynamic_loaddeltat );
 
     reductionFactor = 1.;
     IR_GIVE_OPTIONAL_FIELD(ir, reductionFactor, _IFT_NlDEIDynamic_reduct);
@@ -96,6 +131,10 @@ NlDEIDynamic :: initializeFrom(InputRecord &ir)
         IR_GIVE_FIELD(ir, pyEstimate, _IFT_NlDEIDynamic_py);
     }
 
+    int energyMeasures = 0;
+    IR_GIVE_OPTIONAL_FIELD( ir, energyMeasures, _IFT_NlDEIDynamic_energyMeasures );
+    if ( energyMeasures == 1 )
+        this->calculateEnergyMeasures = true;
 #ifdef __PARALLEL_MODE
     commBuff = new CommunicatorBuff( this->giveNumberOfProcesses() );
     communicator = new NodeCommunicator(this, commBuff, this->giveRank(),
@@ -330,9 +369,11 @@ void NlDEIDynamic :: solveYourselfAt(TimeStep *tStep)
 
     if ( !drFlag ) {
         //
-        // Assembling the element part of load vector.
-        //
-        this->computeLoadVector(loadVector, VM_Total, tStep);
+        if ( loadDeltaT == 1 || ( tStep->giveNumber() >= this->giveNumberOfSteps() * 0.75 && tStep->giveNumber() % loadDeltaT == 0 ) ) {
+            // Assembling the element part of load vector.
+            //
+            this->computeLoadVector( loadVector, VM_Total, tStep );
+        }
         //
         // Assembling additional parts of right hand side.
         //
@@ -420,6 +461,9 @@ void NlDEIDynamic :: solveYourselfAt(TimeStep *tStep)
         err = err / ( pMp * pt * pt );
         OOFEM_LOG_RELEVANT("Relative error is %e, loadlevel is %e\n", err, pt);
     }
+    
+    if ( calculateEnergyMeasures )
+        currentExternalLoad = loadVector + internalForces;
 
     for ( int j = 1; j <= neq; j++ ) {
         loadVector.at(j) +=
@@ -446,7 +490,6 @@ void NlDEIDynamic :: solveYourselfAt(TimeStep *tStep)
     //        OOFEM_ERROR("No success in solving system. Ma=f");
     //    }
 
-
     for ( int i = 1; i <= neq; i++ ) {
         double prevIncrOfDisplacement = previousIncrementOfDisplacementVector.at(i);
         double incrOfDisplacement = loadVector.at(i) /
@@ -455,6 +498,24 @@ void NlDEIDynamic :: solveYourselfAt(TimeStep *tStep)
         accelerationVector.at(i) = ( incrOfDisplacement - prevIncrOfDisplacement ) / ( deltaT * deltaT );
         velocityVector.at(i)     = ( incrOfDisplacement + prevIncrOfDisplacement ) / ( 2. * deltaT );
         previousIncrementOfDisplacementVector.at(i) = incrOfDisplacement;
+    }
+
+    if ( calculateEnergyMeasures ) {
+        this->computeExternalEnergy( tStep );
+        this->computeKineticEnergy();
+        this->computeStrainEnergy( tStep );
+    }
+
+#ifdef VERBOSE
+    if ( calculateEnergyMeasures && tStep->giveNumber() > 1)  {
+        OOFEM_LOG_RELEVANT( "\n\n External load: %15e", currentExternalLoad.computeNorm() );
+        OOFEM_LOG_RELEVANT( "\n\n Total strain energy: %15e\n Current kinetic energy: %15e\n Total work of external forces: %15e", strainEnergy, kineticEnergy, externalEnergy );
+        OOFEM_LOG_RELEVANT( "\n\n Displacement norm: %15e\n", previousIncrementOfDisplacementVector.computeNorm()/displacementVector.computeNorm() );
+    }
+#endif
+    if ( calculateEnergyMeasures ) {
+        previousInternalForces = internalForces;
+        previousExternalLoad   = currentExternalLoad;
     }
 }
 
@@ -559,6 +620,7 @@ NlDEIDynamic :: computeMassMtrx(FloatArray &massMatrix, double &maxOm, TimeStep 
                 // in those DOFs without mass
                 double maxOmEl = 0.;
                 for ( int j = 1; j <= n; j++ ) {
+                    float checkThis = maxElmass * ZERO_REL_MASS;
                     if ( charMtrx.at(j, j) > maxElmass * ZERO_REL_MASS ) {
                         double maxOmi =  charMtrx2.at(j, j) / charMtrx.at(j, j);
                         maxOmEl = ( maxOmEl > maxOmi ) ? ( maxOmEl ) : ( maxOmi );
@@ -771,6 +833,8 @@ NlDEIDynamic :: printOutputAt(FILE *file, TimeStep *tStep)
     if ( drFlag ) {
         fprintf(file, "Reached load level : %e\n\n", this->pt);
     }
+    if ( calculateEnergyMeasures )
+        fprintf( file, "\nENERGY MEASURES:\n Total strain energy: %15e\n Current kinetic energy: %15e\n Total work of external forces: %15e\n\n", strainEnergy, kineticEnergy, externalEnergy );
 
     this->giveDomain(1)->giveOutputManager()->doDofManOutput(file, tStep);
     this->giveDomain(1)->giveOutputManager()->doElementOutput(file, tStep);

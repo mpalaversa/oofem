@@ -32,22 +32,28 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef bctype_h
-#define bctype_h
+#include "sm/Materials/DecoupledMaterials/decoupledmaterial.h"
+#include "domain.h"
 
 namespace oofem {
-/// Type representing the type of bc.
-enum bcType {
-    UnknownBT,      ///< Unknown.
-    DirichletBT,    ///< Prescribed value.
-    TransmissionBC, ///< Neumann type (prescribed flux).
-    ConvectionBC,   ///< Newton type - transfer coefficient
-    SlipWithFriction,
-    PenetrationWithResistance,
-    OutFlowBC,
-    RadiationBC,     ///< Stefan-Boltzmann law.
-    HydrodynamicMorison,    ///< Hydrodynamic load based on Morison's equation.
-    HydrodynamicKF  ///< Hydrodynamic load based on Kristiansen and Faltinsen.
-};
+
+
+DecoupledMaterial :: DecoupledMaterial(int n, Domain *d) : Material(n, d) { }
+
+void DecoupledMaterial ::initializeFrom( InputRecord &ir )
+{
+    Material ::initializeFrom( ir );
+
+    int userInputType;
+    IR_GIVE_OPTIONAL_FIELD( ir, userInputType, _IFT_DecoupledMaterial_type );
+    switch ( userInputType ) {
+    case 1:
+        type = DecoupledFluidMaterial;
+        break;
+    default:
+        type = Unknown;
+        break;
+    }
+}
+
 } // end namespace oofem
-#endif // bctype_h

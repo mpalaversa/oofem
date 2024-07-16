@@ -171,9 +171,10 @@ const IntArray &Set :: giveNodeList()
             }
         }
 
-        for ( int iedge = 1; iedge <= this->elementEdges.giveSize() / 2; ++iedge ) {
-            auto e = this->domain->giveElement( this->elementEdges.at(iedge * 2 - 1) );
-            auto edge = this->elementEdges.at(iedge * 2);
+        // elementEdges should be in the following format: boundaryID elementID boundaryID element ID ...
+        for ( int iedge = 1; iedge <= this->elementEdges.giveSize() / 2; iedge+=2 ) {
+            auto e = this->domain->giveElement( this->elementEdges.at(iedge + 1) );
+            auto edge = this->elementEdges.at(iedge);
             auto fei = e->giveInterpolation();
             auto eNodes = fei->boundaryEdgeGiveNodes(edge);
             for ( int inode = 1; inode <= eNodes.giveSize(); ++inode ) {

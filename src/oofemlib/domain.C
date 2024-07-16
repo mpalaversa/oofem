@@ -976,9 +976,16 @@ Domain :: postInitialize()
     for ( int i = 1; i <= this->giveNumberOfCrossSectionModels(); i++ ) {
         if ( int setNum = this->giveCrossSection(i)->giveSetNumber() ) {
             Set *set = this->giveSet(setNum);
-            for ( int ielem: set->giveElementList() ) {
-                Element *element = this->giveElement( ielem );
-                element->setCrossSection(i);
+            if ( !this->giveCrossSection( i )->isDecoupled() ) {
+                for ( int ielem : set->giveElementList() ) {
+                    Element *element = this->giveElement( ielem );
+                    element->setCrossSection( i );
+                }
+            } else {
+                for ( int ielem : set->giveElementList() ) {
+                    Element *element = this->giveElement( ielem );
+                    element->setDecoupledCrossSection( i );
+                }
             }
         }
     }

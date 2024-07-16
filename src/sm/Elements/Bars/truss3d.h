@@ -44,6 +44,7 @@
 
 namespace oofem {
 class FEI3dLineLin;
+class DecoupledMaterial;
 
 /**
  * This class implements a two-node truss bar element for three-dimensional
@@ -55,6 +56,7 @@ public NodalAveragingRecoveryModelInterface
 {
 protected:
     static FEI3dLineLin interp;
+    //FloatMatrix *GtoLRotationMatrix;
 
 public:
     Truss3d(int n, Domain * d);
@@ -71,7 +73,6 @@ public:
 
     int computeNumberOfDofs() override { return 6; }
     void giveDofManDofIDMask(int inode, IntArray &) const override;
-
 
     // characteristic length (for crack band approach)
     double giveCharacteristicLength(const FloatArray &normalToCrackPlane) override
@@ -107,6 +108,8 @@ protected:
     void computeBHmatrixAt(GaussPoint *gp, FloatMatrix &answer) override;
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override;
     void computeGaussPoints() override;
+    void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep ) override;
+    FloatArray computeDragCoefficients( double density, double mu, double characteristicDim, double relativeNormalVelocity );
 
 };
 } // end namespace oofem

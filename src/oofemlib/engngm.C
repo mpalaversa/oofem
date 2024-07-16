@@ -1199,10 +1199,14 @@ void EngngModel :: assembleVectorFromBC(FloatArray &answer, TimeStep *tStep,
                 }
             } else if ( ( eLoad = dynamic_cast< EdgeLoad * >(load) ) ) { // Edge load:
                 const IntArray &edgeBoundaries = set->giveEdgeList();
-                for ( int ibnd = 1; ibnd <= edgeBoundaries.giveSize() / 2; ++ibnd ) {
-                    Element *element = domain->giveElement( edgeBoundaries.at(ibnd * 2 - 1) );
+                // edgeboundaries should be in the following format: boundaryID elementID boundaryID element ID ...
+                // Iterate over boundaries (every odd input in edgeboundaries is a boundary ID)
+                for ( int ibnd = 1; ibnd <= edgeBoundaries.giveSize(); ibnd+=2 ) {
+                    // Get the element corresponding to the boundary given by ibnd
+                    // (every even input in edgeboundaries is an element ID)
+                    Element *element = domain->giveElement( edgeBoundaries.at(ibnd + 1) );
                     if ( element->isActivated(tStep) && this->isElementActivated(element) ) {
-                        int boundary = edgeBoundaries.at(ibnd * 2);
+                        int boundary = edgeBoundaries.at(ibnd);
                         charVec.clear();
                         va.vectorFromEdgeLoad(charVec, *element, eLoad, boundary, tStep, mode);
 

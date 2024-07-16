@@ -50,11 +50,13 @@
 #define _IFT_NlDEIDynamic_Name "nldeidynamic"
 #define _IFT_NlDEIDynamic_dumpcoef "dumpcoef"
 #define _IFT_NlDEIDynamic_deltat "deltat"
+#define _IFT_NlDEIDynamic_loaddeltat "loaddeltat"
 #define _IFT_NlDEIDynamic_drflag "drflag"
 #define _IFT_NlDEIDynamic_tau "tau"
 #define _IFT_NlDEIDynamic_py "py"
 #define _IFT_NlDEIDynamic_nonlocalext "nonlocalext"
 #define _IFT_NlDEIDynamic_reduct "reduct"
+#define _IFT_NlDEIDynamic_energyMeasures "energy"
 //@}
 
 namespace oofem {
@@ -105,6 +107,8 @@ protected:
     double dumpingCoef;
     /// Time step.
     double deltaT;
+    /// Load time step size relative to deltaT.
+    int loadDeltaT;
     /// Flag indicating the need for initialization.
     int initFlag;
     /// Optional reduction factor for time step deltaT
@@ -125,6 +129,10 @@ protected:
     /// Product of p^tM^(-1)p; where p is reference load vector.
     double pMp;
 
+    bool calculateEnergyMeasures;
+    double strainEnergy, kineticEnergy, externalEnergy;
+    FloatArray previousInternalForces, previousExternalLoad, currentExternalLoad;
+    
     LinSystSolverType solverType;
     SparseMtrxType sparseMtrxType;
     std::unique_ptr<SparseLinearSystemNM> nMethod;
@@ -134,6 +142,21 @@ public:
 
     virtual ~NlDEIDynamic();
 
+    /**
+    * Computes strain energy in the current analysis step, sums it with the energy computed in the previous
+    * steps and outputs the total strain energy.
+    */
+    void computeStrainEnergy( TimeStep *tStep);
+    /**
+    * Computes kinetic energy in the current analysis step.
+    */
+    void computeKineticEnergy();
+    /**
+    * Computes work of external forces in the current analysis step, sums it with the work computed in the previous
+    * steps and outputs the total work of external forces.
+    */
+    void computeExternalEnergy( TimeStep *tStep );
+    
     void solveYourself() override;
     void solveYourselfAt(TimeStep *tStep) override;
 

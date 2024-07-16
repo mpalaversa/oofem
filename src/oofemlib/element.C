@@ -69,7 +69,7 @@
 
 namespace oofem {
 Element :: Element(int n, Domain *aDomain) :
-    FEMComponent(n, aDomain), dofManArray(), crossSection(0), bodyLoadArray(), boundaryLoadArray(), integrationRulesArray()
+    FEMComponent( n, aDomain ), dofManArray(), crossSection( 0 ), bodyLoadArray(), boundaryLoadArray(), integrationRulesArray(), decoupledCrossSections()
 {
     material           = 0;
     numberOfDofMans    = 0;
@@ -502,7 +502,6 @@ CrossSection *Element :: giveCrossSection()
     return domain->giveCrossSection(crossSection);
 }
 
-
 int
 Element :: giveRegionNumber()
 {
@@ -750,6 +749,9 @@ Element :: postInitialize()
     this->computeGaussPoints();
 }
 
+void Element ::setDecoupledCrossSection( int csIndex ) {
+    decoupledCrossSections.push_back( csIndex );
+}
 
 void
 Element :: printOutputAt(FILE *file, TimeStep *tStep)

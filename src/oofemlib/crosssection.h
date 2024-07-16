@@ -265,6 +265,18 @@ public:
     virtual double predictRelativeRedistributionCost(GaussPoint *gp) { return 1.0; }
 
     void initializeFrom(InputRecord &ir) override;
+    /**
+     * Returns true if the cross-section is of a decoupled type
+     * @return true if the cross-section is decoupled. Otherwise reuterns false.
+     */
+    virtual bool isDecoupled() { return false; }
+    /**
+     * Some decoupled cross-sections might have a drag coeffiecient specified by the user
+     * when they are used in combination with a decoupled fluid material.
+     * @return value of the user-defined drag coefficient.
+     */
+    virtual double giveDragCoefficient() { return 0.0; }
+
     void giveInputRecord(DynamicInputRecord &input) override;
 
     /**

@@ -56,6 +56,7 @@ class IntArray;
 class FloatMatrix;
 class SparseMtrx; // required by addNonlocalStiffnessContributions declaration
 class StructuralCrossSection;
+class DecoupledCrossSection;
 class IDNLMaterial;
 
 /**
@@ -320,6 +321,19 @@ public:
     void computeLoadVector(FloatArray &answer, BodyLoad *load, CharType type, ValueModeType mode, TimeStep *tStep) override;
     void computeBoundarySurfaceLoadVector(FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global = true) override;
     void computeBoundaryEdgeLoadVector(FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global = true) override;
+    
+     /**
+     * Computes hydrodynamic loads arrising from interaction with a fluid.
+     * The expected input is a velocity vector related to the fluid flow.
+     * Returns the loads acting on the element equally divided between the
+     * element nodes.
+     * @note The corresponding elements must have an associated hydrodynamic
+     * cross-section and a material.
+     * @param answer Requested contribution of load (in local c.s.).
+     * @param velocity User-defined fluid velocity vector.
+     */
+    virtual void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep );
+    
     /// computes edge interpolation matrix
     virtual void computeEdgeNMatrix(FloatMatrix &answer, int boundaryID, const FloatArray &lcoords);
     /**
@@ -349,6 +363,9 @@ public:
                                              TimeStep *tStep) = 0;
     /// Helper function which returns the structural cross-section for the element.
     StructuralCrossSection *giveStructuralCrossSection();
+
+    /// Helper function which returns a decoupled cross-section for the element.
+    DecoupledCrossSection *giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType type );
 
     virtual void createMaterialStatus();
 
@@ -512,9 +529,6 @@ protected:
      * Setup Integration Rule Gauss Points for Mass Matrix integration
      */
     virtual void setupIRForMassMtrxIntegration(IntegrationRule &iRule);
-
-
-
 
     friend class IDNLMaterial;
     friend class TrabBoneNL3D;

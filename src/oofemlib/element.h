@@ -53,6 +53,7 @@
 #include "integrationrule.h"
 #include "dofiditem.h"
 #include "floatarray.h"
+#include "sm/Materials/DecoupledMaterials/decoupledmaterial.h"
 
 #include <cstdio>
 #include <vector>
@@ -76,11 +77,13 @@ namespace oofem {
 class TimeStep;
 class Node;
 class Material;
+class DecoupledMaterial;
 class IntegrationRule;
 class GaussPoint;
 class FloatMatrix;
 class IntArray;
 class CrossSection;
+class DecoupledCrossSection;
 class ElementSide;
 class FEInterpolation;
 class Load;
@@ -153,6 +156,8 @@ protected:
     int material;
     /// Number of associated cross section.
     int crossSection;
+    /// Numbers (IDs) of secondary cross-sections associated with the element
+    std::vector<int> decoupledCrossSections;
     /**
      * Array containing indexes of loads (body loads and boundary loads are kept separately),
      * that apply on receiver.
@@ -663,6 +668,15 @@ public:
      * @param csIndx Index of new cross section.
      */
     virtual void setCrossSection(int csIndx) { this->crossSection = csIndx; }
+
+    /**
+     * Sets the decoupled cross section model of receiver.
+     * @param csIndx Index of the new decoupled cross section.
+     */
+    void setDecoupledCrossSection( int csIndex );
+
+    /// @return Number of decoupled cross-sections associated with the element
+    virtual int giveNumberOfDecoupledCrossSections() { return this->decoupledCrossSections.size(); }
 
     /// @return Number of dofmanagers of receiver.
     virtual int giveNumberOfDofManagers() const { return numberOfDofMans; }

@@ -87,22 +87,6 @@ set (sm_element
 	Elements/PlaneStress/qdmembrane.C
 	Elements/PlaneStress/plnstrssqd1.C
 	Elements/PlaneStress/plnstrssqd1rot.C
-	Elements/Fsb/FsbLinearStatic.C
-    Elements/Fsb/FsbLinearStatic2D.C
-    Elements/Fsb/FsbPlaneStress.C
-    Elements/Fsb/FsbPlaneStressDrill.C
-    Elements/Fsb/FsbInterpolatorPlaneStress.C
-    Elements/Fsb/FsbInterpolatorPlate.C
-    Elements/Fsb/FsbPlate.C
-    Elements/Perleta/acm_plate.C
-    Elements/Perleta/basiclsr.C
-    Elements/Perleta/basiclsr3d.C
-    Elements/Perleta/basiclsrk3d.C
-    Elements/Perleta/cssrk3d.C
-    Elements/Perleta/mplate.C
-    Elements/Perleta/pplate.C
-    Elements/Perleta/qcshell.C
-    Elements/Perleta/qshell.C
     Elements/AbaqusUserElement.C
     Elements/htselement.C
     Elements/lumpedmasselement.C
@@ -185,6 +169,7 @@ set (sm_crosssection
     CrossSections/variablecrosssection.C
     CrossSections/warpingcrosssection.C
     CrossSections/latticecrosssection.C
+	CrossSections/decoupledcrosssection.CPP
     )
 
 set (sm_emodel
@@ -306,6 +291,8 @@ set (sm_material
     Materials/LatticeMaterials/latticeplasticitydamage.C
     Materials/LatticeMaterials/latticeslip.C
     Materials/LatticeMaterials/latticeplasticitydamageviscoelastic.C
+	Materials/DecoupledMaterials/decoupledmaterial.CPP
+	Materials/DecoupledMaterials/decoupledfluidmaterial.CPP
 )
 
     

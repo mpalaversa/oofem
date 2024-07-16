@@ -80,6 +80,7 @@ class InitialCondition;
 class Load;
 class Function;
 class CrossSection;
+class DecoupledCrossSection;
 class ElementSide;
 class DofManager;
 class OutputManager;

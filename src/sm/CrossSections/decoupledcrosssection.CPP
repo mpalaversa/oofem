@@ -32,22 +32,36 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef bctype_h
-#define bctype_h
+#include "sm/CrossSections/decoupledcrosssection.h"
+#include "classfactory.h"
 
 namespace oofem {
-/// Type representing the type of bc.
-enum bcType {
-    UnknownBT,      ///< Unknown.
-    DirichletBT,    ///< Prescribed value.
-    TransmissionBC, ///< Neumann type (prescribed flux).
-    ConvectionBC,   ///< Newton type - transfer coefficient
-    SlipWithFriction,
-    PenetrationWithResistance,
-    OutFlowBC,
-    RadiationBC,     ///< Stefan-Boltzmann law.
-    HydrodynamicMorison,    ///< Hydrodynamic load based on Morison's equation.
-    HydrodynamicKF  ///< Hydrodynamic load based on Kristiansen and Faltinsen.
-};
+REGISTER_CrossSection( DecoupledCrossSection );
+
+void DecoupledCrossSection ::initializeFrom( InputRecord &ir )
+{
+    CrossSection ::initializeFrom( ir );
+
+    characteristicDim = 0.0;
+    IR_GIVE_OPTIONAL_FIELD( ir, characteristicDim, _DecoupledCrossSection_CharacteristicDim );
+
+    materialNumber = -1;
+    IR_GIVE_OPTIONAL_FIELD( ir, materialNumber, _DecoupledCrossSection_Material );
+
+    userDefinedDragCoeff = 0.0;
+    IR_GIVE_OPTIONAL_FIELD( ir, userDefinedDragCoeff, _DecoupledCrossSection_dragcoeff );
+}
+
+bool DecoupledCrossSection::isDecoupled() {
+    return true;
+}
+
+Material* DecoupledCrossSection::giveMaterial()
+{
+    return this->giveDomain()->giveMaterial( this->giveMaterialNumber() );
+}
+
+double DecoupledCrossSection::giveMagnitudeOfMaterialProperty(int property) {
+    return this->giveMaterial()->give( property );
+}
 } // end namespace oofem
-#endif // bctype_h

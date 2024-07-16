@@ -116,6 +116,8 @@ protected:
     /// Material existing before casting time - optional parameter, zero by default
     int preCastingTimeMat;
     
+    /// Dynamic viscosity of the material
+    double mu;
 
 public:
     /**
@@ -134,6 +136,14 @@ public:
     virtual bool isCharacteristicMtrxSymmetric(MatResponseMode rMode) const { return true; }
     /**
      * Returns the value of material property 'aProperty'. Property must be identified
+     * by unique int id. This is used for properties whose magnitude is independednt of
+     * the integration point (e.g. decoupled materials).
+     * @param aProperty ID of property requested.
+     * @return Property value.
+     */
+    virtual double give( int aProperty ) const;
+    /**
+     * Returns the value of material property 'aProperty'. Property must be identified
      * by unique int id. Integration point also passed to allow for materials with spatially
      * varying properties
      * @param aProperty ID of property requested.
@@ -148,6 +158,8 @@ public:
      * @return True if 'aProperty' exists.
      */
     virtual bool hasProperty(int aProperty, GaussPoint *gp) const;
+    
+    double giveDynamicViscosity() { return mu; }
     /**
      * Modify 'aProperty', which already exists on material. Intended for evolving material properties.
      * @param aProperty ID of a property requested.

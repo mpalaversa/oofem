@@ -34,10 +34,12 @@
 
 #include "sm/Elements/structuralelement.h"
 #include "sm/CrossSections/structuralcrosssection.h"
+#include "sm/CrossSections/decoupledcrosssection.h"
 #include "sm/Materials/structuralmaterial.h"
 #include "sm/Materials/structuralms.h"
 #include "sm/Materials/InterfaceMaterials/structuralinterfacematerialstatus.h"
 #include "sm/Materials/LatticeMaterials/latticematstatus.h"
+#include "sm/Materials/DecoupledMaterials/decoupledmaterial.h"
 #include "Loads/structtemperatureload.h"
 #include "sm/Materials/structuralnonlocalmaterialext.h"
 #include "Loads/structeigenstrainload.h"
@@ -192,48 +194,63 @@ void StructuralElement :: computeBoundaryEdgeLoadVector(FloatArray &answer, Boun
 
     FEInterpolation *fei = this->giveInterpolation();
     if ( !fei ) {
-        OOFEM_ERROR("No interpolator available");
+        OOFEM_ERROR( "No interpolator available" );
     }
 
     FloatMatrix n, T;
     FloatArray force, globalIPcoords;
 
-    std :: unique_ptr< IntegrationRule >iRule(this->giveBoundaryEdgeIntegrationRule(load->giveApproxOrder(), boundary) );
+    std ::unique_ptr<IntegrationRule> iRule( this->giveBoundaryEdgeIntegrationRule( load->giveApproxOrder(), boundary ) );
 
-    for ( GaussPoint *gp : * iRule ) {
+    for ( GaussPoint *gp : *iRule ) {
         const FloatArray &lcoords = gp->giveNaturalCoordinates();
 
-        if ( load->giveFormulationType() == Load :: FT_Entity ) {
-            load->computeValueAt(force, tStep, lcoords, mode);
+        if ( load->giveFormulationType() == Load ::FT_Entity ) {
+            load->computeValueAt( force, tStep, lcoords, mode );
         } else {
-            fei->boundaryEdgeLocal2Global(globalIPcoords, boundary, lcoords, FEIElementGeometryWrapper(this) );
-            load->computeValueAt(force, tStep, globalIPcoords, mode);
+            fei->boundaryEdgeLocal2Global( globalIPcoords, boundary, lcoords, FEIElementGeometryWrapper( this ) );
+            load->computeValueAt( force, tStep, globalIPcoords, mode );
         }
 
         ///@todo Make sure this part is correct.
         // We always want the global values in the end, so we might as well compute them here directly:
         // transform force
-        if ( load->giveCoordSystMode() == Load :: CST_Global ) {
+        if ( load->giveCoordSystMode() == Load ::CST_Global ) {
             // then just keep it in global c.s
+            /*
+            if ( load->giveType() == bcType::HydrodynamicMorison || load->giveType() == bcType::HydrodynamicKF ) {
+                if ( this->computeGtoLRotationMatrix( T ) ) {
+                    force.rotatedWith( T, 'n' );
+                }
+            }*/
         } else {
-            ///@todo Support this...
-            // transform from local boundary to element local c.s
-            if ( this->computeLoadLEToLRotationMatrix(T, boundary, gp) ) {
-                force.rotatedWith(T, 'n');
-            }
-            // then to global c.s
-            if ( this->computeLoadGToLRotationMtrx(T) ) {
-                force.rotatedWith(T, 't');
+            if ( load->giveType() == bcType::HydrodynamicMorison || load->giveType() == bcType::HydrodynamicKF ) {
+                OOFEM_ERROR( "Hydrodynamic loads must be defined in the global coord. system." );
+            } else {
+                ///@todo Support this...
+                // transform from local boundary to element local c.s
+                if ( this->computeLoadLEToLRotationMatrix( T, boundary, gp ) ) {
+                    force.rotatedWith( T, 'n' );
+                }
+                // then to global c.s
+                if ( this->computeLoadGToLRotationMtrx( T ) ) {
+                    force.rotatedWith( T, 't' );
+                }
             }
         }
 
-        // Construct n-matrix
-        //fei->boundaryEdgeEvalN( n_vec, boundary, lcoords, FEIElementGeometryWrapper(this) );
-        //n.beNMatrixOf(n_vec, nsd);
-        this->computeEdgeNMatrix(n, boundary, lcoords); // to allow adapttation on element level
+        if (load->giveType() == bcType::HydrodynamicMorison || load->giveType() == bcType::HydrodynamicKF) {
+            if ( force.computeNorm() > 0 )
+                this->computeHydrodynamicLoadVector(answer, force, tStep);
+        } else {
+            // Construct n-matrix
+            // fei->boundaryEdgeEvalN( n_vec, boundary, lcoords, FEIElementGeometryWrapper(this) );
+            // n.beNMatrixOf(n_vec, nsd);
+            this->computeEdgeNMatrix( n, boundary, lcoords ); // to allow adapttation on element level
 
-        double dV = this->computeEdgeVolumeAround(gp, boundary);
-        answer.plusProduct(n, force, dV);
+            double dV = this->computeEdgeVolumeAround( gp, boundary );
+            answer.plusProduct( n, force, dV );
+        }
     }
 }
 
@@ -255,7 +272,11 @@ StructuralElement :: computeEdgeNMatrix(FloatMatrix &answer, int boundaryID, con
     answer.beNMatrixOf(n_vec, this->giveInterpolation()->giveNsd() );
 }
 
-
+void StructuralElement ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep )
+{
+    answer.clear();
+    OOFEM_ERROR( "Hydrodynamic loads are not implemented for this element." );
+}
 
 
 void
@@ -1245,6 +1266,20 @@ void StructuralElement :: giveInputRecord(DynamicInputRecord &input)
 StructuralCrossSection *StructuralElement :: giveStructuralCrossSection()
 {
     return static_cast< StructuralCrossSection * >( this->giveCrossSection() );
+}
+
+DecoupledCrossSection *StructuralElement::giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType type )
+{
+    for ( int i = 1; i <= decoupledCrossSections.size(); i++ ) {
+        CrossSection *cs = domain->giveCrossSection( decoupledCrossSections.at( i - 1 ));
+        if ( cs->isDecoupled() ) {
+            DecoupledCrossSection *cs2 = static_cast<DecoupledCrossSection *>( cs );
+            DecoupledMaterial *mat     = static_cast<DecoupledMaterial *>( cs2->giveMaterial() );
+            if ( mat->giveType() == type )
+                return cs2;
+        }
+    }
+    return 0;
 }
 
 void StructuralElement :: createMaterialStatus()

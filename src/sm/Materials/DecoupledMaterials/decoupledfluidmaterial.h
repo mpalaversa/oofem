@@ -32,22 +32,45 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef bctype_h
-#define bctype_h
+#ifndef decoupledfluidmaterial_h
+#define decoupledfluidmaterial_h
+
+#include "sm/Materials/DecoupledMaterials/decoupledmaterial.h"
+
+///@name Input fields for DecoupledFluidMaterial
+//@{
+#define _IFT_DecoupledFluidMaterial_Name "decoupledfluidmaterial"
+#define _IFT_DecoupledFluidMaterial_mu "mu"
+//@}
 
 namespace oofem {
-/// Type representing the type of bc.
-enum bcType {
-    UnknownBT,      ///< Unknown.
-    DirichletBT,    ///< Prescribed value.
-    TransmissionBC, ///< Neumann type (prescribed flux).
-    ConvectionBC,   ///< Newton type - transfer coefficient
-    SlipWithFriction,
-    PenetrationWithResistance,
-    OutFlowBC,
-    RadiationBC,     ///< Stefan-Boltzmann law.
-    HydrodynamicMorison,    ///< Hydrodynamic load based on Morison's equation.
-    HydrodynamicKF  ///< Hydrodynamic load based on Kristiansen and Faltinsen.
+
+/**
+ * This is a decoupled material for fluids.
+ *
+ * @author Marin Palaversa
+ */
+class OOFEM_EXPORT DecoupledFluidMaterial : public DecoupledMaterial
+{
+public:
+
+    /**
+     * Constructor. Creates material with given number, belonging to given domain.
+     * @param n Material number.
+     * @param d Domain to which new material will belong.
+     */
+    DecoupledFluidMaterial(int n, Domain *d);
+
+    const char *giveClassName() const override { return "DecoupledFluidMaterial"; }
+
+    const char *giveInputRecordName() const override { return _IFT_DecoupledFluidMaterial_Name; }
+
+    void initializeFrom( InputRecord &ir ) override;
+    /*
+    friend class CrossSection;
+    friend class StructuralCrossSection;
+    friend class SimpleCrossSection;
+    friend class LayeredCrossSection;*/
 };
 } // end namespace oofem
-#endif // bctype_h
+#endif // decoupledfluidmaterial_h

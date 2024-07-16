@@ -47,6 +47,22 @@ Material :: Material(int n, Domain *d) : FEMComponent(n, d), propertyDictionary(
 
 
 double
+Material ::give( int aProperty ) const
+// Returns the value of the property aProperty (e.g. the Young's modulus
+// 'E') of the receiver.
+{
+    double value = 0.0;
+
+    if ( propertyDictionary.includes( aProperty ) ) {
+        value = propertyDictionary.at( aProperty );
+    } else {
+        OOFEM_ERROR( "property #%d not defined", aProperty );
+    }
+
+    return value;
+}
+
+double
 Material :: give(int aProperty, GaussPoint *gp) const
 // Returns the value of the property aProperty (e.g. the Young's modulus
 // 'E') of the receiver.
