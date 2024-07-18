@@ -306,6 +306,7 @@ set (core_bc
     constantsurfaceload.C
     nodalload.C
     deadweight.C
+	buoyantforce.CPP
     reinforcement.C
     surfacetensionbc.C
     linearconstraintbc.C

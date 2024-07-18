@@ -32,30 +32,32 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef deadweight_h
-#define deadweight_h
+#ifndef buoyantforce_h
+#define buoyantforce_h
 
 #include "bodyload.h"
 #include "bcgeomtype.h"
 #include "valuemodetype.h"
 
-#define _IFT_DeadWeight_Name "deadweight"
+#define _IFT_BuoyantForce_Name "buoyantforce"
 
 namespace oofem {
 /**
- * This class implements a gravity-like load, or internal source (heat etc.) for transport problems.
- * The inherited attribute 'componentArray' contains the components of an
- * loading prescribed per unit volume.
- *
- * Its task is to return the body force @f$ \rho a @f$
+ * This class implements a body load acting on a body immersed in a fluid.
+ * The inherited attribute 'componentArray' contains the components of a
+ * unit vector that gives the direction of the buoyant force (it should in general
+ * act in the direction opposite to the gravity force).
+ * Since the buoyant force is equivalent to the weight of the fluid displaced by
+ * the body, the FE representing the body must have a fluid material associated with
+ * it (e.g. see the DecoupledFluidMaterial class).
  */
-class OOFEM_EXPORT DeadWeight : public BodyLoad
+class OOFEM_EXPORT BuoyantForce : public BodyLoad
 {
 public:
     /// Constructor
-    DeadWeight(int i, Domain * d) : BodyLoad(i, d) { }
+    BuoyantForce(int i, Domain * d) : BodyLoad(i, d) { }
     /**
-     * Computes components values of deadweight field at given point (coordinates given in Global c.s.).
+     * Computes components values of the buoyant force vector at a given point (coordinates given in Global c.s.).
      * taking into account corresponding load time function value while respecting load response mode.
      * @param answer Component values at given point and time.
      * @param tStep Time step.
@@ -64,14 +66,14 @@ public:
      */
     void computeValueAt(FloatArray &answer, TimeStep *tStep, const FloatArray &coords, ValueModeType mode) override;
 
-    bcValType giveBCValType() const override { return ForceLoadBVT; }
+    //bcValType giveBCValType() const override { return ForceLoadBVT; }
     bcGeomType giveBCGeoType() const override { return BodyLoadBGT; }
 
-    void setDeadWeighComponents(FloatArray newComponents);
+    void setBuoyantForceComponents(FloatArray newComponents);
 
-    BodyLoadType giveBodyLoadType() override { return BodyLoadType::Deadweight; }
-    const char *giveClassName() const override { return "DeadWeight"; }
-    const char *giveInputRecordName() const override { return _IFT_DeadWeight_Name; }
+    BodyLoadType giveBodyLoadType() override { return BodyLoadType::BuoyantForce; }
+    const char *giveClassName() const override { return "BuoyantForce"; }
+    const char *giveInputRecordName() const override { return _IFT_BuoyantForce_Name; }
 };
 } // end namespace oofem
-#endif // deadweight_h
+#endif // buoyantforce_h

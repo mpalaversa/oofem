@@ -175,20 +175,20 @@ void Truss3d ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray vel
     }
     
     // Drag force on the element based on Morison's equation
-    double normalDragForceMagnitude = 0.5 * density * dragCoeffs.at(1) *characteristicDim *l * pow(normalVelocityMagnitude, 2);
-    double tangentialDragForceMagnitude = dragCoeffs.at(2) * l * pow( tangentialVelocityMagnitude, 2 );
-    FloatArray dragForceVector, normalDragForceVector, tangentialDragForceVector;
+    double normalForceMagnitude = 0.5 * density * dragCoeffs.at(1) *characteristicDim *l * pow(normalVelocityMagnitude, 2);
+    double tangentialForceMagnitude = dragCoeffs.at(2) * l * pow( tangentialVelocityMagnitude, 2 );
+    FloatArray viscousForceVector, normalForceVector, tangentialForceVector;
     // Form the drag force vector (this vector is orthogonal to the element)
     normalVelocity.normalize();
-    normalDragForceVector.beScaled( normalDragForceMagnitude / 2, normalVelocity );
-    tangentialDragForceVector.beScaled( tangentialDragForceMagnitude / 2, ex );
-    dragForceVector.add(normalDragForceVector);
-    dragForceVector.add( tangentialDragForceVector );
+    normalForceVector.beScaled( normalForceMagnitude / 2, normalVelocity );
+    tangentialForceVector.beScaled( tangentialForceMagnitude / 2, ex );
+    viscousForceVector.add( normalForceVector );
+    viscousForceVector.add( tangentialForceVector );
     // The force is equally distributed among the element's nodes
     answer.resize( 6 );
-    answer.at( 1 ) = answer.at( 4 ) = dragForceVector.at( 1 );
-    answer.at( 2 ) = answer.at( 5 ) = dragForceVector.at( 2 );
-    answer.at( 3 ) = answer.at( 6 ) = dragForceVector.at( 3 );
+    answer.at( 1 ) = answer.at( 4 ) = viscousForceVector.at( 1 );
+    answer.at( 2 ) = answer.at( 5 ) = viscousForceVector.at( 2 );
+    answer.at( 3 ) = answer.at( 6 ) = viscousForceVector.at( 3 );
 
     // Get acceleration of element nodes in the current time step
     FloatArray currentNodalAcceleration;

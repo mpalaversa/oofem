@@ -32,42 +32,21 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef bodyload_h
-#define bodyload_h
-
-#include "load.h"
-#include "bcgeomtype.h"
+#include "buoyantforce.h"
+#include "timestep.h"
+#include "function.h"
+#include "classfactory.h"
 
 namespace oofem {
-/**
- * Class implementing element body load, acting over whole element volume (e.g., the dead weight).
- * Body load is usually attribute of one or more elements.
- *
- * This base body load class only defines the common services common to all derived classes.
- * Derived classes need to implement services declared by base Load class.
- */
-class OOFEM_EXPORT BodyLoad : public Load
+REGISTER_BoundaryCondition(BuoyantForce);
+
+void BuoyantForce :: computeValueAt(FloatArray &answer, TimeStep *tStep, const FloatArray &coords, ValueModeType mode)
 {
-public:
-    enum BodyLoadType {
-        Unknown,
-        Deadweight,
-        BuoyantForce
-    };
-    /**
-     * Constructor. Creates Body Load object with given number, belonging to given domain.
-     * @param i Load number
-     * @param d Domain to which new load belongs.
-     */
-    BodyLoad(int i, Domain * d) : Load(i, d) { }
+    computeComponentArrayAt(answer, tStep, mode);
+}
 
-    /**
-     * Returns receiver's load geometry type.
-     * @return BodyLoadBGT.
-     */
-    bcGeomType giveBCGeoType() const override { return BodyLoadBGT; }
-
-     virtual BodyLoadType giveBodyLoadType() { return BodyLoadType::Unknown; };
-};
+void BuoyantForce :: setBuoyantForceComponents(FloatArray newComponents)
+{
+    this->componentArray = std :: move(newComponents);
+}
 } // end namespace oofem
-#endif // bodyload_h
