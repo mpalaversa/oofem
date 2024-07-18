@@ -119,7 +119,6 @@ NlDEIDynamic :: initializeFrom(InputRecord &ir)
 
     IR_GIVE_FIELD(ir, dumpingCoef, _IFT_NlDEIDynamic_dumpcoef); // C = dumpingCoef * M
     IR_GIVE_FIELD(ir, deltaT, _IFT_NlDEIDynamic_deltat);
-    IR_GIVE_FIELD( ir, loadDeltaT, _IFT_NlDEIDynamic_loaddeltat );
 
     reductionFactor = 1.;
     IR_GIVE_OPTIONAL_FIELD(ir, reductionFactor, _IFT_NlDEIDynamic_reduct);
@@ -130,7 +129,7 @@ NlDEIDynamic :: initializeFrom(InputRecord &ir)
         IR_GIVE_FIELD(ir, Tau, _IFT_NlDEIDynamic_tau);
         IR_GIVE_FIELD(ir, pyEstimate, _IFT_NlDEIDynamic_py);
     }
-
+    
     int energyMeasures = 0;
     IR_GIVE_OPTIONAL_FIELD( ir, energyMeasures, _IFT_NlDEIDynamic_energyMeasures );
     if ( energyMeasures == 1 )
@@ -369,11 +368,9 @@ void NlDEIDynamic :: solveYourselfAt(TimeStep *tStep)
 
     if ( !drFlag ) {
         //
-        if ( loadDeltaT == 1 || ( tStep->giveNumber() >= this->giveNumberOfSteps() * 0.75 && tStep->giveNumber() % loadDeltaT == 0 ) ) {
-            // Assembling the element part of load vector.
-            //
-            this->computeLoadVector( loadVector, VM_Total, tStep );
-        }
+        // Assembling the element part of load vector.
+        //
+        this->computeLoadVector( loadVector, VM_Total, tStep );
         //
         // Assembling additional parts of right hand side.
         //

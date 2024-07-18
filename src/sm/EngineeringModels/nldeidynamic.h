@@ -50,13 +50,13 @@
 #define _IFT_NlDEIDynamic_Name "nldeidynamic"
 #define _IFT_NlDEIDynamic_dumpcoef "dumpcoef"
 #define _IFT_NlDEIDynamic_deltat "deltat"
-#define _IFT_NlDEIDynamic_loaddeltat "loaddeltat"
 #define _IFT_NlDEIDynamic_drflag "drflag"
 #define _IFT_NlDEIDynamic_tau "tau"
 #define _IFT_NlDEIDynamic_py "py"
 #define _IFT_NlDEIDynamic_nonlocalext "nonlocalext"
 #define _IFT_NlDEIDynamic_reduct "reduct"
-#define _IFT_NlDEIDynamic_energyMeasures "energy"
+#define _IFT_NlDEIDynamic_energyMeasures "energymeasures"
+#define _IFT_NlDEIDynamic_tolH "tolh"
 //@}
 
 namespace oofem {
@@ -107,8 +107,6 @@ protected:
     double dumpingCoef;
     /// Time step.
     double deltaT;
-    /// Load time step size relative to deltaT.
-    int loadDeltaT;
     /// Flag indicating the need for initialization.
     int initFlag;
     /// Optional reduction factor for time step deltaT

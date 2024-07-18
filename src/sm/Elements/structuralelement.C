@@ -69,8 +69,10 @@
 
 namespace oofem {
     StructuralElement :: StructuralElement(int n, Domain *aDomain) :
-    Element(n, aDomain)
-{}
+    Element(n, aDomain){
+        isDownstream = false;
+        velocityReductionFactor = 0.0;
+    }
 
 
 StructuralElement :: ~StructuralElement()
@@ -1265,6 +1267,18 @@ void
 StructuralElement :: initializeFrom(InputRecord &ir)
 {
     Element :: initializeFrom(ir);
+
+    int downstream = 0;
+    IR_GIVE_OPTIONAL_FIELD( ir, downstream, _IFT_StructuralElement_downstream );
+    if ( downstream == 1 )
+        isDownstream = true;
+
+    IR_GIVE_OPTIONAL_FIELD( ir, velocityReductionFactor, _IFT_StructuralElement_r );
+    if ( isDownstream ) {
+        if ( velocityReductionFactor == 0.0 ) {
+            OOFEM_WARNING( "Element %d is designated as downstream, but the velocity reduction factor (r) is not specified or is given 0.", this->giveNumber() );
+        }
+    }
 }
 
 void StructuralElement :: giveInputRecord(DynamicInputRecord &input)

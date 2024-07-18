@@ -44,6 +44,11 @@
 
 #include <memory>
 
+///@name Input fields for general element.
+//@{
+#define _IFT_StructuralElement_downstream "downstream"
+#define _IFT_StructuralElement_r "r"
+
 namespace oofem {
 #define ALL_STRAINS -1
 
@@ -98,6 +103,8 @@ class OOFEM_EXPORT StructuralElement : public Element
 protected:
     /// Initial displacement vector, describes the initial nodal displacements when element has been casted.
     std :: unique_ptr< FloatArray >initialDisplacements;
+    bool isDownstream;
+    double velocityReductionFactor;
 
 public:
     /**

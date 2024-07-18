@@ -145,6 +145,11 @@ void Truss3d ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray vel
     ex.beDifferenceOf( currentNode2Coordinates, currentNode1Coordinates );
     ex.normalize();
 
+    // Check if the element is downstream relative to another element
+    if ( this->isDownstream )
+        // Reduce the inflow velocity by the given velocity reduction factor (r)
+        velocity.beScaled( this->velocityReductionFactor, velocity );
+
     // Get velocity of element nodes in the current time step
     FloatArray currentNodalVelocity;
     this->computeVectorOf( VM_Velocity, tStep, currentNodalVelocity );

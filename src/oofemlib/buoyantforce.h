@@ -44,10 +44,10 @@
 namespace oofem {
 /**
  * This class implements a body load acting on a body immersed in a fluid.
- * The inherited attribute 'componentArray' contains the components of a
- * unit vector that gives the direction of the buoyant force (it should in general
+ * The inherited attribute 'componentArray' contains components of the associated
+ * acceleration vector, which gives the direction of the buoyant force (it should in general
  * act in the direction opposite to the gravity force).
- * Since the buoyant force is equivalent to the weight of the fluid displaced by
+ * Since magnitude of the buoyant force is equivalent to the weight of the fluid displaced by
  * the body, the FE representing the body must have a fluid material associated with
  * it (e.g. see the DecoupledFluidMaterial class).
  */
@@ -66,7 +66,6 @@ public:
      */
     void computeValueAt(FloatArray &answer, TimeStep *tStep, const FloatArray &coords, ValueModeType mode) override;
 
-    //bcValType giveBCValType() const override { return ForceLoadBVT; }
     bcGeomType giveBCGeoType() const override { return BodyLoadBGT; }
 
     void setBuoyantForceComponents(FloatArray newComponents);
