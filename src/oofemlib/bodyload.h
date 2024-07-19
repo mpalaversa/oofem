@@ -67,7 +67,7 @@ public:
      */
     bcGeomType giveBCGeoType() const override { return BodyLoadBGT; }
 
-     virtual BodyLoadType giveBodyLoadType() { return BodyLoadType::Unknown; };
+    virtual BodyLoadType giveBodyLoadType() { return BodyLoadType::Unknown; };
 };
 } // end namespace oofem
 #endif // bodyload_h

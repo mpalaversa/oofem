@@ -127,8 +127,9 @@ protected:
     /// Product of p^tM^(-1)p; where p is reference load vector.
     double pMp;
 
-    bool calculateEnergyMeasures;
-    double strainEnergy, kineticEnergy, externalEnergy;
+    /// The following 3 lines of code provide attributes for storing energy measures when calculateEnergyMeasures is true
+    bool calculateEnergyMeasures, immersedElements;
+    double strainEnergy, kineticEnergy, externalEnergy, externalLoadMagnitude, internalForcesMagnitude, viscousLoadMagnitude;
     FloatArray previousInternalForces, previousExternalLoad, currentExternalLoad;
     
     LinSystSolverType solverType;

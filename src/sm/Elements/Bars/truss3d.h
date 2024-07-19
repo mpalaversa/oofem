@@ -99,6 +99,8 @@ public:
     void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;
     void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
 
+    FloatArray giveViscousForce() override { return this->viscousForce; }
+
 protected:
     // edge load support
     void giveEdgeDofMapping(IntArray &answer, int iEdge) const override;
@@ -111,6 +113,7 @@ protected:
     void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep ) override;
     FloatArray computeDragCoefficients( double density, double mu, double characteristicDim, double relativeNormalVelocity );
 
+    FloatArray viscousForce;
 };
 } // end namespace oofem
 #endif // truss3d_h

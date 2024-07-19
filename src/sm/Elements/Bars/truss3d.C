@@ -165,36 +165,43 @@ void Truss3d ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray vel
     FloatArray tangentialVelocity, normalVelocity;
     tangentialVelocity.beScaled( tangentialVelocityMagnitude, ex );
     // Calculate normal velocity component, i.e. velocity component orthogonal
-    // to the element, that contributes to the drag force (see Morison's equation)
+    // to the element, that contributes to the viscous force (see Morison's equation)
     normalVelocity.beDifferenceOf(relativeVelocity, tangentialVelocity);
     double normalVelocityMagnitude = normalVelocity.computeNorm();
 
     FloatArray dragCoeffs;
+    // Check if the user has defined a constant value of the drag coefficient
     double userDefinedDragCoeff = cs->giveDragCoefficient();
     if ( userDefinedDragCoeff == 0.0 )
+        // If no, calculate the drag coefficients.
         dragCoeffs = computeDragCoefficients( density, mu, characteristicDim, normalVelocityMagnitude );
     else {
+        // If yes, use the user defined drag coefficient for the normal viscous force component
+        // and disregard the tangential one.
         dragCoeffs.resize( 2 );
         dragCoeffs.at( 1 ) = userDefinedDragCoeff;
         dragCoeffs.at( 2 ) = 0;
     }
     
-    // Drag force on the element based on Morison's equation
+    // Viscous force on the element based on Morison's equation
     double normalForceMagnitude = 0.5 * density * dragCoeffs.at(1) *characteristicDim *l * pow(normalVelocityMagnitude, 2);
     double tangentialForceMagnitude = dragCoeffs.at(2) * l * pow( tangentialVelocityMagnitude, 2 );
-    FloatArray viscousForceVector, normalForceVector, tangentialForceVector;
-    // Form the drag force vector (this vector is orthogonal to the element)
+    FloatArray normalForceVector, tangentialForceVector;
+    // Form the viscous force vector
     normalVelocity.normalize();
     normalForceVector.beScaled( normalForceMagnitude / 2, normalVelocity );
     tangentialForceVector.beScaled( tangentialForceMagnitude / 2, ex );
-    viscousForceVector.add( normalForceVector );
-    viscousForceVector.add( tangentialForceVector );
+    this->viscousForce.zero();
+    this->viscousForce.add( normalForceVector );
+    this->viscousForce.add( tangentialForceVector );
     // The force is equally distributed among the element's nodes
     answer.resize( 6 );
-    answer.at( 1 ) = answer.at( 4 ) = viscousForceVector.at( 1 );
-    answer.at( 2 ) = answer.at( 5 ) = viscousForceVector.at( 2 );
-    answer.at( 3 ) = answer.at( 6 ) = viscousForceVector.at( 3 );
-
+    answer.at( 1 ) = answer.at( 4 ) = viscousForce.at( 1 );
+    answer.at( 2 ) = answer.at( 5 ) = viscousForce.at( 2 );
+    answer.at( 3 ) = answer.at( 6 ) = viscousForce.at( 3 );
+    // Store vector of the viscous force (this can be used in defining a convergence criterion in an analysis).
+    this->viscousForce.beScaled( 2, viscousForce );
+    
     // Get acceleration of element nodes in the current time step
     FloatArray currentNodalAcceleration;
     this->computeVectorOf( VM_Acceleration, tStep, currentNodalAcceleration );

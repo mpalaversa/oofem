@@ -632,6 +632,12 @@ Element :: giveCharacteristicValue(CharType mtrx, TimeStep *tStep)
     return 0.;
 }
 
+FloatArray Element :: giveViscousForce()
+{
+    FloatArray fa;
+    fa.resize( 3 );
+    return fa;
+}
 
 void
 Element :: initializeFrom(InputRecord &ir)

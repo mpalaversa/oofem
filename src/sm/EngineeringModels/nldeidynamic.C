@@ -63,6 +63,7 @@ NlDEIDynamic :: NlDEIDynamic(int i, EngngModel *_master) : StructuralEngngModel(
 {
     ndomains = 1;
     calculateEnergyMeasures = false;
+    immersedElements        = true;
     strainEnergy            = 0.0;
     kineticEnergy           = 0.0;
     externalEnergy          = 0.0;
@@ -496,16 +497,38 @@ void NlDEIDynamic :: solveYourselfAt(TimeStep *tStep)
         velocityVector.at(i)     = ( incrOfDisplacement + prevIncrOfDisplacement ) / ( 2. * deltaT );
         previousIncrementOfDisplacementVector.at(i) = incrOfDisplacement;
     }
-
+    FloatArray viscousLoad;
     if ( calculateEnergyMeasures ) {
         this->computeExternalEnergy( tStep );
         this->computeKineticEnergy();
         this->computeStrainEnergy( tStep );
+        externalLoadMagnitude = currentExternalLoad.computeNorm();
+        internalForcesMagnitude = internalForces.computeNorm();
+
+        viscousLoad.resize( 3 );
+        bool immersedElement = false;
+        // Check if there are immersed elements, i.e. those that could have viscous load
+        if ( this->immersedElements ) {
+            // If yes calculate the viscous load
+            for ( int i = 1; i <= this->giveDomain( 1 )->giveNumberOfElements(); i++ ) {
+                Element *el = this->giveDomain( 1 )->giveElement( i );
+                viscousLoad.add( el->giveViscousForce() );
+            }
+            // Check if magntiude of the viscous load vector is greater than zero. If yes, this means that there
+            // are immersed elements. This is primarily intended to be used in the first step since this-immersedElements
+            // is set to true in the constructor.
+            if ( viscousLoad.computeNorm() > 0 )
+                immersedElement = true;
+        }
+        this->immersedElements = immersedElement;
     }
 
 #ifdef VERBOSE
     if ( calculateEnergyMeasures && tStep->giveNumber() > 1)  {
-        OOFEM_LOG_RELEVANT( "\n\n External load: %15e", currentExternalLoad.computeNorm() );
+        if ( this->immersedElements ) {
+            viscousLoadMagnitude = viscousLoad.computeNorm();
+            OOFEM_LOG_RELEVANT( "\n\n Viscous load: %15e", viscousLoadMagnitude );
+        }
         OOFEM_LOG_RELEVANT( "\n\n Total strain energy: %15e\n Current kinetic energy: %15e\n Total work of external forces: %15e", strainEnergy, kineticEnergy, externalEnergy );
         OOFEM_LOG_RELEVANT( "\n\n Displacement norm: %15e\n", previousIncrementOfDisplacementVector.computeNorm()/displacementVector.computeNorm() );
     }
@@ -830,8 +853,11 @@ NlDEIDynamic :: printOutputAt(FILE *file, TimeStep *tStep)
     if ( drFlag ) {
         fprintf(file, "Reached load level : %e\n\n", this->pt);
     }
-    if ( calculateEnergyMeasures )
+    if ( calculateEnergyMeasures ) {
         fprintf( file, "\nENERGY MEASURES:\n Total strain energy: %15e\n Current kinetic energy: %15e\n Total work of external forces: %15e\n\n", strainEnergy, kineticEnergy, externalEnergy );
+        if (this->immersedElements)
+            fprintf( file, "\nLOAD MEASURES:\n External load magnitude: %15e\n Viscous load magnitude: %15e\n Internal forces magnitude: %15e\n\n", externalLoadMagnitude, viscousLoadMagnitude, internalForcesMagnitude );
+    }
 
     this->giveDomain(1)->giveOutputManager()->doDofManOutput(file, tStep);
     this->giveDomain(1)->giveOutputManager()->doElementOutput(file, tStep);

@@ -66,6 +66,7 @@ public:
      */
     void computeValueAt(FloatArray &answer, TimeStep *tStep, const FloatArray &coords, ValueModeType mode) override;
 
+    bcValType giveBCValType() const override { return ForceLoadBVT; }
     bcGeomType giveBCGeoType() const override { return BodyLoadBGT; }
 
     void setBuoyantForceComponents(FloatArray newComponents);

@@ -1160,8 +1160,8 @@ public:
      * Returns the relative redistribution cost of the receiver
      */
     virtual double predictRelativeRedistributionCost() { return 1.0; }
-
-public:
+    /// Returns components of the viscous force vector acting on the element
+    virtual FloatArray giveViscousForce();
     /// Returns array containing load numbers of loads acting on element
     IntArray *giveBodyLoadArray();
     /// Returns array containing load numbers of boundary loads acting on element.
