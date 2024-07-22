@@ -357,6 +357,26 @@ StructuralElement :: computePointLoadVectorAt(FloatArray &answer, Load *load, Ti
     }
 }
 
+FloatArray
+StructuralElement::computeDragCoefficients( double density, double mu, double characteristicDim, double relativeNormalVelocity )
+{
+    double reynoldsNo = density * characteristicDim * relativeNormalVelocity / mu;
+    double s          = -0.077215665 + log( 8 / reynoldsNo );
+
+    FloatArray dragCoeffs;
+    dragCoeffs.resize( 2 );
+    if ( reynoldsNo <= 1 )
+        dragCoeffs.at( 1 ) = 8 * 3.14 / ( reynoldsNo * s ) * ( 1 - 0.87 * pow( s, -2 ) );
+    else if ( reynoldsNo <= 30 )
+        dragCoeffs.at( 1 ) = 1.45 + 8.55 * pow( reynoldsNo, -0.9 );
+    else
+        dragCoeffs.at( 1 ) = 1.1 + 4 * pow( reynoldsNo, -0.5 );
+
+    dragCoeffs.at( 2 ) = 3.14 * mu * ( 0.55 * pow( reynoldsNo, 0.5 ) + 0.084 * pow( reynoldsNo, 2 / 3 ) );
+
+    return dragCoeffs;
+}
+
 int
 StructuralElement :: giveNumberOfIPForMassMtrxIntegration()
 {

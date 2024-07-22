@@ -40,9 +40,10 @@
 ///@name Input fields for DecoupledCrossSection
 //@{
 #define _IFT_DecoupledCrossSection_Name "decoupledcrosssection"
-#define _DecoupledCrossSection_CharacteristicDim "characteristicdim"
+#define _DecoupledCrossSection_characteristicdim "characteristicdim"
 #define _DecoupledCrossSection_dragcoeff "dragcoeff"
-#define _DecoupledCrossSection_Material "material"
+#define _DecoupledCrossSection_addedmasscoeff "addedmasscoeff"
+#define _DecoupledCrossSection_material "material"
 //@}
 
 
@@ -71,7 +72,7 @@ protected:
     /// (e.g. diameter for a circular cross-section or length of a side for
     /// a square cross-section).
     /// </summary>
-    double characteristicDim, userDefinedDragCoeff;
+    double characteristicDim, userDefinedDragCoeff, addedMassCoeff;
     int materialNumber;
 
 public:
@@ -80,7 +81,8 @@ public:
      * @param n Cross section number.
      * @param d Domain to which new cross section will belong.
      */
-    DecoupledCrossSection(int n, Domain *d) : CrossSection(n, d)  { }
+    DecoupledCrossSection( int n, Domain *d ) :
+        CrossSection( n, d ) { addedMassCoeff = 0; }
 
     const char *giveClassName() const override { return "DecoupledCrossSection"; }
     
@@ -88,6 +90,7 @@ public:
 
     double giveMagnitudeOfMaterialProperty( int property );
     
+    double giveAddedMassCoefficient() { return addedMassCoeff; }
     double giveCharacteristicDimension() { return characteristicDim; }
     double giveDragCoefficient() override { return userDefinedDragCoeff; }
     

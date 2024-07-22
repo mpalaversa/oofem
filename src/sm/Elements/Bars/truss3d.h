@@ -111,7 +111,6 @@ protected:
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override;
     void computeGaussPoints() override;
     void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep ) override;
-    FloatArray computeDragCoefficients( double density, double mu, double characteristicDim, double relativeNormalVelocity );
 
     FloatArray viscousForce;
 };

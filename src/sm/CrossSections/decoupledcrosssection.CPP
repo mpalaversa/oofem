@@ -43,10 +43,12 @@ void DecoupledCrossSection ::initializeFrom( InputRecord &ir )
     CrossSection ::initializeFrom( ir );
 
     characteristicDim = 0.0;
-    IR_GIVE_OPTIONAL_FIELD( ir, characteristicDim, _DecoupledCrossSection_CharacteristicDim );
+    IR_GIVE_FIELD( ir, characteristicDim, _DecoupledCrossSection_characteristicdim );
 
     materialNumber = -1;
-    IR_GIVE_OPTIONAL_FIELD( ir, materialNumber, _DecoupledCrossSection_Material );
+    IR_GIVE_FIELD( ir, materialNumber, _DecoupledCrossSection_material );
+
+    IR_GIVE_FIELD( ir, addedMassCoeff, _DecoupledCrossSection_addedmasscoeff );
 
     userDefinedDragCoeff = 0.0;
     IR_GIVE_OPTIONAL_FIELD( ir, userDefinedDragCoeff, _DecoupledCrossSection_dragcoeff );

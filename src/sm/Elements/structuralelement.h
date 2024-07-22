@@ -537,6 +537,11 @@ protected:
      */
     virtual void setupIRForMassMtrxIntegration(IntegrationRule &iRule);
 
+    /**
+     * Method for computing drag coefficients according to A. Lo and J.W. Leonard, "Dynamic analysis of underwater cables"
+     */
+    FloatArray computeDragCoefficients( double density, double mu, double characteristicDim, double relativeNormalVelocity );
+
     friend class IDNLMaterial;
     friend class TrabBoneNL3D;
     friend class MisesMatNl;
