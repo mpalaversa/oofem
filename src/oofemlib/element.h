@@ -675,6 +675,9 @@ public:
      */
     void setDecoupledCrossSection( int csIndex );
 
+    /// Helper function which returns a decoupled cross-section for the element.
+    virtual DecoupledCrossSection *giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType type ) { return 0; };
+
     /// @return Number of decoupled cross-sections associated with the element
     virtual int giveNumberOfDecoupledCrossSections() { return this->decoupledCrossSections.size(); }
 

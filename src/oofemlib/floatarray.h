@@ -245,6 +245,12 @@ public:
     /// Returns true if receiver is empty.
     bool isEmpty() const { return this->values.empty(); }
     /**
+     * Checks if v is parallel or anti-parallel to the receiver.
+     * @param v a vector
+     * @return true if the vectors are parallel/anti-parallel; false otherwise
+     */
+    bool isParallelTo( const FloatArray &v);
+    /**
      * Switches the sign of every coefficient of receiver.
      * @return receiver.
      */

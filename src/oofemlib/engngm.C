@@ -1237,7 +1237,26 @@ void EngngModel :: assembleVectorFromBC(FloatArray &answer, TimeStep *tStep,
                 for ( int idman = 1; idman <= nodes.giveSize(); ++idman ) {
                     DofManager *node = domain->giveDofManager( nodes.at(idman) );
                     charVec.clear();
-                    va.vectorFromNodeLoad(charVec, *node, nLoad, tStep, mode);
+                    // If the nodal load is of HydrodynamicKF type, the user input data contains components of the
+                    // fluid velocity vector and a special procedure must be employed to calculate the resulting nodal forces.
+                    if ( nLoad->giveType() == bcType::HydrodynamicKF ) {
+                        // Define an array of FEs associated with the current node
+                        std::vector < Element* > elements;
+                        // Go through the list of all elements
+                        for ( int i = 0; i < this->giveDomain( 1 )->elementList.size(); i++ ) {
+                            // Check if the element contains the current node
+                            for ( int j = 1; j <= this->giveDomain( 1 )->elementList.at( i )->giveNumberOfNodes(); j++ ) {
+                                // If it does
+                                if ( this->giveDomain( 1 )->elementList.at( i )->giveNode( j )->giveNumber() == node->giveNumber() )
+                                    // Add it to the 'elements' array
+                                    elements.push_back( this->giveDomain( 1 )->giveElement( i + 1 ) );
+                            }
+                        }
+                        // Invoke the method of NodalLoad that can calculate the load vector
+                        nLoad->computeHydrodynamicKFLoad( charVec, elements, node, tStep );
+                    }
+
+                    va.vectorFromNodeLoad( charVec, *node, nLoad, tStep, mode );
 
                     if ( charVec.isNotEmpty() ) {
                         if ( node->computeM2LTransformation(R, nLoad->giveDofIDs()) ) {

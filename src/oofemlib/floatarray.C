@@ -367,6 +367,19 @@ void FloatArray :: beVectorProductOf(const FloatArray &v1, const FloatArray &v2)
     this->at(3) = v1.at(1) * v2.at(2) - v1.at(2) * v2.at(1);
 }
 
+bool FloatArray::isParallelTo(const FloatArray& v2) {
+    FloatArray v1, result;
+    v1.resize( this->giveSize() );
+    for ( int i = 1; i <= this->giveSize(); i++ )
+        v1.at( i ) = this->at( i );
+
+    result.beVectorProductOf( v1, v2 );
+    if ( result.computeNorm() == 0 )
+        return true;
+    else
+        return false;
+}
+
 int FloatArray :: giveIndexMinElem()
 {
     int index = 1;

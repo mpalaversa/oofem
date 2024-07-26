@@ -56,7 +56,6 @@
 #define _IFT_NlDEIDynamic_nonlocalext "nonlocalext"
 #define _IFT_NlDEIDynamic_reduct "reduct"
 #define _IFT_NlDEIDynamic_energyMeasures "energymeasures"
-#define _IFT_NlDEIDynamic_tolH "tolh"
 //@}
 
 namespace oofem {

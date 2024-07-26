@@ -371,8 +371,7 @@ public:
     /// Helper function which returns the structural cross-section for the element.
     StructuralCrossSection *giveStructuralCrossSection();
 
-    /// Helper function which returns a decoupled cross-section for the element.
-    DecoupledCrossSection *giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType type );
+    DecoupledCrossSection *giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType type ) override;
 
     virtual void createMaterialStatus();
 

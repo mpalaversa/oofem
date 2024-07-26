@@ -37,15 +37,24 @@
 
 #include "load.h"
 #include "bcgeomtype.h"
+#include "bctype.h"
 #include "valuemodetype.h"
+#include "element.h"
+#include "node.h"
+
+#include <memory>
 
 namespace oofem {
 ///@name Input fields for nodal loads
 //@{
 #define _IFT_NodalLoad_Name "nodalload"
 #define _IFT_NodalLoad_cstype "cstype"
+#define _IFT_NodalLoad_loadtype "loadtype"
+#define _IFT_NodalLoad_sn "sn"
+#define _IFT_NodalLoad_a3 "a3"
+#define _IFT_NodalLoad_b4 "b4"
 //@}
-
+//class Element;
 class TimeStep;
 
 /**
@@ -73,6 +82,13 @@ protected:
      * coordinate system
      */
     CoordSystType coordSystemType;
+    /// Load type (its physical meaning).
+    bcType lType;
+    // Solidity ratio (must be specified in the input file when NodalLoad with loadType 9 is used)
+    double sn;
+    // Coefficients that can be specified in the input file when NodalLoad with loadType 9 is used.
+    // Both are 0.05 by default.
+    double a3, b4;
 
 public:
     /**
@@ -80,7 +96,7 @@ public:
      * @param n Load  number.
      * @param d Domain to which new object will belongs.
      */
-    NodalLoad(int n, Domain * d) : Load(n, d) { }
+    NodalLoad( int n, Domain *d );
 
     const char *giveInputRecordName() const override { return _IFT_NodalLoad_Name; }
     void computeValueAt(FloatArray &answer, TimeStep *tStep, const FloatArray &coords, ValueModeType mode) override
@@ -91,6 +107,20 @@ public:
     void giveInputRecord(DynamicInputRecord &input) override;
     const char *giveClassName() const override { return "NodalLoad"; }
     bcGeomType giveBCGeoType() const override { return NodalLoadBGT; }
+    bcType giveType() const override { return lType; }
+    double giveSolidityRatio() { return sn; }
+
+     /**
+     * A method for calculating hydrodynamic load based on "Kristiansen, T., Faltinsen, O.M., 2012. Modelling of
+     * current loads on aquaculture net cages. Journal of Fluids and Structures 34 (2012), 218–235."
+     * @param answer Force based on the implemented method.
+     * @param associatedElements Elements associated with the node where the load is evaluated.
+     * @param node Node at which the load is evaluated.
+     * @param tStep Current time step.
+     */
+    void computeHydrodynamicKFLoad( FloatArray &answer, std::vector<Element*> associatedElements, DofManager *node, TimeStep *tStep );
+    double computeDragCoefficientOfCircularCylinder( double density, double mu, double dt, double relativeVelocity, double sn );
+    bool NodalLoad::isEdgePairAlreadyFound( std::vector<IntArray> panelEdges, int edge1, int edge2 );
 
     void saveContext(DataStream &stream, ContextMode mode) override;
     void restoreContext(DataStream &stream, ContextMode mode) override;
