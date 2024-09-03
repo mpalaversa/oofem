@@ -44,6 +44,7 @@
 #define _DecoupledCrossSection_dragcoeff "dragcoeff"
 #define _DecoupledCrossSection_addedmasscoeff "addedmasscoeff"
 #define _DecoupledCrossSection_material "material"
+#define _DecoupledCrossSection_sn "sn"
 //@}
 
 
@@ -72,7 +73,14 @@ protected:
     /// (e.g. diameter for a circular cross-section or length of a side for
     /// a square cross-section).
     /// </summary>
-    double characteristicDim, userDefinedDragCoeff, addedMassCoeff;
+    double characteristicDim;
+    /// <summary>
+    /// Represent hydrodynamic coefficients assoicated with the decoupled
+    /// cross-section.
+    /// </summary>
+    double userDefinedDragCoeff, addedMassCoeff;
+    // Solidity ratio of net represented by the decoupled cross-section.
+    double sn;
     int materialNumber;
 
 public:
@@ -92,6 +100,7 @@ public:
     
     double giveAddedMassCoefficient() { return addedMassCoeff; }
     double giveCharacteristicDimension() { return characteristicDim; }
+    double giveSolidityRatio() { return sn; }
     double giveDragCoefficient() override { return userDefinedDragCoeff; }
     
     Material *giveMaterial();

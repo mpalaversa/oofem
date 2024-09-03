@@ -47,7 +47,6 @@
 ///@name Input fields for general element.
 //@{
 #define _IFT_StructuralElement_downstream "downstream"
-#define _IFT_StructuralElement_r "r"
 
 namespace oofem {
 #define ALL_STRAINS -1

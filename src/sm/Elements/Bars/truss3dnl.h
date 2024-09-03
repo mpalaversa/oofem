@@ -38,9 +38,10 @@
 #include "../sm/Elements/Bars/truss3d.h"
 
 #define _IFT_Truss3dnl_Name "truss3dnl"
-
-
 #define _IFT_Truss3dnl_initialStretch "initstretch"
+#define _IFT_Truss3dnl_gf "gf"
+#define _IFT_Truss3dnl_l0 "l0"
+#define _IFT_Truss3dnl_cd "cd"
 
 namespace oofem {
 /**
@@ -50,7 +51,12 @@ namespace oofem {
 class Truss3dnl : public Truss3d
 {
 protected:
-    double initialStretch;
+    double initialStretch, l0;
+    /// <summary>
+    /// Globalization factor used when Truss3dNL models an equivalent numerical twine
+    /// </summary>
+    FloatArray gf;
+    FloatArray viscousForce;
 
 public:
     Truss3dnl(int n, Domain * d);
@@ -62,7 +68,9 @@ public:
 
     void initializeFrom(InputRecord &ir) override;
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
+    double computeVolumeAround( GaussPoint *gp ) override;
     void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0) override;
+    FloatArray giveViscousForce() override { return this->viscousForce; }
 
 protected:
 
@@ -70,7 +78,8 @@ protected:
     void computeBlMatrixAt(GaussPoint *gp, FloatMatrix &answer);
     void computeBnlMatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *tStep, bool lin = false);
     void computeInitialStressStiffness(FloatMatrix &answer, GaussPoint *gp, TimeStep *tStep);
-
+    void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep ) override;
+    double computeVelocityReductionFactor( FloatArray relativeVelocity );
 };
 } // end namespace oofem
 #endif // truss3dnl_h

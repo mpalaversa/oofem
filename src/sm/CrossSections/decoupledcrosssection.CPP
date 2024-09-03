@@ -52,6 +52,9 @@ void DecoupledCrossSection ::initializeFrom( InputRecord &ir )
 
     userDefinedDragCoeff = 0.0;
     IR_GIVE_OPTIONAL_FIELD( ir, userDefinedDragCoeff, _DecoupledCrossSection_dragcoeff );
+
+    sn = 0.0;
+    IR_GIVE_OPTIONAL_FIELD( ir, sn, _DecoupledCrossSection_sn );
 }
 
 bool DecoupledCrossSection::isDecoupled() {

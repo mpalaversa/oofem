@@ -34,6 +34,7 @@
 
 #include "../sm/Elements/Bars/truss3dnl.h"
 #include "../sm/CrossSections/structuralcrosssection.h"
+#include "../sm/CrossSections/decoupledcrosssection.h"
 #include "../sm/Materials/structuralms.h"
 #include "fei3dlinelin.h"
 #include "node.h"
@@ -45,6 +46,7 @@
 #include "intarray.h"
 #include "mathfem.h"
 #include "classfactory.h"
+#include <math.h>
 
 
 namespace oofem {
@@ -52,6 +54,7 @@ REGISTER_Element(Truss3dnl);
 
 Truss3dnl :: Truss3dnl(int n, Domain *aDomain) : Truss3d(n, aDomain)
 {
+    
 }
 
 
@@ -61,6 +64,12 @@ Truss3dnl :: initializeFrom(InputRecord &ir)
   Truss3d :: initializeFrom(ir);
   initialStretch = 1;
   IR_GIVE_OPTIONAL_FIELD(ir, initialStretch, _IFT_Truss3dnl_initialStretch);
+  gf.resize( 1 );
+  IR_GIVE_OPTIONAL_FIELD( ir, gf, _IFT_Truss3dnl_gf );
+  l0 = -1;
+  IR_GIVE_OPTIONAL_FIELD( ir, l0, _IFT_Truss3dnl_l0 );
+  if ( ( l0 > 0 && gf.computeNorm() == 0 ) || ( gf.computeNorm() != 0 && l0 == -1 ) )
+      OOFEM_ERROR( "Both the globalization factor(s) and the undeformed twine lenght must be defined for element %d.", this->giveNumber() );
 }
 
   
@@ -173,7 +182,29 @@ Truss3dnl :: computeStiffnessMatrix(FloatMatrix &answer,
   }
 }
   
-  
+double
+Truss3dnl ::computeVolumeAround( GaussPoint *gp )
+// Returns the length of the receiver. This method is valid only if 1
+// Gauss point is used.
+{
+    double detJ   = this->interp.giveTransformationJacobian( gp->giveNaturalCoordinates(), FEIElementGeometryWrapper( this ) );
+    double weight = gp->giveWeight();
+    double area   = 0.0;
+    if ( gf.computeNorm() == 0 )
+        area = this->giveCrossSection()->give( CS_Area, gp );
+    else {
+        // The following block of code is used for equivalent numerical twines
+        double de = 0.0;
+        if ( gf.giveSize() == 1 )
+            de = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial )->giveCharacteristicDimension() * sqrt( gf.at( 1 ) * this->computeLength() / l0 );
+        else
+            de = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial )->giveCharacteristicDimension() * sqrt( gf.at( 1 ) * gf.at( 2 ) );
+        // Calculate area of element's cross-section (assumes circular shape)
+        area = pow( de, 2) * 3.14 / 4;
+    }
+    return detJ * weight * area;
+}
+
 void
 Truss3dnl :: computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *tStep, bool lin)
 {
@@ -221,8 +252,167 @@ Truss3dnl :: computeBnlMatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *t
   answer.beTranspositionOf(Bnl);
   
 }
-  
-  
+
+void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep )
+{
+    FloatArray et, u, currentNode1Coordinates, currentNode2Coordinates;
+    this->computeVectorOf( VM_Total, tStep, u );
+    // Form two vectors, one for current position of node 1 and the other for the node 2
+    // by storing current displacements into the corresponding vectors.
+    currentNode1Coordinates.resize( 3 );
+    currentNode1Coordinates.at( 1 ) = u.at( 1 );
+    currentNode1Coordinates.at( 2 ) = u.at( 2 );
+    currentNode1Coordinates.at( 3 ) = u.at( 3 );
+    currentNode2Coordinates.resize( 3 );
+    currentNode2Coordinates.at( 1 ) = u.at( 4 );
+    currentNode2Coordinates.at( 2 ) = u.at( 5 );
+    currentNode2Coordinates.at( 3 ) = u.at( 6 );
+    // Add coordinates of the initial position of the nodes
+    currentNode1Coordinates.add( this->giveNode( 1 )->giveCoordinates() );
+    currentNode2Coordinates.add( this->giveNode( 2 )->giveCoordinates() );
+    // Calculate unit vector along the element's longitudinal axis (tangential direction)
+    et.beDifferenceOf( currentNode2Coordinates, currentNode1Coordinates );
+    et.normalize();
+
+    // Form the fluid velocity vector
+    FloatArray velocity;
+    velocity.resize( 3 );
+    for ( int i = 1; i <= 3; i++ )
+        velocity.at( i ) = flowCharacteristics.at( i );
+
+    DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
+    // Check if the element is downstream relative to another element
+    if ( this->isDownstream ) {
+        double sn = cs->giveSolidityRatio();
+        // Reduce the inflow velocity by the velocity reduction coefficient as given in Loland, G. Current forces on and flow thorugh fish farms
+        if ( sn > 0 )
+            velocity.beScaled( 1 - 0.46 * ( 0.33 * sn + 6.54 * pow( sn, 2 ) - 4.88 * pow( sn, 3 ) ), velocity );
+        else
+            OOFEM_ERROR( "Element %d is denoted as downstream, but the solidty ratio is not specified.", this->giveNumber() );
+    }
+
+    // Get velocity and acceleration of element nodes in the current time step
+    FloatArray currentNodalVelocity, currentNodalAcceleration;
+    this->computeVectorOf( VM_Velocity, tStep, currentNodalVelocity );
+    this->computeVectorOf( VM_Acceleration, tStep, currentNodalAcceleration );
+
+    // Calculate velocity of the fluid relative to the element
+    FloatArray relativeVelocity;
+    relativeVelocity.resize( 3 );
+    relativeVelocity.at( 1 ) = velocity.at( 1 ) - ( currentNodalVelocity.at( 1 ) + currentNodalVelocity.at( 4 ) ) / 2;
+    relativeVelocity.at( 2 ) = velocity.at( 2 ) - ( currentNodalVelocity.at( 2 ) + currentNodalVelocity.at( 5 ) ) / 2;
+    relativeVelocity.at( 3 ) = velocity.at( 3 ) - ( currentNodalVelocity.at( 3 ) + currentNodalVelocity.at( 6 ) ) / 2;
+
+    // Calculate tangential component of the relative velocity
+    FloatArray tangentialRelativeVelocity;
+    tangentialRelativeVelocity.beScaled( relativeVelocity.dotProduct( et ), et );
+
+    // Calculate normal component of the relative velocity
+    FloatArray normalRelativeVelocity;
+    normalRelativeVelocity.beDifferenceOf( relativeVelocity, tangentialRelativeVelocity );
+
+    // Fetch length of the element, characteristic dimension of the cross-section and density and dynamic viscosity of the fluid
+    double userDefinedDragCoeff = cs->giveDragCoefficient();
+    double l                  = this->computeLength();
+    double density            = cs->giveMagnitudeOfMaterialProperty( 'd' );
+    double mu                 = cs->giveMaterial()->giveDynamicViscosity();
+    double characteristicDim  = 0.0;
+    if ( this->gf.computeNorm() == 0 )
+        characteristicDim = cs->giveCharacteristicDimension();
+    // If the globalization factor(s) are defined, the equivalent numerical twines are used and the characteristic dimension must be calculated
+    else {
+        if ( gf.giveSize() == 1 )
+            characteristicDim = gf.at( 1 ) * cs->giveCharacteristicDimension();
+        else
+            characteristicDim = 2 * gf.at( 1 ) * gf.at( 2 ) * l0 * cs->giveCharacteristicDimension() / l;
+    }
+
+    // Caluclate drag coefficients
+    FloatArray dragCoeffs;
+    if ( userDefinedDragCoeff == 0.0 ) {
+        // If no, calculate the drag coefficients.
+        if ( this->gf.computeNorm() == 0 )
+            dragCoeffs = computeDragCoefficients( density, mu, characteristicDim, normalRelativeVelocity.computeNorm() );
+        else
+            dragCoeffs = computeDragCoefficients( density, mu, cs->giveCharacteristicDimension(), normalRelativeVelocity.computeNorm() );
+    }    
+    else {
+        // If yes, use the user defined drag coefficient for the normal viscous force component
+        // and disregard the tangential one.
+        dragCoeffs.resize( 2 );
+        dragCoeffs.at( 1 ) = userDefinedDragCoeff;
+        dragCoeffs.at( 2 ) = 0;
+    }
+
+    // Caluclate viscous force
+    FloatArray normalViscousForce, tangentialViscousForce;
+    normalViscousForce.beScaled( 0.5 * density * dragCoeffs.at( 1 ) * characteristicDim * l * normalRelativeVelocity.computeNorm(), normalRelativeVelocity );
+    tangentialViscousForce.beScaled( dragCoeffs.at( 2 ) * l, tangentialRelativeVelocity );
+    this->viscousForce.zero();
+    this->viscousForce.add( normalViscousForce );
+    this->viscousForce.add( tangentialViscousForce );
+
+    // The force is equally distributed among the element's nodes
+    answer.resize( 6 );
+    answer.at( 1 ) = answer.at( 4 ) = viscousForce.at( 1 ) / 2;
+    answer.at( 2 ) = answer.at( 5 ) = viscousForce.at( 2 ) / 2;
+    answer.at( 3 ) = answer.at( 6 ) = viscousForce.at( 3 ) / 2;
+
+    if ( currentNodalAcceleration.computeNorm() != 0 ) {
+        // Form the fluid acceleration vector
+        FloatArray acceleration;
+        acceleration.resize( 3 );
+        for ( int i = 4; i <= 6; i++ )
+            acceleration.at( i - 3 ) = flowCharacteristics.at( i );
+
+        // Calculate an average fluid acceleration on the element - this should be changed when the fluid acceleration becomes available as an input quantity
+        FloatArray relativeAcceleration;
+        relativeAcceleration.resize( 3 );
+        relativeAcceleration.at( 1 ) = acceleration.at( 1 ) - ( currentNodalAcceleration.at( 1 ) + currentNodalAcceleration.at( 4 ) ) / 2;
+        relativeAcceleration.at( 2 ) = acceleration.at( 2 ) - ( currentNodalAcceleration.at( 2 ) + currentNodalAcceleration.at( 5 ) ) / 2;
+        relativeAcceleration.at( 3 ) = acceleration.at( 3 ) - ( currentNodalAcceleration.at( 3 ) + currentNodalAcceleration.at( 6 ) ) / 2;
+
+        // Calculate tangential component of the relative acceleration
+        FloatArray tangentialRelativeAcceleration;
+        tangentialRelativeAcceleration.beScaled( relativeAcceleration.dotProduct( et ), et );
+
+        // Calculate normal component of the relative acceleration
+        FloatArray normalRelativeAcceleration;
+        normalRelativeAcceleration.beDifferenceOf( relativeAcceleration, tangentialRelativeAcceleration );
+
+        // Calculate tangential component of the fluid acceleration
+        FloatArray tangentialAcceleration;
+        tangentialAcceleration.beScaled( acceleration.dotProduct( et ), et );
+
+        // Calculate normal component of the fluid acceleration
+        FloatArray normalAcceleration;
+        normalAcceleration.beDifferenceOf( acceleration, tangentialAcceleration );
+
+        // Added-mass coefficient
+        double cm = cs->giveAddedMassCoefficient();
+
+        if ( gf.computeNorm() != 0 ) {
+            if ( gf.giveSize() == 1 )
+                characteristicDim = cs->giveCharacteristicDimension() * sqrt( gf.at( 1 ) );
+            else
+                characteristicDim = cs->giveCharacteristicDimension() * sqrt( 2 * gf.at( 1 ) * gf.at( 2 ) * l0 / l );
+        }
+        
+        // Calculate the added-mass force. [CURRENTLY ASSUMES A CIRCULAR CROSS-SECTION.]
+        FloatArray addedMassForce;
+        addedMassForce.beScaled( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l, normalAcceleration );
+        addedMassForce.add( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l * cm, normalRelativeAcceleration );
+
+        // The force is equally distributed among the element's nodes
+        answer.at( 1 ) = answer.at( 1 ) + addedMassForce.at( 1 ) / 2;
+        answer.at( 4 ) = answer.at( 4 ) + addedMassForce.at( 1 ) / 2;
+        answer.at( 2 ) = answer.at( 2 ) + addedMassForce.at( 2 ) / 2;
+        answer.at( 5 ) = answer.at( 5 ) + addedMassForce.at( 2 ) / 2;
+        answer.at( 3 ) = answer.at( 3 ) + addedMassForce.at( 3 ) / 2;
+        answer.at( 6 ) = answer.at( 6 ) + addedMassForce.at( 3 ) / 2;
+    }
+}
+
 void
 Truss3dnl :: computeInitialStressStiffness(FloatMatrix &answer, GaussPoint *gp, TimeStep *tStep)
 {
