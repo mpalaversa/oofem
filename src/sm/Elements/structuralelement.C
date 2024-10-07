@@ -242,8 +242,7 @@ void StructuralElement :: computeBoundaryEdgeLoadVector(FloatArray &answer, Boun
         }
 
         if (load->giveType() == bcType::HydrodynamicMorison || load->giveType() == bcType::HydrodynamicKF) {
-            if ( force.computeNorm() > 0 )
-                this->computeHydrodynamicLoadVector(answer, force, tStep);
+            this->computeHydrodynamicLoadVector( answer, force, tStep );
         } else {
             // Construct n-matrix
             // fei->boundaryEdgeEvalN( n_vec, boundary, lcoords, FEIElementGeometryWrapper(this) );
