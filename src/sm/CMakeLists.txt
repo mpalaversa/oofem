@@ -6,6 +6,7 @@ set (sm_element
     Elements/structural2delement.C
     Elements/structural3delement.C
 	Elements/qdelement.C
+	Elements/netelement.C
     Elements/3D/space3delementevaluator.C
     Elements/3D/lspace.C 
     Elements/3D/lspacebb.C
@@ -129,6 +130,7 @@ set (sm_element
     Elements/MixedPressure/basemixedpressureelement.C
     Elements/MixedPressure/PlaneStrain/qtrplanestrainp1.C
     Elements/MixedPressure/PlaneStrain/quad1planestrainp1.C
+	Elements/NetElements/netrec4trla.C
 
     Elements/structural2delement.C
     Elements/structural3delement.C
@@ -169,7 +171,7 @@ set (sm_crosssection
     CrossSections/variablecrosssection.C
     CrossSections/warpingcrosssection.C
     CrossSections/latticecrosssection.C
-	CrossSections/decoupledcrosssection.CPP
+	CrossSections/decoupledcrosssection.C
     )
 
 set (sm_emodel
