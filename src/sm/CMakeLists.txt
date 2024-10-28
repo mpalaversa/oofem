@@ -130,7 +130,9 @@ set (sm_element
     Elements/MixedPressure/basemixedpressureelement.C
     Elements/MixedPressure/PlaneStrain/qtrplanestrainp1.C
     Elements/MixedPressure/PlaneStrain/quad1planestrainp1.C
+	#Net elements
 	Elements/NetElements/netrec4trla.C
+	Elements/NetElements/nettr3pr.C
 
     Elements/structural2delement.C
     Elements/structural3delement.C

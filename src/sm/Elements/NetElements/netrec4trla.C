@@ -152,7 +152,6 @@ NetRec4TrLa ::computeLumpedMassMatrix( FloatMatrix &answer, TimeStep *tStep )
     GaussPoint *gp    = integrationRulesArray[0]->getIntegrationPoint( 0 );
     double density    = this->giveStructuralCrossSection()->give( 'd', gp );
     double quarterMass   = 0.25 * noOfTwines * density * this->giveCrossSection()->give( CS_Area, gp ) * a0;
-    //answer.at( 1, 1 ) = answer.at( 2, 2 ) = answer.at( 3, 3 ) = answer.at( 4, 4 ) = answer.at( 5, 5 ) = answer.at( 6, 6 ) = answer.at( 7, 7 ) = answer.at( 8, 8 ) = answer.at( 9, 9 ) = answer.at( 10, 10 ) = answer.at( 11, 11 ) = answer.at( 12, 12 ) = quarterMass;
     answer.at( 1, 1 ) = answer.at( 2, 2 ) = answer.at( 3, 3 ) = answer.at( 4, 4 ) = answer.at( 5, 5 ) = answer.at( 6, 6 ) = answer.at( 7, 7 ) = answer.at( 8, 8 ) = quarterMass;
 }
 

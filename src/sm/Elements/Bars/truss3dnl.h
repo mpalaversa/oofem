@@ -79,7 +79,6 @@ protected:
     void computeBnlMatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *tStep, bool lin = false);
     void computeInitialStressStiffness(FloatMatrix &answer, GaussPoint *gp, TimeStep *tStep);
     void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep ) override;
-    double computeVelocityReductionFactor( FloatArray relativeVelocity );
 };
 } // end namespace oofem
 #endif // truss3dnl_h
