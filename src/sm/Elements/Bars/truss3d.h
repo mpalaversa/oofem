@@ -44,7 +44,6 @@
 
 namespace oofem {
 class FEI3dLineLin;
-class DecoupledMaterial;
 
 /**
  * This class implements a two-node truss bar element for three-dimensional

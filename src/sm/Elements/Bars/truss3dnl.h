@@ -44,6 +44,7 @@
 #define _IFT_Truss3dnl_cd "cd"
 
 namespace oofem {
+class DecoupledMaterial;
 /**
  * This class implements a nonlinear two-node truss bar element for three-dimensional
  * analysis.

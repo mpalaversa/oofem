@@ -39,16 +39,20 @@
 #include "../sm/CrossSections/structuralcrosssection.h"
 #include "sm/Materials/structuralms.h"
 
+#include "boundaryload.h"
 #include "classfactory.h"
+#include "fei2dtrlin.h"
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
+#include "load.h"
 
 namespace oofem {
 REGISTER_Element( NetTr3Pr );
-
+FEI2dTrLin NetTr3Pr ::interp( 1, 2 );
 NetTr3Pr::NetTr3Pr(int n, Domain* aDomain) : NetElement(n, aDomain)
 {
     numberOfDofMans = 3;
+    numberOfGaussPoints = 1;
     
     d  = -1;
     L0 = -1;
@@ -61,71 +65,59 @@ NetTr3Pr::NetTr3Pr(int n, Domain* aDomain) : NetElement(n, aDomain)
 }
 
 FloatArray
-NetTr3Pr::computeUTwine( TimeStep *tStep )
+NetTr3Pr::calculateCurrentUnitNormalToElement( TimeStep *tStep )
 {
-    // Fetch current coordinates of element's nodes
-    FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
-    FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
-    FloatArray node3 = this->giveNode( 3 )->giveCoordinates();
-    // Fetch total displacements in the current configuration
-    FloatArray u;
-    u.resize( 9 );
-    if ( !tStep->isTheFirstStep() )
-        this->computeVectorOf( VM_Total, tStep, u );
-    // Current coordinates of node 1
-    double x1 = node1.at( 1 ) + u.at( 1 );
-    double y1 = node1.at( 2 ) + u.at( 2 );
-    double z1 = node1.at( 3 ) + u.at( 3 );
-    // Current coordinates of node 2
-    double x2 = node2.at( 1 ) + u.at( 4 );
-    double y2 = node2.at( 2 ) + u.at( 5 );
-    double z2 = node2.at( 3 ) + u.at( 6 );
-    // Current coordinates of node 3
-    double x3 = node3.at( 1 ) + u.at( 7 );
-    double y3 = node3.at( 2 ) + u.at( 8 );
-    double z3 = node3.at( 3 ) + u.at( 9 );
+    FloatArray U = computeUTwine( tStep );
+    FloatArray V = computeVTwine( tStep );
 
-    // Express unit vectors of the twine coord. system in the global coord. syst.
-    FloatArray U;
-    U.resize( 3 );
-    U.at( 1 ) = ( V3 - V1 ) * ( x2 - x1 ) / d - ( V2 - V1 ) * ( x3 - x1 ) / d;
-    U.at( 2 ) = ( V3 - V1 ) * ( y2 - y1 ) / d - ( V2 - V1 ) * ( y3 - y1 ) / d;
-    U.at( 3 ) = ( V3 - V1 ) * ( z2 - z1 ) / d - ( V2 - V1 ) * ( z3 - z1 ) / d;
-    return U;
+    FloatArray en;
+    en.beVectorProductOf( U, V );
+    en.normalize();
+    return en;
 }
 
 FloatArray
-NetTr3Pr::computeVTwine( TimeStep *tStep )
+NetTr3Pr::calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep )
 {
-    // Fetch initial coordinates of element's nodes
-    FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
-    FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
-    FloatArray node3 = this->giveNode( 3 )->giveCoordinates();
-    // Fetch total displacements in the current configuration
-    FloatArray u;
-    u.resize( 9 );
-    if ( !tStep->isTheFirstStep() )
-        this->computeVectorOf( VM_Total, tStep, u );
-    // Current coordinates of node 1
-    double x1 = node1.at( 1 ) + u.at( 1 );
-    double y1 = node1.at( 2 ) + u.at( 2 );
-    double z1 = node1.at( 3 ) + u.at( 3 );
-    // Current coordinates of node 2
-    double x2 = node2.at( 1 ) + u.at( 4 );
-    double y2 = node2.at( 2 ) + u.at( 5 );
-    double z2 = node2.at( 3 ) + u.at( 6 );
-    // Current coordinates of node 3
-    double x3 = node3.at( 1 ) + u.at( 7 );
-    double y3 = node3.at( 2 ) + u.at( 8 );
-    double z3 = node3.at( 3 ) + u.at( 9 );
+    // Get acceleration of element nodes in the current time step
+    FloatArray currentNodalAcceleration;
+    this->computeVectorOf( VM_Acceleration, tStep, currentNodalAcceleration );
 
-    // Express unit vectors of the twine coord. system in the global coord. syst.
-    FloatArray V;
-    V.resize( 3 );
-    V.at( 1 ) = ( U2 - U1 ) * ( x3 - x1 ) / d - ( U3 - U1 ) * ( x2 - x1 ) / d;
-    V.at( 2 ) = ( U2 - U1 ) * ( y3 - y1 ) / d - ( U3 - U1 ) * ( y2 - y1 ) / d;
-    V.at( 3 ) = ( U2 - U1 ) * ( z3 - z1 ) / d - ( U3 - U1 ) * ( z2 - z1 ) / d;
-    return V;
+    // Calculate an average fluid acceleration on the element - this should be changed when the fluid acceleration becomes available as an input quantity
+    FloatArray relativeAcceleration;
+    relativeAcceleration.resize( 3 );
+    relativeAcceleration.at( 1 ) = acceleration.at( 1 ) - ( currentNodalAcceleration.at( 1 ) + currentNodalAcceleration.at( 4 ) + currentNodalAcceleration.at( 7 ) ) / 3;
+    relativeAcceleration.at( 2 ) = acceleration.at( 2 ) - ( currentNodalAcceleration.at( 2 ) + currentNodalAcceleration.at( 5 ) + currentNodalAcceleration.at( 8 ) ) / 3;
+    relativeAcceleration.at( 3 ) = acceleration.at( 3 ) - ( currentNodalAcceleration.at( 3 ) + currentNodalAcceleration.at( 6 ) + currentNodalAcceleration.at( 9 ) ) / 3;
+
+    return relativeAcceleration;
+}
+
+FloatArray
+NetTr3Pr::calculateRelativeVelocity(FloatArray velocity, TimeStep* tStep) {
+    // Get velocity and acceleration of element nodes in the current time step
+    FloatArray currentNodalVelocity;
+    this->computeVectorOf( VM_Velocity, tStep, currentNodalVelocity );
+
+    // Calculate velocity of the fluid relative to the element
+    FloatArray relativeVelocity;
+    relativeVelocity.resize( 3 );
+    relativeVelocity.at( 1 ) = velocity.at( 1 ) - ( currentNodalVelocity.at( 1 ) + currentNodalVelocity.at( 4 ) + currentNodalVelocity.at( 7 ) ) / 3;
+    relativeVelocity.at( 2 ) = velocity.at( 2 ) - ( currentNodalVelocity.at( 2 ) + currentNodalVelocity.at( 5 ) + currentNodalVelocity.at( 8 ) ) / 3;
+    relativeVelocity.at( 3 ) = velocity.at( 3 ) - ( currentNodalVelocity.at( 3 ) + currentNodalVelocity.at( 6 ) + currentNodalVelocity.at( 9 ) ) / 3;
+
+    return relativeVelocity;
+}
+
+void
+NetTr3Pr ::computeGaussPoints()
+{
+    // Sets up the integration rule array which contains all the Gauss points
+    if ( integrationRulesArray.size() == 0 ) {
+        integrationRulesArray.resize( 1 );
+        integrationRulesArray[0] = std::make_unique<GaussIntegrationRule>( 1, this, 1, 6 );
+        this->giveCrossSection()->setupIntegrationPoints( *integrationRulesArray[0], this->numberOfGaussPoints, this );
+    }
 }
 
 void
@@ -451,6 +443,80 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     }
 }
 
+FloatArray
+NetTr3Pr::computeUTwine( TimeStep *tStep )
+{
+    // Fetch current coordinates of element's nodes
+    FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
+    FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
+    FloatArray node3 = this->giveNode( 3 )->giveCoordinates();
+    // Fetch total displacements in the current configuration
+    FloatArray u;
+    u.resize( 9 );
+    if ( !tStep->isTheFirstStep() )
+        this->computeVectorOf( VM_Total, tStep, u );
+    // Current coordinates of node 1
+    double x1 = node1.at( 1 ) + u.at( 1 );
+    double y1 = node1.at( 2 ) + u.at( 2 );
+    double z1 = node1.at( 3 ) + u.at( 3 );
+    // Current coordinates of node 2
+    double x2 = node2.at( 1 ) + u.at( 4 );
+    double y2 = node2.at( 2 ) + u.at( 5 );
+    double z2 = node2.at( 3 ) + u.at( 6 );
+    // Current coordinates of node 3
+    double x3 = node3.at( 1 ) + u.at( 7 );
+    double y3 = node3.at( 2 ) + u.at( 8 );
+    double z3 = node3.at( 3 ) + u.at( 9 );
+
+    // Express unit vectors of the twine coord. system in the global coord. syst.
+    FloatArray U;
+    U.resize( 3 );
+    U.at( 1 ) = ( V3 - V1 ) * ( x2 - x1 ) / d - ( V2 - V1 ) * ( x3 - x1 ) / d;
+    U.at( 2 ) = ( V3 - V1 ) * ( y2 - y1 ) / d - ( V2 - V1 ) * ( y3 - y1 ) / d;
+    U.at( 3 ) = ( V3 - V1 ) * ( z2 - z1 ) / d - ( V2 - V1 ) * ( z3 - z1 ) / d;
+    return U;
+}
+
+FloatArray
+NetTr3Pr::computeVTwine( TimeStep *tStep )
+{
+    // Fetch initial coordinates of element's nodes
+    FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
+    FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
+    FloatArray node3 = this->giveNode( 3 )->giveCoordinates();
+    // Fetch total displacements in the current configuration
+    FloatArray u;
+    u.resize( 9 );
+    if ( !tStep->isTheFirstStep() )
+        this->computeVectorOf( VM_Total, tStep, u );
+    // Current coordinates of node 1
+    double x1 = node1.at( 1 ) + u.at( 1 );
+    double y1 = node1.at( 2 ) + u.at( 2 );
+    double z1 = node1.at( 3 ) + u.at( 3 );
+    // Current coordinates of node 2
+    double x2 = node2.at( 1 ) + u.at( 4 );
+    double y2 = node2.at( 2 ) + u.at( 5 );
+    double z2 = node2.at( 3 ) + u.at( 6 );
+    // Current coordinates of node 3
+    double x3 = node3.at( 1 ) + u.at( 7 );
+    double y3 = node3.at( 2 ) + u.at( 8 );
+    double z3 = node3.at( 3 ) + u.at( 9 );
+
+    // Express unit vectors of the twine coord. system in the global coord. syst.
+    FloatArray V;
+    V.resize( 3 );
+    V.at( 1 ) = ( U2 - U1 ) * ( x3 - x1 ) / d - ( U3 - U1 ) * ( x2 - x1 ) / d;
+    V.at( 2 ) = ( U2 - U1 ) * ( y3 - y1 ) / d - ( U3 - U1 ) * ( y2 - y1 ) / d;
+    V.at( 3 ) = ( U2 - U1 ) * ( z3 - z1 ) / d - ( U3 - U1 ) * ( z2 - z1 ) / d;
+    return V;
+}
+
+std::unique_ptr<IntegrationRule>
+NetTr3Pr::giveBoundarySurfaceIntegrationRule( int order, int boundary )
+{
+    return this->giveInterpolation()->giveIntegrationRule( order );
+}
+
 void
 NetTr3Pr::giveDofManDofIDMask( int inode, IntArray &answer ) const
 {
@@ -496,6 +562,9 @@ NetTr3Pr::giveInternalForcesVector( FloatArray &answer, TimeStep *tStep, int use
         answer.at( i ) = -1 * answer.at( i );
 }
 
+FEInterpolation *
+NetTr3Pr::giveInterpolation() const { return &interp; }
+
 void
 NetTr3Pr ::computeStrainVector( FloatArray &answer, GaussPoint *gp, TimeStep *tStep )
 {
@@ -514,6 +583,15 @@ void
 NetTr3Pr ::computeStressVector( FloatArray &answer, const FloatArray &strains, GaussPoint *gp, TimeStep *tStep )
 {
     answer = this->giveStructuralCrossSection()->giveRealStress_Netting( strains, gp, tStep );
+}
+
+void
+NetTr3Pr::calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector )
+{
+    answer.resize( 9 );
+    answer.at( 1 ) = answer.at( 4 ) = answer.at( 7 ) = vector.at( 1 ) / 3;
+    answer.at( 2 ) = answer.at( 5 ) = answer.at( 8 ) = vector.at( 2 ) / 3;
+    answer.at( 3 ) = answer.at( 6 ) = answer.at( 9 ) = vector.at( 3 ) / 3;
 }
 
 void

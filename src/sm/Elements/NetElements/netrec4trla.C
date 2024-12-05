@@ -42,13 +42,17 @@
 #include "classfactory.h"
 #include "gaussintegrationrule.h"
 #include "gausspoint.h"
+#include "fei2dquadlin.h"
 
 namespace oofem {
 REGISTER_Element( NetRec4TrLa );
 
+FEI2dQuadLin NetRec4TrLa::interpolation( 1, 2 );
+
 NetRec4TrLa::NetRec4TrLa(int n, Domain* aDomain) : NetElement(n, aDomain)
 {
     numberOfDofMans = 4;
+    numberOfGaussPoints = 1;
     
     mask = -1;
     a0   = -1;
@@ -107,14 +111,25 @@ NetRec4TrLa::calculateInternalDisplacements( TimeStep *tStep )
     return uInternal;
 }
 
+void
+NetRec4TrLa::computeGaussPoints()
+{
+    // Sets up the integration rule array which contains all the Gauss points
+    // Default: create one integration rule
+    if ( integrationRulesArray.size() == 0 ) {
+        integrationRulesArray.resize( 1 );
+        integrationRulesArray[0] = std::make_unique<GaussIntegrationRule>( 1, this, 1, 3 );
+        this->giveCrossSection()->setupIntegrationPoints( *integrationRulesArray[0], this->numberOfGaussPoints, this );
+    }
+}
+
 bool
 NetRec4TrLa::computeGtoLRotationMatrix( FloatMatrix &answer )
 // Returns the rotation matrix of the receiver of the size [8,12]
 // r(local) = T * r(global)
 // for one node (r written transposed): {u,v} = T * {u,v,w}
 {
-    // test if pereviously computed
-    if ( GtoLRotationMatrix == NULL )
+    if ( GtoLRotationMatrix == NULL)
         NetElement::computeGtoLRotationMatrix();
 
     answer.resize( 8, 12 );
@@ -187,7 +202,9 @@ NetRec4TrLa::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, 
         // Calculate element's stiffness matrix
         answer.resize( 8, 8 );
         answer.at( 1, 1 ) = answer.at( 3, 3 ) = answer.at( 5, 5 ) = answer.at( 7, 7 ) = At * Et / ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 1 ) / ( a0 * ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) ) ) / initialDimensions.at( 1 );
+        answer.at( 1, 3 ) = answer.at( 3, 1 ) = answer.at( 5, 7 ) = answer.at( 7, 5 ) = -1 * ( At * Et / ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 1 ) / ( a0 * ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) ) ) / initialDimensions.at( 1 ) );
         answer.at( 2, 2 ) = answer.at( 4, 4 ) = answer.at( 6, 6 ) = answer.at( 8, 8 ) = At * Et / ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 2 ) / ( a0 * ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) ) ) / initialDimensions.at( 2 );
+        answer.at( 2, 8 ) = answer.at( 4, 6 ) = answer.at( 6, 4 ) = answer.at( 8, 4 ) = -1 * ( At * Et / ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 2 ) / ( a0 * ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) ) ) / initialDimensions.at( 2 ) );
     }
 }
 
@@ -219,6 +236,12 @@ NetRec4TrLa::giveInternalForcesVector( FloatArray &answer, TimeStep *tStep, int 
     answer.at( 3 ) = answer.at( 5 ) = Fx;
     answer.at( 2 ) = answer.at( 4 ) = -Fy;
     answer.at( 6 ) = answer.at( 8 ) = Fy;
+}
+
+FEInterpolation *
+NetRec4TrLa::giveInterpolation() const
+{
+    return &interpolation;
 }
 
 void

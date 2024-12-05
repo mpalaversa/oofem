@@ -56,9 +56,12 @@
 #define _IFT_NetTr3Pr_V3 "v3"
 
 namespace oofem {
+class FEI2dTrLin;
 	class NetTr3Pr : public NetElement
 	{
         protected:
+            // These elements don't use numerical integration. This is used just to access data associated with an integration point.
+            static FEI2dTrLin interp;
             int mask;
             // Undeformed length of a twine
             double L0;
@@ -67,24 +70,35 @@ namespace oofem {
             // An auxilliary variable (see Priour D. A Finite Element Method for Netting Application to Fish Cages and Fishing Gear)
             double d;
 
+            FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) override;
+            FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override;
+            virtual FloatArray calculateRelativeAcceleration( FloatArray velocity, TimeStep *tStep ) override;
+            void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
+            // Numerical integration is not used in these elements. This is used to generate 1 GP to be used only in manipulating the associated element materials and cross-sections.
+            void computeGaussPoints() override;
+            double giveTwineLength() override { return L0; };
+            double giveNumberOfTwines() override { return d; };
+
         public:
             NetTr3Pr(int n, Domain* d);
             virtual ~NetTr3Pr() = default;
 
-            // Returns unit vector of the twine coord. syst. in U-direction expressed in the global coord. syst.
-            FloatArray computeUTwine( TimeStep *tStep );
-            // Returns a unit vector of the twine coord. syst. in V-direction expressed in the global coord. syst.
-            FloatArray computeVTwine( TimeStep *tStep );
             void computeLumpedMassMatrix( FloatMatrix &answer, TimeStep *tStep ) override;
             int computeNumberOfDofs() override { return 9; }
             int computeNumberOfGlobalDofs() override { return 9; }
             void computeStiffnessMatrix( FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep ) override;
             void computeStrainVector( FloatArray &answer, GaussPoint *gp, TimeStep *tStep ) override;
             void computeStressVector( FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep ) override;
-            void giveDofManDofIDMask( int inode, IntArray & ) const override;
+            // Returns unit vector of the twine coord. syst. in U-direction expressed in the global coord. syst.
+            FloatArray computeUTwine( TimeStep *tStep );
+            // Returns a unit vector of the twine coord. syst. in V-direction expressed in the global coord. syst.
+            FloatArray computeVTwine( TimeStep *tStep );
+            std::unique_ptr<IntegrationRule> giveBoundarySurfaceIntegrationRule( int order, int boundary ) override;
             const char *giveClassName() const override { return "NetTr3Pr"; }
+            void giveDofManDofIDMask( int inode, IntArray & ) const override;
             const char *giveInputRecordName() const override { return _IFT_NetTr3Pr_Name; }
             void giveInternalForcesVector( FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0 ) override;
+            FEInterpolation *giveInterpolation() const override;
             void initializeFrom( InputRecord &ir ) override;
 
             void computeBmatrixAt( GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS ) override{};

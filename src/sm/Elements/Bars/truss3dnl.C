@@ -358,20 +358,20 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
     answer.at( 2 ) = answer.at( 5 ) = viscousForce.at( 2 ) / 2;
     answer.at( 3 ) = answer.at( 6 ) = viscousForce.at( 3 ) / 2;
 
-    if ( currentNodalAcceleration.computeNorm() != 0 ) {
-        // Form the fluid acceleration vector
-        FloatArray acceleration;
-        acceleration.resize( 3 );
-        for ( int i = 4; i <= 6; i++ )
-            acceleration.at( i - 3 ) = flowCharacteristics.at( i );
+    // Form the fluid acceleration vector
+    FloatArray acceleration;
+    acceleration.resize( 3 );
+    for ( int i = 4; i <= 6; i++ )
+        acceleration.at( i - 3 ) = flowCharacteristics.at( i );
 
-        // Calculate an average fluid acceleration on the element - this should be changed when the fluid acceleration becomes available as an input quantity
-        FloatArray relativeAcceleration;
-        relativeAcceleration.resize( 3 );
-        relativeAcceleration.at( 1 ) = acceleration.at( 1 ) - ( currentNodalAcceleration.at( 1 ) + currentNodalAcceleration.at( 4 ) ) / 2;
-        relativeAcceleration.at( 2 ) = acceleration.at( 2 ) - ( currentNodalAcceleration.at( 2 ) + currentNodalAcceleration.at( 5 ) ) / 2;
-        relativeAcceleration.at( 3 ) = acceleration.at( 3 ) - ( currentNodalAcceleration.at( 3 ) + currentNodalAcceleration.at( 6 ) ) / 2;
+    // Calculate an average fluid acceleration on the element - this should be changed when the fluid acceleration becomes available as an input quantity
+    FloatArray relativeAcceleration;
+    relativeAcceleration.resize( 3 );
+    relativeAcceleration.at( 1 ) = acceleration.at( 1 ) - ( currentNodalAcceleration.at( 1 ) + currentNodalAcceleration.at( 4 ) ) / 2;
+    relativeAcceleration.at( 2 ) = acceleration.at( 2 ) - ( currentNodalAcceleration.at( 2 ) + currentNodalAcceleration.at( 5 ) ) / 2;
+    relativeAcceleration.at( 3 ) = acceleration.at( 3 ) - ( currentNodalAcceleration.at( 3 ) + currentNodalAcceleration.at( 6 ) ) / 2;
 
+    if ( relativeAcceleration.computeNorm() != 0 ) {
         // Calculate tangential component of the relative acceleration
         FloatArray tangentialRelativeAcceleration;
         tangentialRelativeAcceleration.beScaled( relativeAcceleration.dotProduct( et ), et );

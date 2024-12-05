@@ -54,9 +54,11 @@
 #define _IFT_NetRec4TrLa_ny "ny"
 
 namespace oofem {
+class FEI2dQuadLin;
 	class NetRec4TrLa : public NetElement
 	{
         protected:
+            static FEI2dQuadLin interpolation;
             int mask;
             // Mesh half length (for square meshes), mesh diagonals (for diamond meshes), no. of meshes along element side in x- and y-direction respectively
             double a0, dx0, dy0, nx, ny;
@@ -69,7 +71,13 @@ namespace oofem {
              */
             FloatArray calculateElementDimensions( TimeStep *tStep );
             FloatArray calculateInternalDisplacements( TimeStep *tStep );
-            //FloatMatrix giveShapeFunctionAtXY( double x, double y );
+            FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) override { return initialDimensions; };
+            FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override { return initialDimensions; };
+            virtual FloatArray calculateRelativeAcceleration( FloatArray velocity, TimeStep *tStep ) override { return initialDimensions; }
+            void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override{};
+            void computeGaussPoints() override;
+            double giveTwineLength() override { return 0.0; };
+            double giveNumberOfTwines() override { return 0.0; };
 
         public:
             NetRec4TrLa(int n, Domain* d);
@@ -85,6 +93,7 @@ namespace oofem {
             void giveDofManDofIDMask( int inode, IntArray & ) const override;
             const char *giveClassName() const override { return "NetRec4TrLa"; }
             const char *giveInputRecordName() const override { return _IFT_NetRec4TrLa_Name; }
+            FEInterpolation *giveInterpolation() const override;
             void giveInternalForcesVector( FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0 ) override;
             void initializeFrom( InputRecord &ir ) override;
 
