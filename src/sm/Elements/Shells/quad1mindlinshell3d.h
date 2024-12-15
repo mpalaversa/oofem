@@ -118,7 +118,7 @@ public:
     int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep) override;
 
     virtual void computeLCS();
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep ) override;
 
     Interface *giveInterface(InterfaceType it) override;
 

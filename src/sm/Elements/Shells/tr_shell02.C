@@ -179,7 +179,7 @@ TR_SHELL02 :: giveCharacteristicMatrix(FloatMatrix &answer, CharType mtrx, TimeS
 }
 
 bool
-TR_SHELL02 :: giveRotationMatrix(FloatMatrix &answer)
+TR_SHELL02 ::giveRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix aux1, aux2;
     int ncol;

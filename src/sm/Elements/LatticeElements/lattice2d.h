@@ -119,7 +119,7 @@ protected:
     void restoreContext(DataStream &stream, ContextMode mode) override;
 
     void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override;
-    bool computeGtoLRotationMatrix(FloatMatrix &) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &, TimeStep *tStep = 0 ) override;
     void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;
     void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;

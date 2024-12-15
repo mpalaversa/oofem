@@ -148,7 +148,7 @@ BondLink3dBoundary :: computeTransformationMatrix(FloatMatrix &answer, TimeStep 
 
 
 bool
-BondLink3dBoundary :: computeGtoLRotationMatrix(FloatMatrix &answer)
+BondLink3dBoundary ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
     int i, j;

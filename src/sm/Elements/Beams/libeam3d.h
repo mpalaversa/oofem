@@ -67,7 +67,7 @@ public:
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override
     { computeLumpedMassMatrix(answer, tStep); }
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 
     int testElementExtension(ElementExtension ext) override;
 

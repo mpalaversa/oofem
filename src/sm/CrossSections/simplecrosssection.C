@@ -102,7 +102,7 @@ SimpleCrossSection :: giveRealStress_PlaneStress(const FloatArrayF<3> &strain, G
 }
 
 FloatArrayF<2>
-SimpleCrossSection ::giveRealStress_Netting( const FloatArrayF<2> &strains, GaussPoint *gp, TimeStep *tStep ) const
+SimpleCrossSection ::giveRealStress_Netting( const FloatArrayF<2> &strains, GaussPoint *gp, TimeStep *tStep, bool saveContext ) const
 {
     auto mat = dynamic_cast<StructuralMaterial *>( this->giveMaterial( gp ) );
     FloatMatrix D = this->giveStiffnessMatrix_1d( TangentStiffness, gp, tStep );
@@ -112,15 +112,17 @@ SimpleCrossSection ::giveRealStress_Netting( const FloatArrayF<2> &strains, Gaus
     stress.at( 1 ) = Et * strains.at( 1 );
     stress.at( 2 ) = Et * strains.at( 2 );
 
-    FloatArrayF<6> strainsToSave, stressesToSave;
-    strainsToSave.at( 1 ) = strains.at( 1 );
-    strainsToSave.at( 6 ) = strains.at( 2 );
-    stressesToSave.at( 1 ) = stress.at( 1 );
-    stressesToSave.at( 6 ) = stress.at( 2 );
+    if ( saveContext ) {
+        FloatArrayF<6> strainsToSave, stressesToSave;
+        strainsToSave.at( 1 )  = strains.at( 1 );
+        strainsToSave.at( 6 )  = strains.at( 2 );
+        stressesToSave.at( 1 ) = stress.at( 1 );
+        stressesToSave.at( 6 ) = stress.at( 2 );
 
-    auto status = static_cast<StructuralMaterialStatus *>( mat->giveStatus( gp ) );
-    status->letTempStrainVectorBe( strainsToSave );
-    status->letTempStressVectorBe( stressesToSave );
+        auto status = static_cast<StructuralMaterialStatus *>( mat->giveStatus( gp ) );
+        status->letTempStrainVectorBe( strainsToSave );
+        status->letTempStressVectorBe( stressesToSave );
+    }
 
     return stress;
 }

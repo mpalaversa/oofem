@@ -445,14 +445,14 @@ public:
      * @param answer Computed rotation matrix.
      * @return Nonzero if transformation is necessary, zero otherwise.
      */
-    virtual bool computeGtoLRotationMatrix(FloatMatrix &answer);
+    virtual bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 );
     /**
      * Transformation matrices updates rotation matrix between element-local and primary DOFs,
      * taking into account nodal c.s. and master DOF weights.
      * @param answer Contains the rotation matrix on exit.
      * @return True if there is a rotation required, false otherwise.
      */
-    virtual bool giveRotationMatrix(FloatMatrix &answer);
+    virtual bool giveRotationMatrix(FloatMatrix &answer, TimeStep *tStep = 0);
     /**
      * Returns transformation matrix for DOFs from global coordinate system
      * to local coordinate system in nodes.

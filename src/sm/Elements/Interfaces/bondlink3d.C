@@ -183,8 +183,7 @@ void BondLink3d :: computeGaussPoints()
 
 
 
-bool
-BondLink3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool BondLink3d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
     int i, j;

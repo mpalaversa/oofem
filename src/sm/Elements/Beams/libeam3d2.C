@@ -180,8 +180,7 @@ LIBeam3d2 :: computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, 
 }
 
 
-bool
-LIBeam3d2 :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool LIBeam3d2 ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     answer.resize(12, 12);
     answer.zero();

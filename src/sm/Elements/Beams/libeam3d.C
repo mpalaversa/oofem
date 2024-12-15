@@ -182,8 +182,7 @@ LIBeam3d :: computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, T
 }
 
 
-bool
-LIBeam3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool LIBeam3d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
 

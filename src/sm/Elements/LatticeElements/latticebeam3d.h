@@ -105,7 +105,7 @@ public:
 
 
 protected:
-    virtual bool computeGtoLRotationMatrix(FloatMatrix &) override;
+    virtual bool computeGtoLRotationMatrix( FloatMatrix &, TimeStep *tStep = 0 ) override;
     virtual void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
 
     /**

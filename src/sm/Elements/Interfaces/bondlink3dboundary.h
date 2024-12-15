@@ -92,7 +92,7 @@ public:
 
 
 protected:
-    bool computeGtoLRotationMatrix(FloatMatrix &) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &, TimeStep *tStep = 0 ) override;
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
     void computeConstitutiveMatrixAt(FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep) override;
     void computeStressVector(FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep) override;

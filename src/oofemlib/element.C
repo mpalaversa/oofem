@@ -256,14 +256,14 @@ Element :: computeNumberOfPrimaryMasterDofs()
 
 
 bool
-Element :: giveRotationMatrix(FloatMatrix &answer)
+Element :: giveRotationMatrix(FloatMatrix &answer, TimeStep *tStep)
 {
     bool is_GtoL, is_NtoG;
     FloatMatrix GtoL, NtoG;
     IntArray nodes;
     nodes.enumerate( this->giveNumberOfDofManagers() );
 
-    is_GtoL = this->computeGtoLRotationMatrix(GtoL);
+    is_GtoL = this->computeGtoLRotationMatrix(GtoL, tStep);
     is_NtoG = this->computeDofTransformationMatrix(NtoG, nodes, true);
 
 #ifdef DEBUG
@@ -1506,8 +1506,7 @@ Element :: giveGeometryType() const
 }
 
 
-bool
-Element :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool Element ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     answer.clear();
     return false;

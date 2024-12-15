@@ -201,8 +201,7 @@ void LatticeLink3d :: computeGaussPoints()
 
 
 
-bool
-LatticeLink3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool LatticeLink3d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
     int i, j;

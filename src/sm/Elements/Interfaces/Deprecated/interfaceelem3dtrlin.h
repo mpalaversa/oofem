@@ -89,7 +89,7 @@ protected:
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override { }
     void computeGaussPoints() override;
 
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
     void computeLCS(FloatMatrix &answer);
 };
 } // end namespace oofem

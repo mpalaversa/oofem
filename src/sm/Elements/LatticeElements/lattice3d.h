@@ -137,7 +137,7 @@ public:
 
 protected:
     void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override;
-    bool computeGtoLRotationMatrix(FloatMatrix &) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &, TimeStep *tStep = 0 ) override;
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override
     { this->computeLumpedMassMatrix(answer, tStep); }    

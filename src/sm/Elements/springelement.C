@@ -72,7 +72,7 @@ SpringElement :: giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, i
 
 
 bool
-SpringElement :: computeGtoLRotationMatrix(FloatMatrix &answer)
+SpringElement ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     /*
      * Spring is defined as 1D element along orientation axis (or around orientation axis for torsional springs)

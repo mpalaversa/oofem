@@ -96,7 +96,7 @@ public:
     void giveDofManDofIDMask(int inode, IntArray &) const override;
     int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep) override;
     const FloatMatrix *computeGtoLRotationMatrix();
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
     int testElementExtension(ElementExtension ext) override
     { return ( ( ext == Element_SurfaceLoadSupport ) ? 1 : 0 ); }
 

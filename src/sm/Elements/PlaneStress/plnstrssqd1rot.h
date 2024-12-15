@@ -74,7 +74,7 @@ namespace oofem {
 		void computeBodyLoadVectorAt(FloatArray& answer, Load* forLoad, TimeStep* tStep, ValueModeType mode) override;
 		// This method is implemented and tested for surface loads only.
 		void computeBoundarySurfaceLoadVector(FloatArray& answer, BoundaryLoad* load, int boundary, CharType type, ValueModeType mode, TimeStep* tStep, bool global = true) override;
-		bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
+        bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 		IntArray giveBoundarySurfaceNodes(int boundary) const override;
 		const char* giveClassName() const override { return "PlnStrssQd1Rot"; }
 		void giveDofManDofIDMask(int inode, IntArray&) const override;

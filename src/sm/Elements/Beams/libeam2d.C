@@ -197,8 +197,7 @@ LIBeam2d :: computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, T
 }
 
 
-bool
-LIBeam2d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool LIBeam2d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     double sine, cosine;
 

@@ -83,7 +83,7 @@ public:
     void printOutputAt(FILE *file, TimeStep *tStep) override;
 
     const FloatMatrix *computeGtoLRotationMatrix() override { return CCTPlate3d::computeGtoLRotationMatrix(); }
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 
     // layered cross section support functions
     void computeStrainVectorInLayer(FloatArray &answer, const FloatArray &masterGpStrain,

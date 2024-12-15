@@ -125,7 +125,7 @@ protected:
                           int lowerIndx = 1, int upperIndx = ALL_STRAINS) override
     { answer.clear(); }
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer) override { answer.clear(); }
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
     double computeSpringInternalForce(TimeStep *tStep);
 };
 } // end namespace oofem

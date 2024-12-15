@@ -205,7 +205,7 @@ LatticeBeam3dBoundary :: giveVTKCoordinates(int nodeNumber, FloatArray &coords) 
 }
 
 bool
-LatticeBeam3dBoundary :: computeGtoLRotationMatrix(FloatMatrix &answer)
+LatticeBeam3dBoundary ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
     int i, j;

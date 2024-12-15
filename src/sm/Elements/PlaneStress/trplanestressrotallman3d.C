@@ -149,7 +149,7 @@ TrPlanestressRotAllman3d :: computeGtoLRotationMatrix()
 
 
 bool
-TrPlanestressRotAllman3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+TrPlanestressRotAllman3d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 // Returns the rotation matrix of the receiver of the size [9,18]
 // r(local) = T * r(global)
 // for one node (r written transposed): {u,v,r3} = T * {u,v,w,r1,r2,r3}

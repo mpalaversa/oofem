@@ -205,7 +205,7 @@ LIBeam3dBoundary :: giveLocalCoordinateSystem(FloatMatrix &answer)
 
 
 bool
-LIBeam3dBoundary :: computeGtoLRotationMatrix(FloatMatrix &answer)
+LIBeam3dBoundary ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
 

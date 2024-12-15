@@ -51,20 +51,16 @@ namespace oofem {
 	{
 	protected:
         FEICellGeometry* cellGeometryWrapper;
-        /**
-        * Transformation Matrix form GtoL(3,3) is stored
-        * at the element level for computation efficiency
-        */
         FloatMatrix* GtoLRotationMatrix;
         // Local vertex coordinates
         std::vector< FloatArray > localCoords;
 
         virtual FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) = 0;
         virtual FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) = 0;
-        virtual FloatArray calculateRelativeAcceleration( FloatArray velocity, TimeStep *tStep ) = 0;
+        virtual FloatArray calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep ) = 0;
         virtual void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) = 0;
         void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) = 0;
-        const FloatMatrix* computeGtoLRotationMatrix();
+        FloatMatrix *computeBasicGtoLRotationMatrix( TimeStep *tStep = 0 );
         void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
         virtual void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) = 0;
         virtual double giveTwineLength() = 0;
@@ -74,13 +70,14 @@ namespace oofem {
         NetElement(int n, Domain* d);
         virtual ~NetElement() = default;
 
+        void computeBodyLoadVectorAt( FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode ) override;
         // Calculates nodal loads equivalent to the given surface loads on the element. At this moment, the method is implemented for hydrdynamic load only.
         void computeBoundarySurfaceLoadVector( FloatArray &answer, BoundaryLoad *load, int boundary, CharType type, ValueModeType mode, TimeStep *tStep, bool global = true ) override;
         void computeConstitutiveMatrixAt( FloatMatrix &answer, MatResponseMode rMode, GaussPoint *gp, TimeStep *tStep ) override;
-        int computeLoadGToLRotationMtrx(FloatMatrix& answer);
         int computeLoadLSToLRotationMatrix(FloatMatrix& answer, int iSurf, GaussPoint* gp) override { return 0; }
         void computeLocalNodalCoordinates(std::vector< FloatArray >& lxy);
         void computeMassMatrix( FloatMatrix &answer, TimeStep *tStep ) override { this->computeLumpedMassMatrix( answer, tStep ); }
+        double computeVolumeAround( GaussPoint *gp ) override;
         MaterialMode giveMaterialMode() override { return _PlaneStress; }
         FEICellGeometry* giveCellGeometryWrapper();
         IntegrationRule* giveIntegrationRule(int i) override { return integrationRulesArray[i].get(); }

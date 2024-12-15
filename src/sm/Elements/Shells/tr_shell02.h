@@ -105,7 +105,7 @@ public:
     void giveCharacteristicVector(FloatArray &answer, CharType mtrx, ValueModeType mode, TimeStep *tStep) override;
     void giveCharacteristicMatrix(FloatMatrix &answer, CharType mtrx, TimeStep *tStep) override;
     double computeVolumeAround(GaussPoint *gp) override;
-    bool giveRotationMatrix(FloatMatrix &answer) override;
+    bool giveRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 
     void updateYourself(TimeStep *tStep) override;
     void updateInternalState(TimeStep *tStep) override;

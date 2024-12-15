@@ -65,27 +65,28 @@ class FEI2dQuadLin;
             FloatArray initialDimensions;
             /**
              * Calculates element's dimensions in the current configuration.
-             * Assumes rectangular shape of the element.
-             * Returns array having element's dimension in the local x-direction at position 1 and element's
-             * dimension in the local y-direction at position 2.
+             * Returns array with element's dimensions in the following order:
+             * side 1-2, side 1-4, side 3-4, side 2-3
              */
             FloatArray calculateElementDimensions( TimeStep *tStep );
             FloatArray calculateInternalDisplacements( TimeStep *tStep );
-            FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) override { return initialDimensions; };
-            FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override { return initialDimensions; };
-            virtual FloatArray calculateRelativeAcceleration( FloatArray velocity, TimeStep *tStep ) override { return initialDimensions; }
-            void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override{};
+            FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) override;
+            FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override;
+            FloatArray calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep ) override;
+            FloatMatrix calculateTransformationMatrix( TimeStep *tStep );
+            void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
             void computeGaussPoints() override;
-            double giveTwineLength() override { return 0.0; };
-            double giveNumberOfTwines() override { return 0.0; };
+            void computeStressVector( FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep, bool saveContext );
+            double giveTwineLength() override;
+            double giveNumberOfTwines() override;
 
         public:
             NetRec4TrLa(int n, Domain* d);
             virtual ~NetRec4TrLa() = default;
 
-		    bool computeGtoLRotationMatrix( FloatMatrix &answer ) override;
+            // Computes answer in the global coord. system.
             void computeLumpedMassMatrix( FloatMatrix &answer, TimeStep *tStep ) override;
-            int computeNumberOfDofs() override { return 8; }
+            int computeNumberOfDofs() override { return 12; }
             int computeNumberOfGlobalDofs() override { return 12; }
             void computeStiffnessMatrix( FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep ) override;
             void computeStrainVector( FloatArray &answer, GaussPoint *gp, TimeStep *tStep ) override;

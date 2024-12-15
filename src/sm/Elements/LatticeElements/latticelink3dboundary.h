@@ -90,7 +90,7 @@ public:
 #endif
 
 protected:
-    bool computeGtoLRotationMatrix(FloatMatrix &) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &, TimeStep *tStep = 0 ) override;
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
 
     void giveSwitches(IntArray &answer, int location);

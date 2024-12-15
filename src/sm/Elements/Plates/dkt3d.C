@@ -146,7 +146,7 @@ DKTPlate3d :: computeGtoLRotationMatrix()
 
 
 bool
-DKTPlate3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+DKTPlate3d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 // Returns the rotation matrix of the receiver of the size [9,18]
 // r(local) = T * r(global)
 // for one node (r written transposed): {w,r1,r2} = T * {u,v,w,r1,r2,r3}

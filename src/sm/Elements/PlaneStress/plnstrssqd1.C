@@ -75,7 +75,7 @@ PlnStrssQd1::computeBmatrixAt(double xi, double eta, FloatMatrix& answer) {
 }
 
 bool
-PlnStrssQd1::computeGtoLRotationMatrix(FloatMatrix& answer)
+PlnStrssQd1::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 // Returns the rotation matrix of the receiver of the size [8,12]
 // r(local) = T * r(global)
 // for one node (r written transposed): {u,v} = T * {u,v,w}

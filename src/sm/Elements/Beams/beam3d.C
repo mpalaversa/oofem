@@ -279,7 +279,7 @@ Beam3d :: computeLoadGToLRotationMtrx(FloatMatrix &answer)
 
 
 bool
-Beam3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+Beam3d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
     int ndofs = computeNumberOfGlobalDofs();

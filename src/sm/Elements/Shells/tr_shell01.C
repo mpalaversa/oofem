@@ -165,7 +165,7 @@ void TR_SHELL01 :: computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, Ti
 }
   
 bool
-TR_SHELL01 :: giveRotationMatrix(FloatMatrix &answer)
+TR_SHELL01 ::giveRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix aux1, aux2;
     int ncol;

@@ -67,7 +67,7 @@ namespace oofem {
         QdShell(int n, Domain* d);
         virtual ~QdShell() = default;
 
-        bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
+        bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
         virtual void computeStrainVector(FloatArray& answer, TimeStep* tStep) { }
         virtual void computeStressVector(FloatArray& answer, const FloatArray& strain, TimeStep* tStep) { }
         OutputCategory getOutputCategory() { return outputCategory; }

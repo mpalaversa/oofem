@@ -601,7 +601,7 @@ NlDEIDynamic :: computeMassMtrx(FloatArray &massMatrix, double &maxOm, TimeStep 
         element->giveCharacteristicMatrix(charMtrx, LumpedMassMatrix, tStep);
         if ( charMtrx.isNotEmpty() ) {
             ///@todo This rotation matrix is not flexible enough.. it can only work with full size matrices and doesn't allow for flexibility in the matrixassembler.
-            if ( element->giveRotationMatrix(R) ) {
+            if ( element->giveRotationMatrix(R, tStep) ) {
                 charMtrx.rotatedWith(R);
             }
         }

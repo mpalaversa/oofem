@@ -90,7 +90,7 @@ public:
     void giveDofManDofIDMask(int inode, IntArray &) const override;
 
     const FloatMatrix *computeGtoLRotationMatrix();
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
     int computeLoadGToLRotationMtrx(FloatMatrix &answer) override;
 
     void printOutputAt(FILE *file, TimeStep *tStep) override;

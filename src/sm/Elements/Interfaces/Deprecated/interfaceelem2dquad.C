@@ -169,8 +169,7 @@ InterfaceElem2dQuad :: giveDofManDofIDMask(int inode, IntArray &answer) const
 }
 
 
-bool
-InterfaceElem2dQuad :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool InterfaceElem2dQuad ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatArray grad(2);
 

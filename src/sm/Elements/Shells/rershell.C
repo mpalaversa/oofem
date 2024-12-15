@@ -456,7 +456,7 @@ RerShell :: computeLocalCoordinates(FloatArray &answer, const FloatArray &coords
 
 
 bool
-RerShell :: computeGtoLRotationMatrix(FloatMatrix &answer)
+RerShell ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 // Returns the rotation matrix of the receiver of the size [18,18]
 // r(local) = T * r(global)
 //

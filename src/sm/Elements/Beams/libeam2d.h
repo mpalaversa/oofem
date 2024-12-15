@@ -64,7 +64,7 @@ public:
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override { computeLumpedMassMatrix(answer, tStep); }
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 
     // layered cross section support functions
     void computeStrainVectorInLayer(FloatArray &answer, const FloatArray &masterGpStrain,

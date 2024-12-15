@@ -303,8 +303,7 @@ double Lattice3d :: giveArea() {
 }
 
 
-bool
-Lattice3d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool Lattice3d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
     int i, j;

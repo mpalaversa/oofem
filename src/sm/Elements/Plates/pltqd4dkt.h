@@ -72,7 +72,7 @@ namespace oofem {
 		void computeConstitutiveMatrixAt(FloatMatrix& answer, MatResponseMode rMode, GaussPoint* gp, TimeStep* tStep) override;
 		//This method should be implemented at the Kirchhoff/Mindlin plate level.
 		void computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeStep* tStep) override;
-		bool computeGtoLRotationMatrix(FloatMatrix& answer) override;
+        bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 		//This method should be implemented at the Kirchhoff/Mindlin plate level.
 		void computeStressVector(FloatArray& answer, const FloatArray& strain, GaussPoint* gp, TimeStep* tStep) override;
 		//This method should be implemented at the Kirchhoff/Mindlin plate level.
@@ -83,7 +83,7 @@ namespace oofem {
 		const char* giveInputRecordName() const override { return _IFT_PltQd4DKT_Name; }
 		FEInterpolation* giveInterpolation() const override;
 		MaterialMode giveMaterialMode() override { return _2dPlate; }
-		bool giveRotationMatrix(FloatMatrix& answer) override;
+        bool giveRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 		void initializeFrom(InputRecord& ir) override;
 		void printOutputAt(FILE* file, TimeStep* tStep) override;
 

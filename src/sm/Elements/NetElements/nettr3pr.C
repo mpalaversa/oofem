@@ -446,7 +446,7 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
 FloatArray
 NetTr3Pr::computeUTwine( TimeStep *tStep )
 {
-    // Fetch current coordinates of element's nodes
+    // Fetch coordinates of element's nodes in initial configuration
     FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
     FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
     FloatArray node3 = this->giveNode( 3 )->giveCoordinates();

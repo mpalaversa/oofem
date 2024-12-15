@@ -197,8 +197,7 @@ void Lattice2d :: computeGaussPoints()
 }
 
 
-bool
-Lattice2d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool Lattice2d ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     double sine, cosine;
     answer.resize(6, 6);

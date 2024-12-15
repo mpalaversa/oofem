@@ -305,21 +305,16 @@ StructuralElement :: computeBodyLoadVectorAt(FloatArray &answer, Load *forLoad, 
     }
 
     answer.clear();
-
     BodyLoad *load = dynamic_cast<BodyLoad *>( forLoad );
-    double fluidDensity = 0.0;
-    if ( load->giveBodyLoadType() == BodyLoad::BodyLoadType::BuoyantForce ) {
-        DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
-        fluidDensity              = cs->giveMagnitudeOfMaterialProperty( 'd' );
-    }
-    
     if ( force.giveSize() ) {
         for ( GaussPoint *gp : * this->giveDefaultIntegrationRulePtr() ) {
             this->computeNmatrixAt(gp->giveSubPatchCoordinates(), n);
             dV  = this->computeVolumeAround(gp);
             
-            if ( load->giveBodyLoadType() == BodyLoad::BodyLoadType::BuoyantForce )
-                dens = fluidDensity;
+            if ( load->giveBodyLoadType() == BodyLoad::BodyLoadType::BuoyantForce ) {
+                DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
+                dens              = cs->giveMagnitudeOfMaterialProperty( 'd' );
+            }
             else
                 dens = this->giveCrossSection()->give( 'd', gp );
             

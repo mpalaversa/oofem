@@ -97,7 +97,7 @@ public:
 protected:
     void giveSwitches(IntArray &answer, int location);
     void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override;
-    bool computeGtoLRotationMatrix(FloatMatrix &) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &, TimeStep *tStep = 0 ) override;
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
 
     void computeStrainVector(FloatArray &answer, GaussPoint *gp, TimeStep *stepN) override;

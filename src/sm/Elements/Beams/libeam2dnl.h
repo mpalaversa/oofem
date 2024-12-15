@@ -58,7 +58,7 @@ public:
     void computeLumpedMassMatrix(FloatMatrix &answer, TimeStep *tStep) override;
     void computeMassMatrix(FloatMatrix &answer, TimeStep *tStep) override
     { computeLumpedMassMatrix(answer, tStep); }
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
     void computeInitialStressMatrix(FloatMatrix &answer, TimeStep *tStep) override;
 
     int computeGlobalCoordinates(FloatArray &answer, const FloatArray &lcoords) override;

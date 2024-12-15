@@ -399,7 +399,7 @@ Lattice3dBoundary :: computeStrainVector(FloatArray &answer, GaussPoint *gp, Tim
 }
 
 bool
-Lattice3dBoundary :: computeGtoLRotationMatrix(FloatMatrix &answer)
+Lattice3dBoundary ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatMatrix lcs;
     int i, j;

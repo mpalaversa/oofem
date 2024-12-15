@@ -215,8 +215,7 @@ InterfaceElement3dTrLin :: computeLCS(FloatMatrix &answer)
 }
 
 
-bool
-InterfaceElement3dTrLin :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool InterfaceElement3dTrLin ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     // planar geometry is assumed
     FloatMatrix lcs(3, 3);

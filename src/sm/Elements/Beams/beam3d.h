@@ -207,7 +207,7 @@ protected:
     int computeLoadGToLRotationMtrx(FloatMatrix &answer) override;
     void computeBmatrixAt(GaussPoint *, FloatMatrix &, int = 1, int = ALL_STRAINS) override;
     void computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &) override;
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix(FloatMatrix &answer, TimeStep *tStep = 0) override;
     void computeBodyLoadVectorAt(FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode) override;
 
     double giveKappayCoeff(TimeStep *tStep);

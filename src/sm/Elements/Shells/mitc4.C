@@ -703,7 +703,7 @@ MITC4Shell :: computeLToDirectorRotationMatrix()
 
 
 bool
-MITC4Shell :: computeGtoLRotationMatrix(FloatMatrix &answer)
+MITC4Shell ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 // Returns the rotation matrix of the receiver of the size [24,24]
 // r(local) = T * r(global)
 // for one node (r written transposed): {u,v,w,alpha,beta} = T * {u,v,w,r1,r2,r3}

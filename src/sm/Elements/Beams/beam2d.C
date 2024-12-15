@@ -204,7 +204,7 @@ Beam2d :: computeStressVector(FloatArray &answer, const FloatArray &strain, Gaus
 
 
 bool
-Beam2d :: computeGtoLRotationMatrix(FloatMatrix &answer)
+Beam2d :: computeGtoLRotationMatrix(FloatMatrix &answer, TimeStep *tStep)
 {
     double sine, cosine;
 

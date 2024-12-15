@@ -210,7 +210,7 @@ QdMembrane::computeVolumeAround(GaussPoint* gp)
 }
 
 bool
-QdMembrane::giveRotationMatrix(FloatMatrix& answer)
+QdMembrane::giveRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     bool is_GtoL, is_NtoG;
     FloatMatrix GtoL, NtoG;

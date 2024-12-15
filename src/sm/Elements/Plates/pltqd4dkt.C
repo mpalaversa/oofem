@@ -312,7 +312,7 @@ PltQd4DKT::computeCurvaturesAt(FloatArray& answer, double xi, double eta, TimeSt
 }
 
 bool
-PltQd4DKT::computeGtoLRotationMatrix(FloatMatrix& answer)
+PltQd4DKT::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 // Returns the rotation matrix of the receiver of the size [24,24]
 // r(local) = T * r(global)
 // for one node (r written transposed): {w,R_u,R_v} = T * {u,v,w,R_u,R_v,R_w}
@@ -420,7 +420,7 @@ PltQd4DKT::giveInternalForcesVector(FloatArray& answer, TimeStep* tStep, int use
 }
 
 bool
-PltQd4DKT::giveRotationMatrix(FloatMatrix& answer)
+PltQd4DKT::giveRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     bool is_GtoL, is_NtoG;
     FloatMatrix GtoL, NtoG;

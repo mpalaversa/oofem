@@ -161,7 +161,7 @@ LinQuad3DPlaneStress :: computeGtoLRotationMatrix()
 
 
 bool
-LinQuad3DPlaneStress :: computeGtoLRotationMatrix(FloatMatrix &answer)
+LinQuad3DPlaneStress ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 // Returns the rotation matrix of the receiver of the size [8,12]
 // r(local) = T * r(global)
 // for one node (r written transposed): {u,v} = T * {u,v,w}

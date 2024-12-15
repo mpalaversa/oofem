@@ -338,8 +338,7 @@ LIBeam2dNL :: computeNmatrixAt(const FloatArray &iLocCoord, FloatMatrix &answer)
 }
 
 
-bool
-LIBeam2dNL :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool LIBeam2dNL ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     double sine, cosine;
 

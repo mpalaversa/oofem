@@ -46,7 +46,7 @@ namespace oofem {
 	}
 
     bool
-    QdShell::computeGtoLRotationMatrix(FloatMatrix& answer)
+    QdShell::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
     // Returns the rotation matrix of the receiver of the size [24,24]
     // r(local) = T * r(global)
     // for one node (r written transposed): {u,v,w,R_u,R_v,R_w} = T * {u,v,w,R_u,R_v,R_w}

@@ -145,8 +145,7 @@ InterfaceElem2dLin :: giveDofManDofIDMask(int inode, IntArray &answer) const
 }
 
 
-bool
-InterfaceElem2dLin :: computeGtoLRotationMatrix(FloatMatrix &answer)
+bool InterfaceElem2dLin ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     FloatArray grad(2);
 

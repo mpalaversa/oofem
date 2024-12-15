@@ -636,7 +636,7 @@ Quad1MindlinShell3D :: computeLCS()
 
 
 bool
-Quad1MindlinShell3D :: computeGtoLRotationMatrix(FloatMatrix &answer)
+Quad1MindlinShell3D ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     answer.resize(24, 24);
     answer.zero();

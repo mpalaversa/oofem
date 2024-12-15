@@ -123,7 +123,7 @@ public:
     int giveIPValue(FloatArray &answer, GaussPoint *gp, InternalStateType type, TimeStep *tStep) override;
 
     const FloatMatrix *computeGtoLRotationMatrix();
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
 
     bool computeLocalCoordinates(FloatArray &answer, const FloatArray &gcoords) override;
     int computeGlobalCoordinates(FloatArray &answer, const FloatArray &lcoords) override;

@@ -335,7 +335,7 @@ Lattice2dBoundary :: computeStrainVector(FloatArray &answer, GaussPoint *gp, Tim
 
 
 bool
-Lattice2dBoundary :: computeGtoLRotationMatrix(FloatMatrix &answer)
+Lattice2dBoundary ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
     double sine, cosine;
     answer.resize(9, 9);

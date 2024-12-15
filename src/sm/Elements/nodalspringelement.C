@@ -73,7 +73,7 @@ NodalSpringElement :: giveInternalForcesVector(FloatArray &answer, TimeStep *tSt
 
 
 bool
-NodalSpringElement :: computeGtoLRotationMatrix(FloatMatrix &answer)
+NodalSpringElement ::computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep )
 {
   return false;
 }

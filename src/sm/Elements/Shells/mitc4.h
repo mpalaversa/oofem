@@ -110,7 +110,7 @@ public:
     void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord) override;
 
     // transformation
-    bool computeGtoLRotationMatrix(FloatMatrix &answer) override;
+    bool computeGtoLRotationMatrix( FloatMatrix &answer, TimeStep *tStep = 0 ) override;
     int computeLoadGToLRotationMtrx(FloatMatrix &answer) override;
     std::array<FloatMatrixF<3,3>, 4> computeLToDirectorRotationMatrix();
     int computeLoadLEToLRotationMatrix(FloatMatrix &answer, int iEdge, GaussPoint *gp) override;
