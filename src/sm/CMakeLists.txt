@@ -131,6 +131,7 @@ set (sm_element
     Elements/MixedPressure/PlaneStrain/qtrplanestrainp1.C
     Elements/MixedPressure/PlaneStrain/quad1planestrainp1.C
 	#Net elements
+	Elements/NetElements/consistentnetelement.C
 	Elements/NetElements/netrec4trla.C
 	Elements/NetElements/nettr3pr.C
 
@@ -295,8 +296,8 @@ set (sm_material
     Materials/LatticeMaterials/latticeplasticitydamage.C
     Materials/LatticeMaterials/latticeslip.C
     Materials/LatticeMaterials/latticeplasticitydamageviscoelastic.C
-	Materials/DecoupledMaterials/decoupledmaterial.CPP
-	Materials/DecoupledMaterials/decoupledfluidmaterial.CPP
+	Materials/DecoupledMaterials/decoupledmaterial.C
+	Materials/DecoupledMaterials/decoupledfluidmaterial.C
 )
 
     

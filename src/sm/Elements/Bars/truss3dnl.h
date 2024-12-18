@@ -39,9 +39,6 @@
 
 #define _IFT_Truss3dnl_Name "truss3dnl"
 #define _IFT_Truss3dnl_initialStretch "initstretch"
-#define _IFT_Truss3dnl_gf "gf"
-#define _IFT_Truss3dnl_l0 "l0"
-#define _IFT_Truss3dnl_cd "cd"
 
 namespace oofem {
 class DecoupledMaterial;
@@ -52,11 +49,8 @@ class DecoupledMaterial;
 class Truss3dnl : public Truss3d
 {
 protected:
-    double initialStretch, l0;
-    /// <summary>
-    /// Globalization factor used when Truss3dNL models an equivalent numerical twine
-    /// </summary>
-    FloatArray gf;
+    double initialStretch;
+
     FloatArray viscousForce;
 
 public:
@@ -71,6 +65,7 @@ public:
     void computeStiffnessMatrix(FloatMatrix &answer, MatResponseMode rMode, TimeStep *tStep) override;
     double computeVolumeAround( GaussPoint *gp ) override;
     void giveInternalForcesVector(FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0) override;
+
     FloatArray giveViscousForce() override { return this->viscousForce; }
 
 protected:
@@ -80,6 +75,11 @@ protected:
     void computeBnlMatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *tStep, bool lin = false);
     void computeInitialStressStiffness(FloatMatrix &answer, GaussPoint *gp, TimeStep *tStep);
     void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep ) override;
+
+    // Returns characteristic dimension of the cross-section used in calculating hydrodynamic loads on the element.
+    virtual double giveCharacteristicHydrodynamicDimension();
+    // Returns characteristic dimension of the cross-section used in calculating weight, buoyant, inertia and added-mass force on the element.
+    virtual double giveCharacteristicWeightDimension();
 };
 } // end namespace oofem
 #endif // truss3dnl_h

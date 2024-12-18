@@ -64,12 +64,6 @@ Truss3dnl :: initializeFrom(InputRecord &ir)
   Truss3d :: initializeFrom(ir);
   initialStretch = 1;
   IR_GIVE_OPTIONAL_FIELD(ir, initialStretch, _IFT_Truss3dnl_initialStretch);
-  gf.resize( 1 );
-  IR_GIVE_OPTIONAL_FIELD( ir, gf, _IFT_Truss3dnl_gf );
-  l0 = -1;
-  IR_GIVE_OPTIONAL_FIELD( ir, l0, _IFT_Truss3dnl_l0 );
-  if ( ( l0 > 0 && gf.computeNorm() == 0 ) || ( gf.computeNorm() != 0 && l0 == -1 ) )
-      OOFEM_ERROR( "Both the globalization factor(s) and the undeformed twine lenght must be defined for element %d.", this->giveNumber() );
 }
 
   
@@ -189,19 +183,8 @@ Truss3dnl ::computeVolumeAround( GaussPoint *gp )
 {
     double detJ   = this->interp.giveTransformationJacobian( gp->giveNaturalCoordinates(), FEIElementGeometryWrapper( this ) );
     double weight = gp->giveWeight();
-    double area   = 0.0;
-    if ( gf.computeNorm() == 0 )
-        area = this->giveCrossSection()->give( CS_Area, gp );
-    else {
-        // The following block of code is used for equivalent numerical twines
-        double de = 0.0;
-        if ( gf.giveSize() == 1 )
-            de = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial )->giveCharacteristicDimension() * sqrt( gf.at( 1 ) * this->computeLength() / l0 );
-        else
-            de = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial )->giveCharacteristicDimension() * sqrt( gf.at( 1 ) * gf.at( 2 ) );
-        // Calculate area of element's cross-section (assumes circular shape)
-        area = pow( de, 2) * 3.14 / 4;
-    }
+    double area   = this->giveCrossSection()->give( CS_Area, gp );
+
     return detJ * weight * area;
 }
 
@@ -251,6 +234,16 @@ Truss3dnl :: computeBnlMatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *t
   Bnl.times(factor);
   answer.beTranspositionOf(Bnl);
   
+}
+
+double Truss3dnl::giveCharacteristicHydrodynamicDimension() {
+    DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
+    return cs->giveCharacteristicDimension();
+}
+
+double Truss3dnl::giveCharacteristicWeightDimension()
+{
+    return giveCharacteristicHydrodynamicDimension();
 }
 
 void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep )
@@ -316,25 +309,13 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
     double l                  = this->computeLength();
     double density            = cs->giveMagnitudeOfMaterialProperty( 'd' );
     double mu                 = cs->giveMaterial()->giveDynamicViscosity();
-    double characteristicDim  = 0.0;
-    if ( this->gf.computeNorm() == 0 )
-        characteristicDim = cs->giveCharacteristicDimension();
-    // If the globalization factor(s) are defined, the equivalent numerical twines are used and the characteristic dimension must be calculated
-    else {
-        if ( gf.giveSize() == 1 )
-            characteristicDim = gf.at( 1 ) * cs->giveCharacteristicDimension();
-        else
-            characteristicDim = 2 * gf.at( 1 ) * gf.at( 2 ) * l0 * cs->giveCharacteristicDimension() / l;
-    }
+    double characteristicDim  = this->giveCharacteristicHydrodynamicDimension();
 
-    // Caluclate drag coefficients
+    // Get drag coefficients
     FloatArray dragCoeffs;
     if ( userDefinedDragCoeff == 0.0 ) {
         // If no, calculate the drag coefficients.
-        if ( this->gf.computeNorm() == 0 )
-            dragCoeffs = computeDragCoefficients( density, mu, characteristicDim, normalRelativeVelocity.computeNorm() );
-        else
-            dragCoeffs = computeDragCoefficients( density, mu, cs->giveCharacteristicDimension(), normalRelativeVelocity.computeNorm() );
+        dragCoeffs = computeDragCoefficients( density, mu, cs->giveCharacteristicDimension(), normalRelativeVelocity.computeNorm() );
     }    
     else {
         // If yes, use the user defined drag coefficient for the normal viscous force component
@@ -391,12 +372,7 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
         // Added-mass coefficient
         double cm = cs->giveAddedMassCoefficient();
 
-        if ( gf.computeNorm() != 0 ) {
-            if ( gf.giveSize() == 1 )
-                characteristicDim = cs->giveCharacteristicDimension() * sqrt( gf.at( 1 ) );
-            else
-                characteristicDim = cs->giveCharacteristicDimension() * sqrt( 2 * gf.at( 1 ) * gf.at( 2 ) * l0 / l );
-        }
+        characteristicDim = this->giveCharacteristicWeightDimension();
         
         // Calculate the added-mass force. [CURRENTLY ASSUMES A CIRCULAR CROSS-SECTION.]
         FloatArray addedMassForce;
