@@ -52,6 +52,7 @@
 #define _IFT_NetRec4TrLa_dy0 "dy0"
 #define _IFT_NetRec4TrLa_nx "nx"
 #define _IFT_NetRec4TrLa_ny "ny"
+#define _IFT_NetRec4TrLa_sf "sf"
 
 namespace oofem {
 class FEI2dQuadLin;
@@ -61,7 +62,7 @@ class FEI2dQuadLin;
             static FEI2dQuadLin interpolation;
             int mask;
             // Mesh half length (for square meshes), mesh diagonals (for diamond meshes), no. of meshes along element side in x- and y-direction respectively
-            double a0, dx0, dy0, nx, ny;
+            double a0, dx0, dy0, nx, ny, sf;
             FloatArray initialDimensions;
             /**
              * Calculates element's dimensions in the current configuration.
@@ -75,7 +76,9 @@ class FEI2dQuadLin;
             FloatArray calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep ) override;
             FloatMatrix calculateTransformationMatrix( TimeStep *tStep );
             void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
+            double calculateDiagonalAngle( TimeStep *tStep );
             void computeGaussPoints() override;
+            void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override {};
             void computeStressVector( FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep, bool saveContext );
             double giveTwineLength() override;
             double giveNumberOfTwines() override;

@@ -60,6 +60,7 @@ NetRec4TrLa::NetRec4TrLa(int n, Domain* aDomain) : NetElement(n, aDomain)
     dy0  = -1;
     nx   = -1;
     ny   = -1;
+    sf   = -1;
     initialDimensions.resize( 2 );
 }
 
@@ -106,6 +107,52 @@ NetRec4TrLa::calculateCurrentUnitNormalToElement(TimeStep* tStep) {
     e3.normalize();
 
     return e3;
+}
+
+double
+NetRec4TrLa::calculateDiagonalAngle( TimeStep *tStep ) {
+    // Fetch initial position of the nodes
+    FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
+    FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
+    FloatArray node3 = this->giveNode( 3 )->giveCoordinates();
+
+    if ( !tStep->isTheFirstStep() ) {
+        // Fetch total displacements in the current configuration
+        FloatArray u;
+        u.resize( 12 );
+        this->computeVectorOf( VM_Total, tStep, u );
+
+        // Update nodes' positions
+        double x      = node1.at( 1 ) + u.at( 1 );
+        double y      = node1.at( 2 ) + u.at( 2 );
+        double z      = node1.at( 3 ) + u.at( 3 );
+        node1.at( 1 ) = x;
+        node1.at( 2 ) = y;
+        node1.at( 3 ) = z;
+
+        x             = node2.at( 1 ) + u.at( 4 );
+        y             = node2.at( 2 ) + u.at( 5 );
+        z             = node2.at( 3 ) + u.at( 6 );
+        node2.at( 1 ) = x;
+        node2.at( 2 ) = y;
+        node2.at( 3 ) = z;
+
+        x             = node3.at( 1 ) + u.at( 7 );
+        y             = node3.at( 2 ) + u.at( 8 );
+        z             = node3.at( 3 ) + u.at( 9 );
+        node3.at( 1 ) = x;
+        node3.at( 2 ) = y;
+        node3.at( 3 ) = z;
+    }
+
+    // Calculate length of the element's sides in the current configuration
+    FloatArray side12, diagonal13;
+    side12.beDifferenceOf( node2, node1 );
+    side12.normalize();
+    diagonal13.beDifferenceOf( node3, node1 );
+    diagonal13.normalize();
+
+    return acos(side12.dotProduct( diagonal13 ));
 }
 
 FloatArray
@@ -363,14 +410,20 @@ NetRec4TrLa::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, 
     internalDisplacements.resize( 2 );
     internalDisplacements = calculateInternalDisplacements( tStep );
     
+    double alpha = calculateDiagonalAngle( tStep );
+
     FloatMatrix ke;
     if ( mask == 1 ) {
         // Calculate element's stiffness matrix
         ke.resize( 8, 8 );
-        ke.at( 1, 1 ) = ke.at( 3, 3 ) = ke.at( 5, 5 ) = ke.at( 7, 7 ) = ( ny / 2 ) * ( At * Et / ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 1 ) / ( a0 * ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) ) ) / initialDimensions.at( 1 ) );
+        ke.at( 1, 1 ) = ke.at( 3, 3 ) = ke.at( 5, 5 ) = ke.at( 7, 7 ) = ( ny / 2 ) * ( At * Et / ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 1 ) / ( a0 * ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) ) ) / initialDimensions.at( 1 ) ) + sf * pow( cos( alpha ), 2 );
         ke.at( 1, 3 ) = ke.at( 3, 1 ) = ke.at( 5, 7 ) = ke.at( 7, 5 ) = - ( ny / 2 ) * ( At * Et / ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 1 ) / ( a0 * ( initialDimensions.at( 1 ) + internalDisplacements.at( 1 ) ) ) ) / initialDimensions.at( 1 ) );
-        ke.at( 2, 2 ) = ke.at( 4, 4 ) = ke.at( 6, 6 ) = ke.at( 8, 8 ) = ( nx / 2 ) * ( At * Et / ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 2 ) / ( a0 * ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) ) ) / initialDimensions.at( 2 ) );
-        ke.at( 2, 8 ) = ke.at( 4, 6 ) = ke.at( 6, 4 ) = ke.at( 8, 4 ) = -( nx / 2 ) * ( At * Et / ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 2 ) / ( a0 * ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) ) ) / initialDimensions.at( 2 ) );
+        ke.at( 1, 2 ) = ke.at( 2, 1 ) = ke.at( 3, 8 ) = ke.at( 8, 3 ) = ke.at( 4, 7 ) = ke.at( 7, 4 ) = ke.at( 5, 6 ) = ke.at( 6, 5 ) = sf * cos( alpha ) * sin( alpha );
+        ke.at( 1, 6 ) = ke.at( 6, 1 ) = ke.at( 2, 5 ) = ke.at( 5, 2 ) = ke.at( 3, 4 ) = ke.at( 4, 3 ) = ke.at( 7, 8 ) = ke.at( 8, 7 ) = -sf * cos( alpha ) * sin( alpha );
+        ke.at( 1, 5 ) = ke.at( 5, 1 ) = ke.at( 3, 7 ) = ke.at( 7, 3 ) = -sf * pow( cos( alpha ), 2 );
+        ke.at( 2, 2 ) = ke.at( 4, 4 ) = ke.at( 6, 6 ) = ke.at( 8, 8 ) = ( nx / 2 ) * ( At * Et / ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 2 ) / ( a0 * ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) ) ) / initialDimensions.at( 2 ) ) + sf * pow( sin( alpha ), 2 );
+        ke.at( 2, 8 ) = ke.at( 4, 6 ) = ke.at( 6, 4 ) = ke.at( 8, 2 ) = -( nx / 2 ) * ( At * Et / ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) + a0 * At * Et * ( 1 / a0 - initialDimensions.at( 2 ) / ( a0 * ( initialDimensions.at( 2 ) + internalDisplacements.at( 2 ) ) ) ) / initialDimensions.at( 2 ) );
+        ke.at( 2, 6 ) = ke.at( 6, 2 ) = ke.at( 4, 8 ) = ke.at( 8, 4 ) = -sf * pow( sin( alpha ), 2 );
     }
 
     FloatMatrix T, TTke;
@@ -521,6 +574,7 @@ NetRec4TrLa::initializeFrom( InputRecord &ir )
     StructuralElement::initializeFrom( ir );
 
     IR_GIVE_FIELD( ir, mask, _IFT_NetRec4TrLa_Mask );
+    IR_GIVE_FIELD( ir, sf, _IFT_NetRec4TrLa_sf );
 
     IR_GIVE_FIELD( ir, dx0, _IFT_NetRec4TrLa_dx0 );
     IR_GIVE_OPTIONAL_FIELD( ir, dy0, _IFT_NetRec4TrLa_dy0 );

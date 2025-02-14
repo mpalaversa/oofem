@@ -54,6 +54,7 @@
 #define _IFT_NetTr3Pr_V2 "v2"
 #define _IFT_NetTr3Pr_U3 "u3"
 #define _IFT_NetTr3Pr_V3 "v3"
+#define _IFT_NetTr3Pr_srf "srf"
 
 namespace oofem {
 class FEI2dTrLin;
@@ -69,6 +70,8 @@ class FEI2dTrLin;
             double U1, V1, U2, V2, U3, V3;
             // An auxilliary variable (see Priour D. A Finite Element Method for Netting Application to Fish Cages and Fishing Gear)
             double d;
+            // Stiffnes reduction factor (used when material stiffness in tension and compression is different)
+            double srf;
 
             FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) override;
             FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override;
@@ -76,6 +79,7 @@ class FEI2dTrLin;
             void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
             // Numerical integration is not used in these elements. This is used to generate 1 GP to be used only in manipulating the associated element materials and cross-sections.
             void computeGaussPoints() override;
+            void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
             double giveTwineLength() override { return L0; };
             // Returns the total number of twines within the element
             double giveNumberOfTwines() override { return d; };
