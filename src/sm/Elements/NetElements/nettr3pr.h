@@ -73,7 +73,6 @@ class FEI2dTrLin;
             // Stiffnes reduction factor (used when material stiffness in tension and compression is different)
             double srf;
 
-            FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) override;
             FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override;
             virtual FloatArray calculateRelativeAcceleration( FloatArray velocity, TimeStep *tStep ) override;
             void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;

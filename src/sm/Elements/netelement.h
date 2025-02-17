@@ -55,7 +55,6 @@ namespace oofem {
         // Local vertex coordinates
         std::vector< FloatArray > localCoords;
 
-        virtual FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) = 0;
         virtual FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) = 0;
         virtual FloatArray calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep ) = 0;
         virtual void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) = 0;

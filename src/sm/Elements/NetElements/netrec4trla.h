@@ -48,11 +48,7 @@
 
 #define _IFT_NetRec4TrLa_Name "netrec4trla"
 #define _IFT_NetRec4TrLa_Mask "mask"
-#define _IFT_NetRec4TrLa_dx0 "dx0"
-#define _IFT_NetRec4TrLa_dy0 "dy0"
-#define _IFT_NetRec4TrLa_nx "nx"
-#define _IFT_NetRec4TrLa_ny "ny"
-#define _IFT_NetRec4TrLa_sf "sf"
+#define _IFT_NetRec4TrLa_L0 "l0"
 
 namespace oofem {
 class FEI2dQuadLin;
@@ -61,25 +57,20 @@ class FEI2dQuadLin;
         protected:
             static FEI2dQuadLin interpolation;
             int mask;
-            // Mesh half length (for square meshes), mesh diagonals (for diamond meshes), no. of meshes along element side in x- and y-direction respectively
-            double a0, dx0, dy0, nx, ny, sf;
+            // Mesh half length (for square meshes)
+            double L0;
             FloatArray initialDimensions;
             /**
              * Calculates element's dimensions in the current configuration.
              * Returns array with element's dimensions in the following order:
-             * side 1-2, side 1-4, side 3-4, side 2-3
+             * side 1-2, side 2-3, side 3-4, side 4-1
              */
             FloatArray calculateElementDimensions( TimeStep *tStep );
-            FloatArray calculateInternalDisplacements( TimeStep *tStep );
-            FloatArray calculateCurrentUnitNormalToElement( TimeStep *tStep ) override;
             FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override;
             FloatArray calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep ) override;
-            FloatMatrix calculateTransformationMatrix( TimeStep *tStep );
             void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
-            double calculateDiagonalAngle( TimeStep *tStep );
             void computeGaussPoints() override;
-            void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override {};
-            void computeStressVector( FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep, bool saveContext );
+            void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
             double giveTwineLength() override;
             double giveNumberOfTwines() override;
 

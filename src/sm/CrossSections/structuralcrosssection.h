@@ -106,7 +106,7 @@ public:
     virtual FloatArrayF<2> giveRealStress_Warping(const FloatArrayF<2> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const = 0;
     virtual FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep) const = 0;
     virtual FloatArrayF<6> giveRealStress_Shell(const FloatArrayF<3>& membraneStrains, const FloatArrayF<3>& plateStrains, GaussPoint* gp, TimeStep* tStep) const = 0;
-    virtual FloatArrayF<2> giveRealStress_Netting( const FloatArrayF<2> &reducedStrain, GaussPoint *gp, TimeStep *tStep, bool saveContext = true ) const = 0;
+    virtual FloatArrayF<4> giveRealStress_Netting( const FloatArrayF<4> &reducedStrain, GaussPoint *gp, TimeStep *tStep ) const = 0;
     //@}
 
     /**

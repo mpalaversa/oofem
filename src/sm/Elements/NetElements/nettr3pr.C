@@ -67,18 +67,6 @@ NetTr3Pr::NetTr3Pr(int n, Domain* aDomain) : NetElement(n, aDomain)
 }
 
 FloatArray
-NetTr3Pr::calculateCurrentUnitNormalToElement( TimeStep *tStep )
-{
-    FloatArray U = computeUTwine( tStep );
-    FloatArray V = computeVTwine( tStep );
-
-    FloatArray en;
-    en.beVectorProductOf( U, V );
-    en.normalize();
-    return en;
-}
-
-FloatArray
 NetTr3Pr::calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep )
 {
     // Get acceleration of element nodes in the current time step
@@ -1116,7 +1104,7 @@ NetTr3Pr::giveInterpolation() const { return &interp; }
 void
 NetTr3Pr ::computeStrainVector( FloatArray &answer, GaussPoint *gp, TimeStep *tStep )
 {
-    answer.resize( 2 );
+    answer.resize( 4 );
     // Calculate current dimension of a U- and a V- twine
     double lengthU, lengthV;
     lengthU = computeUTwine(tStep).computeNorm();
