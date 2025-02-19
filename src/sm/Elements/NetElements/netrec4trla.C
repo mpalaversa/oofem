@@ -225,31 +225,47 @@ void NetRec4TrLa ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray
     double z4 = node4.at( 3 ) + u.at( 12 );
 
     // Side vectors
-    FloatArray s12, s41;
+    FloatArray s12, s23, s34, s41;
     s12.resize( 3 );
+    s23.resize( 3 );
+    s34.resize( 3 );
     s41.resize( 3 );
 
     s12.at( 1 ) = x2 - x1;
     s12.at( 2 ) = y2 - y1;
     s12.at( 3 ) = z2 - z1;
 
+    s23.at( 1 ) = x3 - x2;
+    s23.at( 2 ) = y3 - y2;
+    s23.at( 3 ) = z3 - z2;
+
+    s34.at( 1 ) = x4 - x3;
+    s34.at( 2 ) = y4 - y3;
+    s34.at( 3 ) = z4 - z3;
+
     s41.at( 1 ) = x1 - x4;
     s41.at( 2 ) = y1 - y4;
     s41.at( 3 ) = z1 - z4;
 
     // Unit twine vectors
-    FloatArray EU, EV;
-    EU.beScaled( 1 / s12.computeNorm(), s12 );
-    EV.beScaled( 1 / s41.computeNorm(), s41 );
+    FloatArray EU12, EU34, EV23, EV41;
+    EU12.beScaled( 1 / s12.computeNorm(), s12 );
+    EU34.beScaled( -1 / s34.computeNorm(), s34 );
+    EV23.beScaled( 1 / s23.computeNorm(), s23 );
+    EV41.beScaled( -1 / s41.computeNorm(), s41 );
 
     // Tangential relative velocity component in U- and V-twines
-    FloatArray vRtU, vRtV;
-    vRtU.beScaled( relativeVelocity.dotProduct( EU ), EU );
-    vRtV.beScaled( relativeVelocity.dotProduct( EV ), EV );
+    FloatArray vRtU12, vRtU34, vRtV23, vRtV41;
+    vRtU12.beScaled( relativeVelocity.dotProduct( EU12 ), EU12 );
+    vRtU34.beScaled( relativeVelocity.dotProduct( EU34 ), EU34 );
+    vRtV23.beScaled( relativeVelocity.dotProduct( EV23 ), EV23 );
+    vRtV41.beScaled( relativeVelocity.dotProduct( EV41 ), EV41 );
     // Normal relative velocity component in U- and V-twines
-    FloatArray vRnU, vRnV;
-    vRnU.beDifferenceOf( relativeVelocity, vRtU );
-    vRnV.beDifferenceOf( relativeVelocity, vRtV );
+    FloatArray vRnU12, vRnU34, vRnV23, vRnV41;
+    vRnU12.beDifferenceOf( relativeVelocity, vRtU12 );
+    vRnU34.beDifferenceOf( relativeVelocity, vRtU34 );
+    vRnV23.beDifferenceOf( relativeVelocity, vRtV23 );
+    vRnV41.beDifferenceOf( relativeVelocity, vRtV41 );
 
     // Fetch length of a twine, characteristic dimension of the cross-section and density and dynamic viscosity of the fluid
     double userDefinedDragCoeff = cs->giveDragCoefficient();
@@ -259,32 +275,47 @@ void NetRec4TrLa ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray
     double characteristicDim    = cs->giveCharacteristicDimension();
 
     // Caluclate drag coefficients
-    FloatArray dragCoeffsOnU, dragCoeffsOnV;
+    FloatArray dragCoeffsOnU12, dragCoeffsOnU34, dragCoeffsOnV41, dragCoeffsOnV23;
     if ( userDefinedDragCoeff == 0.0 ) {
         // If no, calculate the drag coefficients.
-        dragCoeffsOnU = computeDragCoefficients( density, mu, characteristicDim, vRnU.computeNorm() );
-        dragCoeffsOnV = computeDragCoefficients( density, mu, characteristicDim, vRnV.computeNorm() );
+        dragCoeffsOnU12 = computeDragCoefficients( density, mu, characteristicDim, vRnU12.computeNorm() );
+        dragCoeffsOnU34 = computeDragCoefficients( density, mu, characteristicDim, vRnU34.computeNorm() );
+        dragCoeffsOnV23 = computeDragCoefficients( density, mu, characteristicDim, vRnV23.computeNorm() );
+        dragCoeffsOnV41 = computeDragCoefficients( density, mu, characteristicDim, vRnV41.computeNorm() );
     } else {
         // If yes, use the user defined drag coefficient for the normal viscous force component
         // and disrfegard the tangential one.
-        dragCoeffsOnU.resize( 2 );
-        dragCoeffsOnV.resize( 2 );
-        dragCoeffsOnU.at( 1 ) = dragCoeffsOnV.at( 1 ) = userDefinedDragCoeff;
+        dragCoeffsOnU12.resize( 2 );
+        dragCoeffsOnU34.resize( 2 );
+        dragCoeffsOnV23.resize( 2 );
+        dragCoeffsOnV41.resize( 2 );
+        dragCoeffsOnU12.at( 1 ) = dragCoeffsOnU34.at( 1 ) = dragCoeffsOnV41.at( 1 ) = dragCoeffsOnV23.at( 1 ) = userDefinedDragCoeff;
     }
 
     // Calculate normal and tangential viscous force components on a U- and a V-twine
-    FloatArray FRnU, FRtU, FRnV, FRtV;
-    FRnU.beScaled( 0.5 * density * dragCoeffsOnU.at( 1 ) * l * characteristicDim * vRnU.computeNorm(), vRnU );
-    FRnV.beScaled( 0.5 * density * dragCoeffsOnV.at( 1 ) * l * characteristicDim * vRnV.computeNorm(), vRnV );
-    FRtU.beScaled( dragCoeffsOnU.at( 2 ) * l, vRtU );
-    FRtV.beScaled( dragCoeffsOnV.at( 2 ) * l, vRtV );
+    FloatArray FRnU12, FRnU34, FRtU12, FRtU34, FRnV23, FRnV41, FRtV23, FRtV41;
+    FRnU12.beScaled( 0.5 * density * dragCoeffsOnU12.at( 1 ) * l * characteristicDim * vRnU12.computeNorm(), vRnU12 );
+    FRnU34.beScaled( 0.5 * density * dragCoeffsOnU34.at( 1 ) * l * characteristicDim * vRnU34.computeNorm(), vRnU34 );
+    FRnV23.beScaled( 0.5 * density * dragCoeffsOnV23.at( 1 ) * l * characteristicDim * vRnV23.computeNorm(), vRnV23 );
+    FRnV41.beScaled( 0.5 * density * dragCoeffsOnV41.at( 1 ) * l * characteristicDim * vRnV41.computeNorm(), vRnV41 );
+    FRtU12.beScaled( dragCoeffsOnU12.at( 2 ) * l, vRtU12 );
+    FRtU34.beScaled( dragCoeffsOnU34.at( 2 ) * l, vRtU34 );
+    FRtV23.beScaled( dragCoeffsOnV23.at( 2 ) * l, vRtV23 );
+    FRtV41.beScaled( dragCoeffsOnV41.at( 2 ) * l, vRtV41 );
 
     // The total viscous force on the element
-    FRnV.add( FRtV );
-    FRnU.add( FRtU );
-    FRnU.add( FRnV );
-    FloatArray Fv;
-    Fv.beScaled( giveNumberOfTwines() / 2, FRnU );
+    FloatArray Fv, FvTemp;
+    FvTemp.resize( 3 );
+    FRnV41.add( FRtV41 );
+    FvTemp.add( FRnV41 );
+    FRnV23.add( FRtV23 );
+    FvTemp.add( FRnV23 );
+    FRnU12.add( FRtU12 );
+    FvTemp.add( FRnU12 );
+    FRnU34.add( FRtU34 );
+    FvTemp.add( FRnU34 );
+
+    Fv.beScaled( giveNumberOfTwines() / 4, FvTemp );
 
     // Distribute Fv to the nodes (calculate nodal force contribution due to the viscous force)
     calculateEquivalentLumpedNodalValues( answer, Fv );
@@ -299,35 +330,54 @@ void NetRec4TrLa ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray
 
     if ( relativeAcceleration.computeNorm() != 0 ) {
         // Tangential relative and absolute acceleration component in U- and V-twines
-        FloatArray aRtU, aRtV, atU, atV;
-        aRtU.beScaled( relativeAcceleration.dotProduct( EU ), EU );
-        aRtV.beScaled( relativeAcceleration.dotProduct( EV ), EV );
-        atU.beScaled( acceleration.dotProduct( EU ), EU );
-        atV.beScaled( acceleration.dotProduct( EV ), EV );
+        FloatArray aRtU12, aRtU34, aRtV23, aRtV41, atU12, atU34, atV23, atV41;
+        aRtU12.beScaled( relativeAcceleration.dotProduct( EU12 ), EU12 );
+        aRtU34.beScaled( relativeAcceleration.dotProduct( EU34 ), EU34 );
+        aRtV23.beScaled( relativeAcceleration.dotProduct( EV23 ), EV23 );
+        aRtV41.beScaled( relativeAcceleration.dotProduct( EV41 ), EV41 );
+        atU12.beScaled( acceleration.dotProduct( EU12 ), EU12 );
+        atU34.beScaled( acceleration.dotProduct( EU34 ), EU34 );
+        atV23.beScaled( acceleration.dotProduct( EV23 ), EV23 );
+        atV41.beScaled( acceleration.dotProduct( EV41 ), EV41 );
 
         // Normal relative and absolute acceleration component in U- and V-twines
-        FloatArray aRnU, aRnV, anU, anV;
-        aRnU.beDifferenceOf( relativeAcceleration, aRtU );
-        aRnV.beDifferenceOf( relativeAcceleration, aRtV );
-        anU.beDifferenceOf( acceleration, atU );
-        anV.beDifferenceOf( acceleration, atV );
+        FloatArray aRnU12, aRnU34, aRnV23, aRnV41, anU12, anU34, anV23, anV41;
+        aRnU12.beDifferenceOf( relativeAcceleration, aRtU12 );
+        aRnU34.beDifferenceOf( relativeAcceleration, aRtU34 );
+        aRnV23.beDifferenceOf( relativeAcceleration, aRtV23 );
+        aRnV41.beDifferenceOf( relativeAcceleration, aRtV41 );
+        anU12.beDifferenceOf( acceleration, atU12 );
+        anU34.beDifferenceOf( acceleration, atU34 );
+        anV23.beDifferenceOf( acceleration, atV23 );
+        anV41.beDifferenceOf( acceleration, atV41 );
 
         // Added-mass coefficient
         double cm = cs->giveAddedMassCoefficient();
 
         // Added-mass force on a U- and V-twine
-        FloatArray FAU, FAV, accelerationComponent;
-        accelerationComponent.beScaled( cm, aRnU );
-        anU.add( accelerationComponent );
-        FAU.beScaled( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l, anU );
-        accelerationComponent.beScaled( cm, aRnV );
-        anV.add( accelerationComponent );
-        FAV.beScaled( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l, anV );
+        FloatArray FAU12, FAU34, FAV23, FAV41, accelerationComponent;
+        accelerationComponent.beScaled( cm, aRnU12 );
+        anU12.add( accelerationComponent );
+        FAU12.beScaled( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l, anU12 );
+        
+        accelerationComponent.beScaled( cm, aRnU34 );
+        anU34.add( accelerationComponent );
+        FAU34.beScaled( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l, anU34 );
+        
+        accelerationComponent.beScaled( cm, aRnV23 );
+        anV23.add( accelerationComponent );
+        FAV23.beScaled( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l, anV23 );
+        
+        accelerationComponent.beScaled( cm, aRnV41 );
+        anV41.add( accelerationComponent );
+        FAV41.beScaled( density * ( pow( characteristicDim, 2 ) * 3.14 / 4 ) * l, anV41 );
 
         // Total added-mass force on the element
         FloatArray FA;
-        FAU.add( FAV );
-        FA.beScaled( giveNumberOfTwines() / 2, FAU );
+        FAU12.add( FAV41 );
+        FAU34.add( FAV23 );
+        FAU12.add( FAU34 );
+        FA.beScaled( giveNumberOfTwines() / 4, FAU12 );
 
         // The force is equally distributed to the element's nodes
         FloatArray distributedAddedMassForce;
