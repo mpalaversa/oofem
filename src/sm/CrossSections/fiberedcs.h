@@ -109,7 +109,7 @@ public:
     FloatArrayF<2> giveRealStress_Warping(const FloatArrayF<2> &reducedStrain, GaussPoint *gp, TimeStep *tStep) const override;
     FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep) const override { OOFEM_ERROR("Not implemented for fibered cross section."); }
     FloatArrayF<6> giveRealStress_Shell(const FloatArrayF<3>& membraneStrains, const FloatArrayF<3>& plateStrains, GaussPoint* gp, TimeStep* tStep) const override { OOFEM_ERROR("Not implemented for fibered cross section."); }
-    FloatArrayF<4> giveRealStress_Netting( const FloatArrayF<4> &reducedStrain, GaussPoint *gp, TimeStep *tStep ) const override { OOFEM_ERROR( "Not implemented for fibered cross section." ); }
+    FloatArrayF<4> giveRealStress_Netting( const FloatArrayF<4> &reducedStrain, GaussPoint *gp, TimeStep *tStep, double sr ) const override { OOFEM_ERROR( "Not implemented for fibered cross section." ); }
 
 
     FloatMatrixF<6,6> giveStiffnessMatrix_3d(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;

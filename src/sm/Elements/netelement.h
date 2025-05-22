@@ -50,6 +50,9 @@ namespace oofem {
 	class NetElement : public NLStructuralElement
 	{
 	protected:
+        // Stiffnes reduction coefficient (used when material stiffness in tension and compression is different)
+        double sr;
+
         FEICellGeometry* cellGeometryWrapper;
         FloatMatrix* GtoLRotationMatrix;
         // Local vertex coordinates

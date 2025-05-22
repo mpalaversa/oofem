@@ -136,7 +136,7 @@ public:
     FloatArrayF<3> giveRealStress_KirchhoffPlate(const FloatArrayF<3>& reducedStrain, GaussPoint* gp, TimeStep* tStep) const override { OOFEM_ERROR("Not implemented for layered cross section."); }
     // This method is not yet implemented for this class.
     FloatArrayF<6> giveRealStress_Shell(const FloatArrayF<3>& membraneStrains, const FloatArrayF<3>& plateStrains, GaussPoint* gp, TimeStep* tStep) const override { OOFEM_ERROR("Not implemented for layered cross section."); }
-    FloatArrayF<4> giveRealStress_Netting( const FloatArrayF<4> &reducedStrain, GaussPoint *gp, TimeStep *tStep ) const override { OOFEM_ERROR( "Not implemented for layered cross section." ); }
+    FloatArrayF<4> giveRealStress_Netting( const FloatArrayF<4> &reducedStrain, GaussPoint *gp, TimeStep *tStep, double sr ) const override { OOFEM_ERROR( "Not implemented for layered cross section." ); }
 
     FloatMatrixF<6,6> giveStiffnessMatrix_3d(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;
     FloatMatrixF<3,3> giveStiffnessMatrix_PlaneStress(MatResponseMode mode, GaussPoint *gp, TimeStep *tStep) const override;

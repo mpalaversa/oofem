@@ -102,17 +102,36 @@ SimpleCrossSection :: giveRealStress_PlaneStress(const FloatArrayF<3> &strain, G
 }
 
 FloatArrayF<4>
-SimpleCrossSection ::giveRealStress_Netting( const FloatArrayF<4> &strains, GaussPoint *gp, TimeStep *tStep ) const
+SimpleCrossSection ::giveRealStress_Netting( const FloatArrayF<4> &strains, GaussPoint *gp, TimeStep *tStep, double sr ) const
 {
     auto mat = dynamic_cast<StructuralMaterial *>( this->giveMaterial( gp ) );
     FloatMatrix D = this->giveStiffnessMatrix_1d( TangentStiffness, gp, tStep );
     double Et = D.at( 1, 1 );
 
     FloatArrayF<4> stress;
-    stress.at( 1 ) = Et * strains.at( 1 );
-    stress.at( 2 ) = Et * strains.at( 2 );
-    stress.at( 3 ) = Et * strains.at( 3 );
-    stress.at( 4 ) = Et * strains.at( 4 );
+    if ( strains.at( 1 ) >= 0 ) {
+        stress.at( 1 ) = Et * strains.at( 1 );
+    } else {
+        stress.at( 1 ) = Et * sr * strains.at( 1 );
+    }
+
+    if ( strains.at( 2 ) >= 0 ) {
+        stress.at( 2 ) = Et * strains.at( 2 );
+    } else {
+        stress.at( 2 ) = Et * sr * strains.at( 2 );
+    }
+
+    if ( strains.at( 3 ) >= 0 ) {
+        stress.at( 3 ) = Et * strains.at( 3 );
+    } else {
+        stress.at( 3 ) = Et * sr * strains.at( 3 );
+    }
+    
+    if ( strains.at( 4 ) >= 0 ) {
+        stress.at( 4 ) = Et * strains.at( 4 );
+    } else {
+        stress.at( 4 ) = Et * sr * strains.at( 4 );
+    }
 
     FloatArrayF<6> strainsToSave, stressesToSave;
     strainsToSave.at( 1 )  = strains.at( 1 );

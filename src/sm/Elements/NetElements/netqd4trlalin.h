@@ -32,8 +32,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
  
-#ifndef netrec4trla_h
-#define netrec4trla_h
+#ifndef netqd4trlalin_h
+#define netqd4trlalin_h
 
 #include "error.h"
 #include "feinterpol2d.h"
@@ -41,25 +41,32 @@
 #include "floatarray.h"
 #include "floatmatrix.h"
 #include "sm/Elements/netelement.h"
+#include "nodalaveragingrecoverymodel.h"
 
 #include <cstdio>
 #include <vector>
 #include <memory>
 
-#define _IFT_NetRec4TrLa_Name "netrec4trla"
-#define _IFT_NetRec4TrLa_Mask "mask"
-#define _IFT_NetRec4TrLa_L0 "l0"
+#define _IFT_NetQd4TrLaLin_Name "netqd4trlalin"
+#define _IFT_NetQd4TrLaLin_Mask "mask"
+#define _IFT_NetQd4TrLaLin_L0 "l0"
+#define _IFT_NetQd4TrLaLin_Ntu "ntu"
+#define _IFT_NetQd4TrLaLin_Ntv "ntv"
+#define _IFT_NetQd4TrLaLin_sr "sr"
 
 namespace oofem {
 class FEI2dQuadLin;
-	class NetRec4TrLa : public NetElement
+class NetQd4TrLaLin : public NetElement, public NodalAveragingRecoveryModelInterface
 	{
         protected:
             static FEI2dQuadLin interpolation;
             int mask;
             // Mesh half length (for square meshes)
             double L0;
-            FloatArray initialDimensions;
+            // Number of twines along side 1-2 and 2-3 respectively
+            double Ntu, Ntv;
+            // Stores undeformed dimensions of element's sides: 1-2 or 3-4 and 2-3 or 4-1, respectively
+            FloatArray undeformedDimensions;
             /**
              * Calculates element's dimensions in the current configuration.
              * Returns array with element's dimensions in the following order:
@@ -71,12 +78,14 @@ class FEI2dQuadLin;
             void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
             void computeGaussPoints() override;
             void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
-            double giveTwineLength() override;
             double giveNumberOfTwines() override;
+            double giveTwineLength() override;
+            // Calculates and returns element's dimensions in the undeformed configuration
+            void giveUndeformedDimensions( TimeStep *tStep );
 
         public:
-            NetRec4TrLa(int n, Domain* d);
-            virtual ~NetRec4TrLa() = default;
+            NetQd4TrLaLin(int n, Domain* d);
+            virtual ~NetQd4TrLaLin() = default;
 
             // Computes answer in the global coord. system.
             void computeLumpedMassMatrix( FloatMatrix &answer, TimeStep *tStep ) override;
@@ -86,11 +95,13 @@ class FEI2dQuadLin;
             void computeStrainVector( FloatArray &answer, GaussPoint *gp, TimeStep *tStep ) override;
             void computeStressVector( FloatArray &answer, const FloatArray &strain, GaussPoint *gp, TimeStep *tStep ) override;
             void giveDofManDofIDMask( int inode, IntArray & ) const override;
-            const char *giveClassName() const override { return "NetRec4TrLa"; }
-            const char *giveInputRecordName() const override { return _IFT_NetRec4TrLa_Name; }
+            const char *giveClassName() const override { return "NetQd4TrLaLin"; }
+            const char *giveInputRecordName() const override { return _IFT_NetQd4TrLaLin_Name; }
+            Interface *giveInterface( InterfaceType it ) override;
             FEInterpolation *giveInterpolation() const override;
             void giveInternalForcesVector( FloatArray &answer, TimeStep *tStep, int useUpdatedGpRecord = 0 ) override;
             void initializeFrom( InputRecord &ir ) override;
+            void NodalAveragingRecoveryMI_computeNodalValue( FloatArray &answer, int node, InternalStateType type, TimeStep *tStep ) override;
 
             void computeBmatrixAt( GaussPoint *gp, FloatMatrix &answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS ) override{};
             void computeConsistentMassMatrix( FloatMatrix &answer, TimeStep *tStep, double &mass, const double *ipDensity = NULL ) override {};

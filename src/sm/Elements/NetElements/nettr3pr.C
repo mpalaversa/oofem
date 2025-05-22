@@ -62,8 +62,6 @@ NetTr3Pr::NetTr3Pr(int n, Domain* aDomain) : NetElement(n, aDomain)
 	V2 = -1;
 	U3 = -1;
 	V3 = -1;
-
-    srf = 1.0;
 }
 
 FloatArray
@@ -206,7 +204,7 @@ void NetTr3Pr ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray fl
         dragCoeffsOnV = computeDragCoefficients( density, mu, characteristicDim, vRnV.computeNorm() );
     } else {
         // If yes, use the user defined drag coefficient for the normal viscous force component
-        // and disrfegard the tangential one.
+        // and disregard the tangential one.
         dragCoeffsOnU.resize( 2 );
         dragCoeffsOnV.resize( 2 );
         dragCoeffsOnU.at( 1 ) = dragCoeffsOnV.at( 1 ) = userDefinedDragCoeff;
@@ -372,118 +370,118 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     answer.resize( 9, 9 );
     //First row in the matrix
         //dFx1dx1
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 1 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 1 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdx1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdx1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 1 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdx1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdx1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 1 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdx1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 1 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdx1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness) {
-        answer.at( 1, 1 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdx1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 1 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdx1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 1) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dy1
     //answer.at( 1, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 2 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 2 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 2 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 2 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 2) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dz1
     //answer.at( 1, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 3 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 3 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 3 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 3 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 3) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dx2
     //answer.at( 1, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 4 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 4 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 4 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 4 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 4) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dy2
     //answer.at( 1, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 5 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 5 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 5 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 5 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 5) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dz2
     //answer.at( 1, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 6 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 6 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 6 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 6 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 6) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dx3
     //answer.at( 1, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 7 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 7 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 7 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 7 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 7) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dy3
     //answer.at( 1, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 8 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 8 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 8 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 8 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx1dz3
     //answer.at( 1, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 1, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 1, 9 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 9 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 1, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 1, 9 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 1, 9 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (1, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -491,105 +489,105 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Second row in the matrix
         //dFy1dy1
     //answer.at( 2, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 2 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 2 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 2 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 2 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 2 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydy1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 2) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy1dz1
     //answer.at( 2, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 3 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 3 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 3 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 3 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 3) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy1dx2
     //answer.at( 2, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 4 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 4 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 4 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 4 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 4) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy1dy2
     //answer.at( 2, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 5 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 5 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 5 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 5 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 5) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy1dz2
     //answer.at( 2, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 6 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 6 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 6 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 6 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 6) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy1dx3
     //answer.at( 2, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 7 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 7 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 7 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 7 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 7) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy1dy3
     //answer.at( 2, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 8 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 8 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 8 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 8 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy1dz3
     //answer.at( 2, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 2, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 2, 9 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 9 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 2, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 2, 9 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 2, 9 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (2, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -597,92 +595,92 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Third row in the matrix
         //dFz1dz1
     //answer.at( 3, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 3, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 3, 3 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 3 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 3, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 3 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 3, 3 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 3 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdz1 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz1 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz1 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz1 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (3, 3) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz1dx2
     //answer.at( 3, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 3, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 3, 4 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 4 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 3, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 4 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 3, 4 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 4 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (3, 4) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz1dy2
     //answer.at( 3, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 3, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 3, 5 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 5 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 3, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 5 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 3, 5 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 5 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (3, 5) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz1dz2
     //answer.at( 3, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 3, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 3, 6 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 6 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 3, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 6 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 3, 6 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 6 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (3, 6) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz1dx3
     //answer.at( 3, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 3, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 3, 7 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 7 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 3, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 7 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 3, 7 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 7 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (3, 7) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz1dy3
     //answer.at( 3, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 3, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 3, 8 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 8 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 3, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 8 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 3, 8 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 8 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (3, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz1dz3
     //answer.at( 3, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 3, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 3, 9 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 9 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 3, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 9 ) = Et * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 3, 9 ) = ( Et / srf ) * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 3, 9 ) = ( Et / sr ) * At * ( V3 - V2 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U2 - U3 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (3, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -690,79 +688,79 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Fourth row in the matrix
         //dFx2dx2
     //answer.at( 4, 4 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 4, 4 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 4, 4 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 4 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 4, 4 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 4 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 4, 4 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 4 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdx2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (4, 4) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx2dy2
     //answer.at( 4, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 4, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 4, 5 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 5 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 4, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 4, 5 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 5 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (4, 5) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx2dz2
     //answer.at( 4, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 4, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 4, 6 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 6 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 4, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 4, 6 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 6 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (4, 6) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx2dx3
     //answer.at( 4, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 4, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 4, 7 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 7 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 4, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 4, 7 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 7 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (4, 7) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx2dy3
     //answer.at( 4, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 4, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 4, 8 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 8 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 4, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 4, 8 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 8 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (4, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx2dz3
     //answer.at( 4, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 4, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 4, 9 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 9 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 4, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 4, 9 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 4, 9 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (4, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -770,66 +768,66 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Fifth row in the matrix
         //dFy2dy2
     //answer.at( 5, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 5, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 5, 5 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 5 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 5, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 5 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 5, 5 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 5 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydy2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (5, 5) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy2dz2
     //answer.at( 5, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 5, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 5, 6 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 6 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 5, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 5, 6 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 6 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (5, 6) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy2dx3
     //answer.at( 5, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 5, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 5, 7 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 7 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 5, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 5, 7 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 7 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (5, 7) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy2dy3
     //answer.at( 5, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 5, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 5, 8 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 8 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 5, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 5, 8 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 8 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (5, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy2dz3
     //answer.at( 5, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 5, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 5, 9 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 9 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 5, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 5, 9 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 5, 9 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (5, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -837,53 +835,53 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Sixth row in the matrix
         //dFz2dz2
     //answer.at( 6, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 6, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 6, 6 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 6 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 6, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 6 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 6, 6 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 6 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdz2 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz2 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz2 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz2 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (6, 6) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz2dx3
     //answer.at( 6, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 6, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 6, 7 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 7 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 6, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 7 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 6, 7 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 7 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (6, 7) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz2dy3
     //answer.at( 6, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 6, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 6, 8 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 8 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 6, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 8 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 6, 8 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 8 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (6, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFz2dz3
     //answer.at( 6, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 6, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 6, 9 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 9 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 6, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 9 ) = Et * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 6, 9 ) = ( Et / srf ) * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 6, 9 ) = ( Et / sr ) * At * ( V1 - V3 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U3 - U1 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (6, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -891,40 +889,40 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Seventh row in the matrix
         //dFx3dx3
     //answer.at( 7, 7 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 7, 7 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 7, 7 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 7 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 7, 7 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 7 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 7, 7 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 7 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUxdx3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdx3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdx3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdx3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (7, 7) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx3dy3
     //answer.at( 7, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 7, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 7, 8 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 8 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 7, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 7, 8 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 8 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUxdy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (7, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFx3dz3
     //answer.at( 7, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 7, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 7, 9 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 9 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 7, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 7, 9 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 7, 9 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUxdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 1 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVxdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 1 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (7, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -932,27 +930,27 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Eigth row in the matrix
         //dFy3dy3
     //answer.at( 8, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 8, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 8, 8 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 8, 8 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 8, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 8, 8 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 8, 8 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 8, 8 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUydy3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdy3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydy3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdy3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (8, 8) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
         //dFy3dz3
     //answer.at( 8, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 8, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 8, 9 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 8, 9 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 8, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 8, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 8, 9 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 8, 9 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUydz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 2 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVydz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 2 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (8, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -960,14 +958,14 @@ NetTr3Pr::computeStiffnessMatrix(FloatMatrix& answer, MatResponseMode rMode, Tim
     //Ninth row in the matrix
         //dFz3dz3
     //answer.at( 9, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
-    if ( srf == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
+    if ( sr == 1.0 || ( !reduceUStiffness && !reduceVStiffness ) ) {
         answer.at( 9, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness && reduceVStiffness ) {
-        answer.at( 9, 9 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 9, 9 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceVStiffness ) {
-        answer.at( 9, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / srf ) * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 9, 9 ) = Et * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + ( Et / sr ) * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else if ( reduceUStiffness ) {
-        answer.at( 9, 9 ) = ( Et / srf ) * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
+        answer.at( 9, 9 ) = ( Et / sr ) * At * ( V2 - V1 ) / 2 * ( dUzdz3 * ( 1 / L0 - 1 / U.computeNorm() ) + dUdz3 * U.at( 3 ) / pow( U.computeNorm(), 2 ) ) + Et * At * ( U1 - U2 ) / 2 * ( dVzdz3 * ( 1 / L0 - 1 / V.computeNorm() ) + dVdz3 * V.at( 3 ) / pow( V.computeNorm(), 2 ) );
     } else {
         OOFEM_ERROR( "No stiffness is associated with element (9, 9) of the stiffness matrix of the finite element %d.", this->giveNumber() );
     }
@@ -1110,22 +1108,22 @@ NetTr3Pr ::computeStrainVector( FloatArray &answer, GaussPoint *gp, TimeStep *tS
     lengthU = computeUTwine(tStep).computeNorm();
     lengthV = computeVTwine(tStep).computeNorm();
 
-    if ( srf == 1 || ( lengthU >= ( 0.995 * L0 ) && lengthV >= ( 0.995 * L0 ) ) ) {
+    if ( sr == 1 || ( lengthU >= ( 0.995 * L0 ) && lengthV >= ( 0.995 * L0 ) ) ) {
         // Calculate strains in U- and V-twines
         answer.at( 1 ) = ( lengthU - L0 ) / L0;
         answer.at( 2 ) = ( lengthV - L0 ) / L0;
     } else if ( lengthU < ( 0.995 * L0 ) && lengthV >= ( 0.995 * L0 ) ) {
         // Calculate strains in V-twines. Reduce strains in U-twines since these are in compression
-        answer.at( 1 ) = ( lengthU - L0 ) / ( srf * L0 );
+        answer.at( 1 ) = ( lengthU - L0 ) / ( sr * L0 );
         answer.at( 2 ) = ( lengthV - L0 ) / L0;
     } else if ( lengthV < ( 0.995 * L0 ) && lengthU >= ( 0.995 * L0 ) ) {
         // Calculate strains in U-twines. Reduce strains in V-twines since these are in compression
         answer.at( 1 ) = ( lengthU - L0 ) / L0;
-        answer.at( 2 ) = ( lengthV - L0 ) / ( srf * L0 );
+        answer.at( 2 ) = ( lengthV - L0 ) / ( sr * L0 );
     } else {
         // Reduce strains in U- and V-twines since both are in compression
-        answer.at( 1 ) = ( lengthU - L0 ) / ( srf * L0 );
-        answer.at( 2 ) = ( lengthV - L0 ) / ( srf * L0 );
+        answer.at( 1 ) = ( lengthU - L0 ) / ( sr * L0 );
+        answer.at( 2 ) = ( lengthV - L0 ) / ( sr * L0 );
     }
 }
 
@@ -1156,7 +1154,7 @@ NetTr3Pr::initializeFrom( InputRecord &ir )
 	IR_GIVE_FIELD( ir, V2, _IFT_NetTr3Pr_V2 );
 	IR_GIVE_FIELD( ir, U3, _IFT_NetTr3Pr_U3 );
 	IR_GIVE_FIELD( ir, V3, _IFT_NetTr3Pr_V3 );
-    IR_GIVE_OPTIONAL_FIELD( ir, srf, _IFT_NetTr3Pr_srf );
+    IR_GIVE_OPTIONAL_FIELD( ir, sr, _IFT_NetTr3Pr_sr );
 
     d = ( U2 - U1 ) * ( V3 - V1 ) - ( U3 - U1 ) * ( V2 - V1 );
 }

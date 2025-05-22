@@ -47,8 +47,9 @@
 namespace oofem {
 NetElement::NetElement(int n, Domain* aDomain) : NLStructuralElement(n, aDomain)
 {
-        GtoLRotationMatrix = NULL;
-        cellGeometryWrapper = NULL;
+    sr                  = 1;    
+    GtoLRotationMatrix = NULL;
+    cellGeometryWrapper = NULL;
 }
 
 void

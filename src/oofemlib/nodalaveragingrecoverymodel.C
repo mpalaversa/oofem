@@ -59,7 +59,8 @@ NodalAveragingRecoveryModel :: recoverValues(Set elementSet, InternalStateType t
 {
     int nnodes = domain->giveNumberOfDofManagers();
     IntArray regionNodalNumbers(nnodes);
-    IntArray regionDofMansConnectivity;
+    // regionStressCompsMultiplicity is used for NetElements
+    IntArray regionDofMansConnectivity, regionStressCompsMultiplicity;
     FloatArray lhs, val;
 
 
@@ -87,6 +88,9 @@ NodalAveragingRecoveryModel :: recoverValues(Set elementSet, InternalStateType t
 
     regionDofMansConnectivity.resize(regionDofMans);
     regionDofMansConnectivity.zero();
+
+    // there are 6 stress components stored for a NetElement
+    regionStressCompsMultiplicity.resize( regionDofMans * 6 );
 
     IntArray elements = elementSet.giveElementList();
     // assemble element contributions
@@ -125,6 +129,12 @@ NodalAveragingRecoveryModel :: recoverValues(Set elementSet, InternalStateType t
             int eq = ( regionNodalNumbers.at(node) - 1 ) * regionValSize;
             for ( int j = 1; j <= regionValSize; j++ ) {
                 lhs.at(eq + j) += val.at(j);
+                // If the element is NetQd4TrLaLin, the stress multiplicity is increased if the stress component is not zero
+                if ( std ::string( element->giveClassName() ).compare( "NetQd4TrLaLin" ) == 0 ) {
+                    if ( val.at( j ) != 0 )
+                        regionStressCompsMultiplicity.at( eq + j )++;
+                } else
+                    regionStressCompsMultiplicity.at( eq + j ) = -1;
             }
 
             regionDofMansConnectivity.at( regionNodalNumbers.at(node) )++;
@@ -142,11 +152,18 @@ NodalAveragingRecoveryModel :: recoverValues(Set elementSet, InternalStateType t
         if ( regionNodalNumbers.at(inode) ) {
             int eq = ( regionNodalNumbers.at(inode) - 1 ) * regionValSize;
             for ( int i = 1; i <= regionValSize; i++ ) {
-                if ( regionDofMansConnectivity.at( regionNodalNumbers.at(inode) ) > 0 ) {
-                    lhs.at(eq + i) /= regionDofMansConnectivity.at( regionNodalNumbers.at(inode) );
+                if (regionStressCompsMultiplicity.at(eq+i)  > -1) {
+                    if ( regionStressCompsMultiplicity.at( eq + i ) > 0 ) {
+                        lhs.at( eq + i ) /= regionStressCompsMultiplicity.at( eq + i );
+                    } else
+                        lhs.at( eq + i ) = 0.0;
                 } else {
-                    OOFEM_WARNING("values of dofmanager %d undetermined", inode);
-                    lhs.at(eq + i) = 0.0;
+                    if ( regionDofMansConnectivity.at( regionNodalNumbers.at( inode ) ) > 0 ) {
+                        lhs.at( eq + i ) /= regionDofMansConnectivity.at( regionNodalNumbers.at( inode ) );
+                    } else {
+                        OOFEM_WARNING( "values of dofmanager %d undetermined", inode );
+                        lhs.at( eq + i ) = 0.0;
+                    }
                 }
             }
         }

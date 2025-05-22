@@ -54,7 +54,7 @@
 #define _IFT_NetTr3Pr_V2 "v2"
 #define _IFT_NetTr3Pr_U3 "u3"
 #define _IFT_NetTr3Pr_V3 "v3"
-#define _IFT_NetTr3Pr_srf "srf"
+#define _IFT_NetTr3Pr_sr "sr"
 
 namespace oofem {
 class FEI2dTrLin;
@@ -70,8 +70,6 @@ class FEI2dTrLin;
             double U1, V1, U2, V2, U3, V3;
             // An auxilliary variable (see Priour D. A Finite Element Method for Netting Application to Fish Cages and Fishing Gear)
             double d;
-            // Stiffnes reduction factor (used when material stiffness in tension and compression is different)
-            double srf;
 
             FloatArray calculateRelativeVelocity( FloatArray velocity, TimeStep *tStep ) override;
             virtual FloatArray calculateRelativeAcceleration( FloatArray velocity, TimeStep *tStep ) override;
