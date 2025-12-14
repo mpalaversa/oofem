@@ -640,7 +640,6 @@ NlDEIDynamic :: computeMassMtrx(FloatArray &massMatrix, double &maxOm, TimeStep 
                 // in those DOFs without mass
                 double maxOmEl = 0.;
                 for ( int j = 1; j <= n; j++ ) {
-                    float checkThis = maxElmass * ZERO_REL_MASS;
                     if ( charMtrx.at(j, j) > maxElmass * ZERO_REL_MASS ) {
                         double maxOmi =  charMtrx2.at(j, j) / charMtrx.at(j, j);
                         maxOmEl = ( maxOmEl > maxOmi ) ? ( maxOmEl ) : ( maxOmi );

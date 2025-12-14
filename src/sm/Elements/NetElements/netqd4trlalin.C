@@ -185,17 +185,6 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
     for ( int i = 1; i <= 3; i++ )
         velocity.at( i ) = flowCharacteristics.at( i );
 
-    DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
-    // Check if the element is downstream relative to another element
-    if ( this->isDownstream ) {
-        double sn = cs->giveSolidityRatio();
-        // Reduce the inflow velocity by the velocity reduction coefficient as given in Loland, G. Current forces on and flow thorugh fish farms
-        if ( sn > 0 )
-            velocity.beScaled( 1 - 0.46 * ( 0.33 * sn + 6.54 * pow( sn, 2 ) - 4.88 * pow( sn, 3 ) ), velocity );
-        else
-            OOFEM_ERROR( "Element %d is denoted as downstream, but the solidity ratio is not specified.", this->giveNumber() );
-    }
-
     FloatArray relativeVelocity = calculateRelativeVelocity( velocity, tStep );
 
     // Get nodal coordinates in the Oxyz and the O'UVW coord. system
@@ -255,6 +244,57 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
     EU34.beScaled( -1 / s34.computeNorm(), s34 );
     EV23.beScaled( 1 / s23.computeNorm(), s23 );
     EV41.beScaled( -1 / s41.computeNorm(), s41 );
+
+    DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
+    // Check if the element is downstream relative to another element
+    if ( this->isDownstream ) {
+        double sn = cs->giveSolidityRatio();
+
+        // The following block of code is used when the velocity reduction doesn't account for the element's inclination to the inflow
+        // Reduce the inflow velocity by the velocity reduction coefficient as given in Loland, G. Current forces on and flow thorugh fish farms
+        if ( sn > 0 )
+            velocity.beScaled( 1 - 0.46 * ( 0.33 * sn + 6.54 * pow( sn, 2 ) - 4.88 * pow( sn, 3 ) ), velocity );
+        else
+            OOFEM_ERROR( "Element %d is denoted as downstream, but the solidity ratio is not specified.", this->giveNumber() );
+
+        /* This block of code is used when the velocity reduction depends on the element's angle of inclination
+        // Find unit normal vector on the element
+        FloatArray d13, d24;
+        d13.resize( 3 );
+        d24.resize( 3 );
+        
+        d13.at( 1 ) = x3 - x1;
+        d13.at( 2 ) = y3 - y1;
+        d13.at( 3 ) = z3 - z1;
+
+        d24.at( 1 ) = x4 - x2;
+        d24.at( 2 ) = y4 - y2;
+        d24.at( 3 ) = z4 - z2;
+
+        FloatArray n, en;
+        n.beVectorProductOf( d13, d24 );
+        en.beScaled( 1 / n.computeNorm(), n );
+
+        // Check if the velocity and the normal vector are in the same quadrant and calculate cosine of the angle between
+        // the velocity vector and the element's normal
+        double cosAlpha = 0.0;
+        if ( en.dotProduct( velocity ) < 0 ) {
+            FloatArray enFinal;
+            enFinal.beScaled( -1, en );
+            cosAlpha = enFinal.dotProduct( velocity ) / velocity.computeNorm();
+            if ( cosAlpha < 0 )
+                OOFEM_LOG_DEBUG( "\n cosAlpha is %d for element %d.", cosAlpha, this->giveNumber() );
+        } else {
+            cosAlpha = en.dotProduct( velocity ) / velocity.computeNorm();
+        }
+         
+        // Reduce the inflow velocity by the velocity reduction coefficient as given in Loland, G. Current forces on and flow thorugh fish farms
+        if ( sn > 0 )
+            velocity.beScaled( 1 - 0.46 * ( 0.04 + ( -0.04 + 0.33 * sn + 6.54 * pow( sn, 2 ) - 4.88 * pow( sn, 3 ) ) * cosAlpha ), velocity );
+        else
+            OOFEM_ERROR( "Element %d is denoted as downstream, but the solidity ratio is not specified.", this->giveNumber() );
+        */
+    }
 
     // Tangential relative velocity component in U- and V-twines
     FloatArray vRtU12, vRtU34, vRtV23, vRtV41;
