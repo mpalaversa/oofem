@@ -53,6 +53,8 @@
 #define _IFT_NetQd4TrLaLin_Ntu "ntu"
 #define _IFT_NetQd4TrLaLin_Ntv "ntv"
 #define _IFT_NetQd4TrLaLin_sr "sr"
+#define _IFT_NetQd4TrLaLin_knot "knot"
+#define _IFT_NetQd4TrLaLin_sup "sup"
 
 namespace oofem {
 class FEI2dQuadLin;
@@ -65,6 +67,12 @@ class NetQd4TrLaLin : public NetElement, public NodalAveragingRecoveryModelInter
             double L0;
             // Number of twines along side 1-2 and 2-3 respectively
             double Ntu, Ntv;
+            // True if the modelled net is knotted
+            bool knotted;
+            // Diameter and drag coefficient of a knot (the knot is assumed to be a sphere)
+            double knotD, knotCd;
+            // True if the local speed-up is accounted for
+            bool speedUp;
             // Stores undeformed dimensions of element's sides: 1-2 or 3-4 and 2-3 or 4-1, respectively
             FloatArray undeformedDimensions;
             /**
@@ -77,7 +85,8 @@ class NetQd4TrLaLin : public NetElement, public NodalAveragingRecoveryModelInter
             FloatArray calculateRelativeAcceleration( FloatArray acceleration, TimeStep *tStep ) override;
             void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
             void computeGaussPoints() override;
-            void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
+            void computeHydrodynamicLoadMorison( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
+            void computeHydrodynamicLoadFromWavesStokes2( FloatArray &answer, FloatArray waveCharacteristics, TimeStep *tStep ) override;
             double giveNumberOfTwines() override;
             double giveTwineLength() override;
             // Calculates and returns element's dimensions in the undeformed configuration

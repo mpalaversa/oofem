@@ -38,6 +38,7 @@
 #include "element.h"
 #include "matresponsemode.h"
 #include "valuemodetype.h"
+#include "bctype.h"
 #include "integrationdomain.h"
 #include "dofmantransftype.h"
 #include "floatarray.h"
@@ -336,9 +337,11 @@ public:
      * @note The corresponding elements must have an associated hydrodynamic
      * cross-section and a material.
      * @param answer Requested contribution of load (in local c.s.).
-     * @param velocity User-defined fluid velocity vector.
+     * @param loadInputData User-defined input data (load-specific).
+     * @param loadType Load type as defined in bctype.h
+     * @param tStep Pointer to the current time step object
      */
-    virtual void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep );
+    virtual void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray loadInputData, bcType loadType, TimeStep *tStep );
     
     /// computes edge interpolation matrix
     virtual void computeEdgeNMatrix(FloatMatrix &answer, int boundaryID, const FloatArray &lcoords);

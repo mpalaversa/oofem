@@ -226,7 +226,7 @@ void StructuralElement :: computeBoundaryEdgeLoadVector(FloatArray &answer, Boun
                 }
             }*/
         } else {
-            if ( load->giveType() == bcType::HydrodynamicMorison || load->giveType() == bcType::HydrodynamicKF ) {
+            if ( load->giveType() == bcType::HydrodynamicMorison || load->giveType() == bcType::HydrodynamicKF || load->giveType() == bcType::HydrodynamicWaveStokes2 ) {
                 OOFEM_ERROR( "Hydrodynamic loads must be defined in the global coord. system." );
             } else {
                 ///@todo Support this...
@@ -241,8 +241,9 @@ void StructuralElement :: computeBoundaryEdgeLoadVector(FloatArray &answer, Boun
             }
         }
 
-        if (load->giveType() == bcType::HydrodynamicMorison || load->giveType() == bcType::HydrodynamicKF) {
-            this->computeHydrodynamicLoadVector( answer, force, tStep );
+        bcType loadType = load->giveType();
+        if ( loadType == bcType::HydrodynamicMorison || loadType == bcType::HydrodynamicKF || loadType == bcType::HydrodynamicWaveStokes2 ) {
+            this->computeHydrodynamicLoadVector( answer, force, loadType, tStep );
         } else {
             // Construct n-matrix
             // fei->boundaryEdgeEvalN( n_vec, boundary, lcoords, FEIElementGeometryWrapper(this) );
@@ -273,7 +274,7 @@ StructuralElement :: computeEdgeNMatrix(FloatMatrix &answer, int boundaryID, con
     answer.beNMatrixOf(n_vec, this->giveInterpolation()->giveNsd() );
 }
 
-void StructuralElement ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep )
+void StructuralElement ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, bcType loadType, TimeStep *tStep )
 {
     answer.clear();
     OOFEM_ERROR( "Hydrodynamic loads are not implemented for this element." );
@@ -356,9 +357,10 @@ StructuralElement::computeDragCoefficients( double density, double mu, double ch
 {
     double reynoldsNo = density * characteristicDim * relativeNormalVelocity / mu;
     double s          = -0.077215665 + log( 8 / reynoldsNo );
-
+    
     FloatArray dragCoeffs;
     dragCoeffs.resize( 2 );
+    
     if ( reynoldsNo <= 1 )
         dragCoeffs.at( 1 ) = 8 * 3.14 / ( reynoldsNo * s ) * ( 1 - 0.87 * pow( s, -2 ) );
     else if ( reynoldsNo <= 30 )
@@ -367,7 +369,8 @@ StructuralElement::computeDragCoefficients( double density, double mu, double ch
         dragCoeffs.at( 1 ) = 1.1 + 4 * pow( reynoldsNo, -0.5 );
 
     dragCoeffs.at( 2 ) = 3.14 * mu * ( 0.55 * pow( reynoldsNo, 0.5 ) + 0.084 * pow( reynoldsNo, 2 / 3 ) );
-
+    
+    //dragCoeffs.at( 1 ) = 1 + 10 / pow( reynoldsNo, 2.0 / 3.0 );
     return dragCoeffs;
 }
 

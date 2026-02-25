@@ -40,6 +40,7 @@
 #define _IFT_ConsistentNetElement_Name "consistentnetelement"
 #define _IFT_ConsistentNetElement_gf "gf"
 #define _IFT_ConsistentNetElement_l0 "l0"
+#define _IFT_ConsistentNetElement_knot "knot"
 
 namespace oofem {
 class DecoupledMaterial;
@@ -52,9 +53,16 @@ class ConsistentNetElement : public Truss3dnl
 protected:
     // Undeformed length of a twine and the globalisation factor
     double l0, gf;
+    // Is there a knot associated with the CNE? (This is used for knotted nets.)
+    bool knotted;
+    // Diameter and drag coefficient of a knot (the knot is assumed to be a sphere)
+    double knotD, knotCd;
+
     FloatArray viscousForce;
 
     void computeBodyLoadVectorAt( FloatArray &answer, Load *load, TimeStep *tStep, ValueModeType mode ) override;
+    void computeDragForceOnKnots( FloatArray &answer, double density, FloatArray relativeVelocity ) override;
+    void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray loadInputData, bcType loadType, TimeStep *tStep ) override;
     double giveCharacteristicHydrodynamicDimension() override;
     double giveCharacteristicWeightDimension() override;
 

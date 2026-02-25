@@ -54,7 +54,7 @@ REGISTER_Element(Truss3dnl);
 
 Truss3dnl :: Truss3dnl(int n, Domain *aDomain) : Truss3d(n, aDomain)
 {
-    
+    speedUp = false;
 }
 
 
@@ -64,6 +64,11 @@ Truss3dnl :: initializeFrom(InputRecord &ir)
   Truss3d :: initializeFrom(ir);
   initialStretch = 1;
   IR_GIVE_OPTIONAL_FIELD(ir, initialStretch, _IFT_Truss3dnl_initialStretch);
+
+  int sup = 0;
+  IR_GIVE_OPTIONAL_FIELD( ir, sup, _IFT_ConsistentNetElement_sup );
+  if ( sup == 1 )
+      speedUp = true;
 }
 
   
@@ -246,7 +251,7 @@ double Truss3dnl::giveCharacteristicWeightDimension()
     return giveCharacteristicHydrodynamicDimension();
 }
 
-void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep )
+void Truss3dnl ::computeHydrodynamicLoadMorison( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep, bool knotted )
 {
     FloatArray et, u, currentNode1Coordinates, currentNode2Coordinates;
     this->computeVectorOf( VM_Total, tStep, u );
@@ -296,6 +301,13 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
     relativeVelocity.at( 2 ) = velocity.at( 2 ) - ( currentNodalVelocity.at( 2 ) + currentNodalVelocity.at( 5 ) ) / 2;
     relativeVelocity.at( 3 ) = velocity.at( 3 ) - ( currentNodalVelocity.at( 3 ) + currentNodalVelocity.at( 6 ) ) / 2;
 
+    // Account for the local speed-up if needed
+    if ( speedUp ) {
+        double sn = cs->giveSolidityRatio();
+        for ( int i = 1; i <= 3; i++ )
+            relativeVelocity.at( i ) = relativeVelocity.at( i ) / ( 1 - sn );
+    }
+
     // Calculate tangential component of the relative velocity
     FloatArray tangentialRelativeVelocity;
     tangentialRelativeVelocity.beScaled( relativeVelocity.dotProduct( et ), et );
@@ -327,11 +339,22 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
 
     // Caluclate viscous force
     FloatArray normalViscousForce, tangentialViscousForce;
-    normalViscousForce.beScaled( 0.5 * density * dragCoeffs.at( 1 ) * characteristicDim * l * normalRelativeVelocity.computeNorm(), normalRelativeVelocity );
+    //if ( this->giveNumber() == 145 || this->giveNumber() == 146 || this->giveNumber() == 147 || this->giveNumber() == 148 || this->giveNumber() == 149 || this->giveNumber() == 150 || this->giveNumber() == 151 || this->giveNumber() == 152 ) {
+        normalViscousForce.beScaled( 0.5 * density * dragCoeffs.at( 1 ) * characteristicDim * l * normalRelativeVelocity.computeNorm(), normalRelativeVelocity );
+   // } else {
+        //normalViscousForce.beScaled( density * dragCoeffs.at( 1 ) * characteristicDim * l * normalRelativeVelocity.computeNorm(), normalRelativeVelocity );
+   // }
     tangentialViscousForce.beScaled( dragCoeffs.at( 2 ) * l, tangentialRelativeVelocity );
     this->viscousForce.zero();
     this->viscousForce.add( normalViscousForce );
     this->viscousForce.add( tangentialViscousForce );
+
+    // Check if the net is knotted and add contribution of the knot
+    FloatArray dragForceOnKnots;
+    if ( knotted ) {
+        computeDragForceOnKnots( dragForceOnKnots, density, relativeVelocity );
+        this->viscousForce.add( dragForceOnKnots );
+    }
 
     // The force is equally distributed among the element's nodes
     answer.resize( 6 );
@@ -343,16 +366,19 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
     FloatArray acceleration;
     acceleration.resize( 3 );
     for ( int i = 4; i <= 6; i++ )
+        //acceleration.at( i - 3 ) = 0;
         acceleration.at( i - 3 ) = flowCharacteristics.at( i );
 
-    // Calculate an average fluid acceleration on the element - this should be changed when the fluid acceleration becomes available as an input quantity
+    
+    // Calculate acceleration of the fluid relative to the element
     FloatArray relativeAcceleration;
     relativeAcceleration.resize( 3 );
     relativeAcceleration.at( 1 ) = acceleration.at( 1 ) - ( currentNodalAcceleration.at( 1 ) + currentNodalAcceleration.at( 4 ) ) / 2;
     relativeAcceleration.at( 2 ) = acceleration.at( 2 ) - ( currentNodalAcceleration.at( 2 ) + currentNodalAcceleration.at( 5 ) ) / 2;
     relativeAcceleration.at( 3 ) = acceleration.at( 3 ) - ( currentNodalAcceleration.at( 3 ) + currentNodalAcceleration.at( 6 ) ) / 2;
-
+    
     if ( relativeAcceleration.computeNorm() != 0 ) {
+        
         // Calculate tangential component of the relative acceleration
         FloatArray tangentialRelativeAcceleration;
         tangentialRelativeAcceleration.beScaled( relativeAcceleration.dotProduct( et ), et );
@@ -360,7 +386,7 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
         // Calculate normal component of the relative acceleration
         FloatArray normalRelativeAcceleration;
         normalRelativeAcceleration.beDifferenceOf( relativeAcceleration, tangentialRelativeAcceleration );
-
+        
         // Calculate tangential component of the fluid acceleration
         FloatArray tangentialAcceleration;
         tangentialAcceleration.beScaled( acceleration.dotProduct( et ), et );
@@ -368,7 +394,7 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
         // Calculate normal component of the fluid acceleration
         FloatArray normalAcceleration;
         normalAcceleration.beDifferenceOf( acceleration, tangentialAcceleration );
-
+        
         // Added-mass coefficient
         double cm = cs->giveAddedMassCoefficient();
 
@@ -387,6 +413,88 @@ void Truss3dnl ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray f
         answer.at( 3 ) = answer.at( 3 ) + addedMassForce.at( 3 ) / 2;
         answer.at( 6 ) = answer.at( 6 ) + addedMassForce.at( 3 ) / 2;
     }
+
+    //if ( this->giveNumber() == 148 || this->giveNumber() == 105 || this->giveNumber() == 36 || this->giveNumber() == 109 || this->giveNumber() == 112 )
+        //OOFEM_LOG_RELEVANT( "Element %d. z: %e. Cdn: %e. Cdt: %e. u: %e. w: %e. ax: %e. az: %e \n", this->giveNumber(), (currentNode1Coordinates.at(3) + currentNode2Coordinates.at(3))/2, dragCoeffs.at(1), dragCoeffs.at(2), flowCharacteristics.at(1), flowCharacteristics.at(3), flowCharacteristics.at(4), flowCharacteristics.at(6) );
+}
+
+void
+Truss3dnl::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray loadInputData, bcType loadType, TimeStep *tStep )
+{
+    FloatArray currentLoadsMorison, waveLoadsStokes2;
+
+    if ( loadType == bcType::HydrodynamicMorison ) {
+        computeHydrodynamicLoadMorison( answer, loadInputData, tStep );
+    } else if ( loadType == bcType::HydrodynamicWaveStokes2 ) {
+        computeHydrodynamicLoadFromWavesStokes2( answer, loadInputData, tStep );
+    } else
+        OOFEM_ERROR( "The following hydrodynamic loads are implemented at the moment: current loads according to the Morison's equation, wave loads according to the Stokes 2nd-order wave theory." );
+}
+
+void
+Truss3dnl ::computeHydrodynamicLoadFromWavesStokes2( FloatArray &answer, FloatArray waveCharacteristics, TimeStep *tStep, bool knotted )
+{
+    // User-defined wave height (H), wave period (T), wave direction (beta in deg), water depth (h) and the convergence criterion for wave number (kErr)
+    double H    = waveCharacteristics.at( 1 );
+    double T    = waveCharacteristics.at( 2 );
+    double beta = waveCharacteristics.at( 3 ) * 3.14 / 180;
+    double h    = waveCharacteristics.at( 4 );
+    double kErr = waveCharacteristics.at( 5 );
+
+    // Current time
+    double t = tStep->giveTargetTime();
+
+    // Determine k by means of the secant method
+    /*
+    FloatArray kTemp;
+    kTemp.resize( 3 );
+    kTemp.at( 1 ) = 4 * pow( 3.14, 2 ) / ( 9.81 * pow( T, 2 ) );
+    kTemp.at( 2 ) = 1.1 * kTemp.at( 1 );
+    int steps     = 3;
+    double omega  = 2 * 3.14 / T;
+    while ( ( abs( kTemp.at( 2 ) - kTemp.at( 1 ) ) > kErr ) && ( steps <= 100 ) ) {
+        if ( steps > 3 ) {
+            kTemp.at( 1 ) = kTemp.at( 2 );
+            kTemp.at( 2 ) = kTemp.at( 3 );
+        }
+        kTemp.at( 3 ) = kTemp.at( 2 ) - ( kTemp.at( 2 ) - kTemp.at( 1 ) ) * ( pow( omega, 2 ) - kTemp.at( 2 ) * 9.81 * tanh( kTemp.at( 2 ) * h ) ) / ( ( pow( omega, 2 ) - kTemp.at( 2 ) * 9.81 * tanh( kTemp.at( 2 ) * h ) ) - ( pow( omega, 2 ) - kTemp.at( 1 ) * 9.81 * tanh( kTemp.at( 1 ) * h ) ) );
+        steps++;
+    }
+    if ( steps > 100 )
+        OOFEM_ERROR( "\n Wave number k was not found in 100 steps for element %d.", this->giveNumber() );
+    double k = kTemp.at( 3 );
+    */
+    double k = 4 * pow( 3.14 , 2 ) / ( 9.81 * pow( T, 2 ) );
+    double omega    = 2 * 3.14 / T;
+    // To find the velocities, we need to distance from the origin (x) and depth (z) at which the current finite element is
+    // Fetch initial coordinates of element's nodes in Oxyz
+    FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
+    FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
+    // Fetch total displacements in the current configuration
+    FloatArray u;
+    u.resize( 12 );
+    if ( !tStep->isTheFirstStep() )
+        this->computeVectorOf( VM_Total, tStep, u );
+    // Calculate the average x- and z-coordinate of the element
+    double x = ( node1.at( 1 ) + u.at( 1 ) + node2.at( 1 ) + u.at( 4 ) ) / 2;
+    double z = ( node1.at( 3 ) + u.at( 3 ) + node2.at( 3 ) + u.at( 6 ) ) / 2;
+
+    FloatArray flowCharacteristics;
+    flowCharacteristics.resize( 6 );
+    // Fluid velocity in x and z direction
+    //flowCharacteristics.at( 1 ) = H / 2 * ( 9.81 * k / omega ) * cosh( k * ( h + z ) ) / cosh( k * h ) * cos( k * x - cos( beta ) * omega * t ) + 3 / 16 * pow( H, 2 ) * omega * k * cosh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * cos( 2 * ( k * x - cos( beta ) * omega * t ) );
+    //flowCharacteristics.at( 3 ) = H / 2 * ( 9.81 * k / omega ) * sinh( k * ( h + z ) ) / cosh( k * h ) * sin( k * x - cos( beta ) * omega * t ) + 3 / 16 * pow( H, 2 ) * omega * k * sinh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) );
+    flowCharacteristics.at( 1 ) = H / 2 * omega * cosh( k * ( h + z ) ) / sinh( k * h ) * cos( k * x - cos( beta ) * omega * t );
+    flowCharacteristics.at( 3 ) = H / 2 * omega * sinh( k * ( h + z ) ) / sinh( k * h ) * sin( k * x - cos( beta ) * omega * t );
+
+    // Fluid acceleration in x and z direction
+    //flowCharacteristics.at( 4 ) = H / 2 * 9.81 * k * cosh( k * ( h + z ) ) / cosh( k * h ) * sin( k * x - cos( beta ) * omega * t ) - pow( H, 2 ) / 4 * 9.81 * pow( k, 2 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) ) / sinh( 2 * k * h ) + 3 / 8 * pow( H, 2 ) * pow( omega, 2 ) * k * cosh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) );
+    //flowCharacteristics.at( 6 ) = -H / 2 * 9.81 * k * sinh( k * ( h + z ) ) / cosh( k * h ) * cos( k * x - cos( beta ) * omega * t ) + pow( H, 2 ) / 4 * 9.81 * pow( k, 2 ) * sinh( 2 * k * ( h + z ) ) / sinh( 2 * k * h ) - 3 / 8 * pow( H, 2 ) * pow( omega, 2 ) * k * sinh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) );
+    flowCharacteristics.at( 4 ) = H / 2 * pow( omega, 2 ) * cosh( k * ( h + z ) ) / sinh( k * h ) * sin ( k * x - cos( beta ) * omega * t );
+    flowCharacteristics.at( 6 ) = - H / 2 * pow( omega, 2 ) * sinh( k * ( h + z ) ) / sinh( k * h ) * cos( k * x - cos( beta ) * omega * t );
+
+
+    computeHydrodynamicLoadMorison( answer, flowCharacteristics, tStep, knotted );
 }
 
 void

@@ -494,6 +494,7 @@ void NlDEIDynamic :: solveYourselfAt(TimeStep *tStep)
         ( massMatrix.at(i) * ( 1. / ( deltaT * deltaT ) + dumpingCoef / ( 2. * deltaT ) ) );
 
         accelerationVector.at(i) = ( incrOfDisplacement - prevIncrOfDisplacement ) / ( deltaT * deltaT );
+        //accelerationVector.at( i )                  = 0.0;
         velocityVector.at(i)     = ( incrOfDisplacement + prevIncrOfDisplacement ) / ( 2. * deltaT );
         previousIncrementOfDisplacementVector.at(i) = incrOfDisplacement;
     }
@@ -643,6 +644,8 @@ NlDEIDynamic :: computeMassMtrx(FloatArray &massMatrix, double &maxOm, TimeStep 
                     if ( charMtrx.at(j, j) > maxElmass * ZERO_REL_MASS ) {
                         double maxOmi =  charMtrx2.at(j, j) / charMtrx.at(j, j);
                         maxOmEl = ( maxOmEl > maxOmi ) ? ( maxOmEl ) : ( maxOmi );
+                        OOFEM_LOG_RELEVANT( "\n k (%d, %d): %15e", j, j, charMtrx2.at( j, j ) );
+                        OOFEM_LOG_RELEVANT( "\n m (%d, %d): %15e", j, j, charMtrx.at( j, j ) );
                     }
                 }
 

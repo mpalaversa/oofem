@@ -76,7 +76,8 @@ class FEI2dTrLin;
             void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) override;
             // Numerical integration is not used in these elements. This is used to generate 1 GP to be used only in manipulating the associated element materials and cross-sections.
             void computeGaussPoints() override;
-            void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
+            void computeHydrodynamicLoadMorison( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) override;
+            void computeHydrodynamicLoadFromWavesStokes2( FloatArray &answer, FloatArray waveCharacteristics, TimeStep *tStep ) override {};
             double giveTwineLength() override { return L0; };
             // Returns the total number of twines within the element
             double giveNumberOfTwines() override { return d; };

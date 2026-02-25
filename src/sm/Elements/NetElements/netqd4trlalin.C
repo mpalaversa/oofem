@@ -58,6 +58,8 @@ NetQd4TrLaLin::NetQd4TrLaLin(int n, Domain* aDomain) : NetElement(n, aDomain)
     L0   = -1;
     Ntu  = -1;
     Ntv  = -1;
+    knotted = false;
+    speedUp = false;
     undeformedDimensions.resize( 2 );
 }
 
@@ -177,16 +179,8 @@ NetQd4TrLaLin::computeGaussPoints()
     }
 }
 
-void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep )
+void NetQd4TrLaLin ::computeHydrodynamicLoadMorison( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep )
 {
-    // Form the fluid velocity vector
-    FloatArray velocity;
-    velocity.resize( 3 );
-    for ( int i = 1; i <= 3; i++ )
-        velocity.at( i ) = flowCharacteristics.at( i );
-
-    FloatArray relativeVelocity = calculateRelativeVelocity( velocity, tStep );
-
     // Get nodal coordinates in the Oxyz and the O'UVW coord. system
     // Fetch initial coordinates of element's nodes
     FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
@@ -245,6 +239,12 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
     EV23.beScaled( 1 / s23.computeNorm(), s23 );
     EV41.beScaled( -1 / s41.computeNorm(), s41 );
 
+        // Form the fluid velocity vector
+    FloatArray velocity;
+    velocity.resize( 3 );
+    for ( int i = 1; i <= 3; i++ )
+        velocity.at( i ) = flowCharacteristics.at( i );
+
     DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
     // Check if the element is downstream relative to another element
     if ( this->isDownstream ) {
@@ -294,6 +294,15 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
         else
             OOFEM_ERROR( "Element %d is denoted as downstream, but the solidity ratio is not specified.", this->giveNumber() );
         */
+    }
+
+    FloatArray relativeVelocity = calculateRelativeVelocity( velocity, tStep );
+
+    // Account for the local speed-up if required
+    if ( speedUp ) {
+        double sn = cs->giveSolidityRatio();
+        for ( int i = 1; i <= 3; i++ )
+            relativeVelocity.at( i ) = relativeVelocity.at( i ) / ( 1 - sn );
     }
 
     // Tangential relative velocity component in U- and V-twines
@@ -359,6 +368,28 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
 
     Fv.beScaled( giveNumberOfTwines() / 4, FvTemp );
 
+    // Check if the net is knotted and add contribution of the knot
+    if ( knotted ) {
+        FloatArray dragForceOn1Knot;
+        dragForceOn1Knot.resize( 3 );
+        // The knot is assumed to be a sphere
+        dragForceOn1Knot.beScaled( 0.5 * density * knotCd * pow( knotD, 2 ) * 3.14 / 4 * relativeVelocity.computeNorm(), relativeVelocity );
+
+        // Calculate undeformed length of the element
+        FloatArray edge12, edge23;
+        edge12.beDifferenceOf( node2, node1 );
+        edge23.beDifferenceOf( node3, node2 );
+
+        // Calculate no. of meshes within the element (this equals no. of knots within the element)
+        double noOfKnots = edge12.computeNorm() / L0 * edge23.computeNorm() / L0;
+
+        // Calculate drag force on the knots associated with the current element
+        FloatArray dragForceOnAllKnots;
+        dragForceOnAllKnots.resize( 3 );
+        dragForceOnAllKnots.beScaled( noOfKnots, dragForceOn1Knot );
+        Fv.add( dragForceOnAllKnots );
+    }
+
     // Distribute Fv to the nodes (calculate nodal force contribution due to the viscous force)
     calculateEquivalentLumpedNodalValues( answer, Fv );
 
@@ -366,9 +397,12 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
     FloatArray acceleration;
     acceleration.resize( 3 );
     for ( int i = 4; i <= 6; i++ )
+        //acceleration.at( i - 3 ) = 0.0;
         acceleration.at( i - 3 ) = flowCharacteristics.at( i );
 
     FloatArray relativeAcceleration = calculateRelativeAcceleration( acceleration, tStep );
+    FloatArray currentNodalAcceleration;
+    this->computeVectorOf( VM_Acceleration, tStep, currentNodalAcceleration );
 
     if ( relativeAcceleration.computeNorm() != 0 ) {
         // Tangential relative and absolute acceleration component in U- and V-twines
@@ -377,6 +411,7 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
         aRtU34.beScaled( relativeAcceleration.dotProduct( EU34 ), EU34 );
         aRtV23.beScaled( relativeAcceleration.dotProduct( EV23 ), EV23 );
         aRtV41.beScaled( relativeAcceleration.dotProduct( EV41 ), EV41 );
+        
         atU12.beScaled( acceleration.dotProduct( EU12 ), EU12 );
         atU34.beScaled( acceleration.dotProduct( EU34 ), EU34 );
         atV23.beScaled( acceleration.dotProduct( EV23 ), EV23 );
@@ -388,6 +423,7 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
         aRnU34.beDifferenceOf( relativeAcceleration, aRtU34 );
         aRnV23.beDifferenceOf( relativeAcceleration, aRtV23 );
         aRnV41.beDifferenceOf( relativeAcceleration, aRtV41 );
+        
         anU12.beDifferenceOf( acceleration, atU12 );
         anU34.beDifferenceOf( acceleration, atU34 );
         anV23.beDifferenceOf( acceleration, atV23 );
@@ -426,6 +462,68 @@ void NetQd4TrLaLin ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArr
         calculateEquivalentLumpedNodalValues( distributedAddedMassForce, FA );
         answer.add( distributedAddedMassForce );
     }
+}
+
+void NetQd4TrLaLin ::computeHydrodynamicLoadFromWavesStokes2( FloatArray &answer, FloatArray waveCharacteristics, TimeStep *tStep )
+{
+    // User-defined wave height (H), wave period (T), wave direction (beta in deg), water depth (h) and the convergence criterion for wave number (kErr)
+    double H = waveCharacteristics.at( 1 );
+    double T = waveCharacteristics.at( 2 );
+    double beta = waveCharacteristics.at( 3 ) * 3.14 / 180;
+    double h    = waveCharacteristics.at( 4 );
+    double kErr = waveCharacteristics.at( 5 );
+
+    // Current time
+    double t = tStep->giveTargetTime();
+
+    // Determine k by means of the secant method
+    /*
+    FloatArray kTemp;
+    kTemp.resize( 3 );
+    kTemp.at( 1 ) = 4 * pow( 3.14, 2 ) / ( 9.81 * pow( T, 2 ) );
+    kTemp.at( 2 ) = 1.1 * kTemp.at( 1 );
+    int steps     = 3;
+    double omega  = 2 * 3.14 / T;
+    while ( ( abs( kTemp.at(2) - kTemp.at(1) ) > kErr ) && ( steps <= 100 ) ) {
+        if (steps > 3) {
+            kTemp.at( 1 ) = kTemp.at( 2 );
+            kTemp.at( 2 ) = kTemp.at( 3 );
+        }
+        kTemp.at( 3 ) = kTemp.at( 2 ) - ( kTemp.at( 2 ) - kTemp.at( 1 ) ) * ( pow( omega, 2 ) - kTemp.at( 2 ) * 9.81 * tanh( kTemp.at( 2 ) * h ) ) / ( ( pow( omega, 2 ) - kTemp.at( 2 ) * 9.81 * tanh( kTemp.at( 2 ) * h ) ) - ( pow( omega, 2 ) - kTemp.at( 1 ) * 9.81 * tanh( kTemp.at( 1 ) * h ) ) );
+        steps++;
+    }
+    if (steps > 100)
+        OOFEM_ERROR( "\n Wave number k was not found in 100 steps for element %d.", this->giveNumber() );
+    double k = kTemp.at( 3 );
+    */
+    double k     = 4 * pow( 3.14, 2 ) / ( 9.81 * pow( T, 2 ) );
+    double omega = 2 * 3.14 / T;
+    // To find the velocities, we need to determine depth (z) at which the current finite element is
+    // Fetch initial coordinates of element's nodes in Oxyz
+    FloatArray node1 = this->giveNode( 1 )->giveCoordinates();
+    FloatArray node2 = this->giveNode( 2 )->giveCoordinates();
+    FloatArray node3 = this->giveNode( 3 )->giveCoordinates();
+    FloatArray node4 = this->giveNode( 4 )->giveCoordinates();
+    // Fetch total displacements in the current configuration
+    FloatArray u;
+    u.resize( 12 );
+    if ( !tStep->isTheFirstStep() )
+        this->computeVectorOf( VM_Total, tStep, u );
+    // Calculate an average x- and z-coordinate of the element
+    double x = ( node1.at( 1 ) + u.at( 1 ) + node2.at( 1 ) + u.at( 4 ) + node3.at( 1 ) + u.at( 7 ) + node4.at( 1 ) + u.at( 10 ) ) / 4;
+    double z = ( node1.at( 3 ) + u.at( 3 ) + node2.at( 3 ) + u.at( 6 ) + node3.at( 3 ) + u.at( 9 ) + node4.at( 3 ) + u.at( 12 ) ) / 4;
+    
+    FloatArray flowCharacteristics;
+    flowCharacteristics.resize( 6 );
+    // Fluid velocity in x and z direction
+    flowCharacteristics.at( 1 ) = H / 2 * ( 9.81 * k / omega ) * cosh( k * ( h + z ) ) / cosh( k * h ) * cos( k * x - cos( beta ) * omega * t ) + 3 / 16 * pow( H, 2 ) * omega * k * cosh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * cos( 2 * ( k * x - cos( beta ) * omega * t ) );
+    flowCharacteristics.at( 3 ) = H / 2 * ( 9.81 * k / omega ) * sinh( k * ( h + z ) ) / cosh( k * h ) * sin( k * x - cos( beta ) * omega * t ) + 3 / 16 * pow( H, 2 ) * omega * k * sinh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) );
+
+    // Fluid acceleration in x and z direction
+    flowCharacteristics.at( 4 ) = H / 2 * 9.81 * k * cosh( k * ( h + z ) ) / cosh( k * h ) * sin( k * x - cos( beta ) * omega * t ) - pow( H, 2 ) / 4 * 9.81 * pow( k, 2 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) ) / sinh( 2 * k * h ) + 3 / 8 * pow( H, 2 ) * pow( omega, 2 ) * k * cosh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) );
+    flowCharacteristics.at( 6 ) = -H / 2 * 9.81 * k * sinh( k * ( h + z ) ) / cosh( k * h ) * cos( k * x - cos( beta ) * omega * t ) + pow( H, 2 ) / 4 * 9.81 * pow( k, 2 ) * sinh( 2 * k * ( h + z ) ) / sinh( 2 * k * h ) - 3 / 8 * pow( H, 2 ) * pow( omega, 2 ) * k * sinh( 2 * k * ( h + z ) ) / pow( sinh( k * h ), 4 ) * sin( 2 * ( k * x - cos( beta ) * omega * t ) );
+
+    computeHydrodynamicLoadMorison( answer, flowCharacteristics, tStep );
 }
 
 void
@@ -769,6 +867,20 @@ NetQd4TrLaLin::initializeFrom( InputRecord &ir )
     IR_GIVE_OPTIONAL_FIELD( ir, Ntv, _IFT_NetQd4TrLaLin_Ntv );
 
     IR_GIVE_OPTIONAL_FIELD( ir, sr, _IFT_NetQd4TrLaLin_sr );
+
+    FloatArray knotData;
+    knotData.resize( 2 );
+    IR_GIVE_OPTIONAL_FIELD( ir, knotData, _IFT_NetQd4TrLaLin_knot );
+    if ( knotData.at( 1 ) > 0 ) {
+        knotted = true;
+        knotD   = knotData.at( 1 );
+        knotCd  = knotData.at( 2 );
+    }
+
+    int sup = 0;
+    IR_GIVE_OPTIONAL_FIELD( ir, sup, _IFT_NetQd4TrLaLin_sup );
+    if ( sup == 1 )
+        speedUp = true;
 }
 
 void NetQd4TrLaLin :: NodalAveragingRecoveryMI_computeNodalValue( FloatArray &answer, int node, InternalStateType type, TimeStep *tStep )

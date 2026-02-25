@@ -47,7 +47,8 @@ enum bcType {
     OutFlowBC,
     RadiationBC,     ///< Stefan-Boltzmann law.
     HydrodynamicMorison,    ///< Hydrodynamic load based on Morison's equation.
-    HydrodynamicKF  ///< Hydrodynamic load based on Kristiansen and Faltinsen.
+    HydrodynamicKF,  ///< Hydrodynamic load based on Kristiansen and Faltinsen.
+    HydrodynamicWaveStokes2 ///< Hydrodynamic load based on Stokes 2nd-order wave theory.
 };
 } // end namespace oofem
 #endif // bctype_h

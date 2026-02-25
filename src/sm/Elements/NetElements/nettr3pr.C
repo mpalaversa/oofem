@@ -108,7 +108,7 @@ NetTr3Pr ::computeGaussPoints()
     }
 }
 
-void NetTr3Pr ::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep )
+void NetTr3Pr ::computeHydrodynamicLoadMorison( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep )
 {
     // Form the fluid velocity vector
     FloatArray velocity;

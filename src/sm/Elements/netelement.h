@@ -63,6 +63,9 @@ namespace oofem {
         virtual void computeBmatrixAt(double xi, double eta, FloatMatrix& answer) = 0;
         void computeBmatrixAt(GaussPoint* gp, FloatMatrix& answer, int lowerIndx = 1, int upperIndx = ALL_STRAINS) = 0;
         FloatMatrix *computeBasicGtoLRotationMatrix( TimeStep *tStep = 0 );
+        void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray loadInputData, bcType loadType, TimeStep *tStep ) override;
+        virtual void computeHydrodynamicLoadMorison( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep ) {};
+        virtual void computeHydrodynamicLoadFromWavesStokes2( FloatArray &answer, FloatArray waveCharacteristics, TimeStep *tStep ) {};
         virtual void calculateEquivalentLumpedNodalValues( FloatArray &answer, FloatArray vector ) = 0;
         virtual double giveTwineLength() = 0;
         virtual double giveNumberOfTwines() = 0;

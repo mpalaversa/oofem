@@ -36,9 +36,12 @@
 #define truss3dnl_h
 
 #include "../sm/Elements/Bars/truss3d.h"
+#include "bctype.h"
 
 #define _IFT_Truss3dnl_Name "truss3dnl"
 #define _IFT_Truss3dnl_initialStretch "initstretch"
+
+#define _IFT_ConsistentNetElement_sup "sup"
 
 namespace oofem {
 class DecoupledMaterial;
@@ -51,6 +54,9 @@ class Truss3dnl : public Truss3d
 protected:
     double initialStretch;
 
+    // Is the local speed-up accounted for?
+    bool speedUp;
+    
     FloatArray viscousForce;
 
 public:
@@ -73,8 +79,13 @@ protected:
     void computeBmatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *tStep, bool lin = false);
     void computeBlMatrixAt(GaussPoint *gp, FloatMatrix &answer);
     void computeBnlMatrixAt(GaussPoint *gp, FloatMatrix &answer, TimeStep *tStep, bool lin = false);
+    void virtual computeDragForceOnKnots( FloatArray &answer, double density, FloatArray relativeVelocity ) {
+        OOFEM_ERROR( "Element %d cannot be associated with knots.", this->giveNumber() );
+    }
     void computeInitialStressStiffness(FloatMatrix &answer, GaussPoint *gp, TimeStep *tStep);
-    void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, TimeStep *tStep ) override;
+    void computeHydrodynamicLoadVector( FloatArray &answer, FloatArray velocity, bcType loadType, TimeStep *tStep ) override;
+    void computeHydrodynamicLoadMorison( FloatArray &answer, FloatArray flowCharacteristics, TimeStep *tStep, bool knotted = false );
+    void computeHydrodynamicLoadFromWavesStokes2( FloatArray &answer, FloatArray inputData, TimeStep *tStep, bool knotted = false );
 
     // Returns characteristic dimension of the cross-section used in calculating hydrodynamic loads on the element.
     virtual double giveCharacteristicHydrodynamicDimension();

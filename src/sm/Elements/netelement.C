@@ -65,10 +65,11 @@ NetElement::computeBoundarySurfaceLoadVector( FloatArray &answer, BoundaryLoad *
         return;
     }
     FloatArray force;
-    if ( boundaryLoad->giveType() == bcType::HydrodynamicMorison || boundaryLoad->giveType() == bcType::HydrodynamicKF ) {
+    bcType loadType = boundaryLoad->giveType();
+    if ( loadType == bcType::HydrodynamicMorison || loadType == bcType::HydrodynamicKF || loadType == bcType::HydrodynamicWaveStokes2 ) {
         Load *load = dynamic_cast<BoundaryLoad *>( boundaryLoad );
         load->computeComponentArrayAt( force, tStep, mode );
-        this->computeHydrodynamicLoadVector( answer, force, tStep );
+        this->computeHydrodynamicLoadVector( answer, force, loadType, tStep );
     } else
         OOFEM_ERROR( "Only hydrodynamic surface load can be defined for element %d at this point.", giveGlobalNumber() );
 }
@@ -180,6 +181,18 @@ void NetElement ::computeBodyLoadVectorAt( FloatArray &answer, Load *forLoad, Ti
     } else {
         return;
     }
+}
+
+void
+NetElement::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray loadInputData, bcType loadType, TimeStep *tStep )
+{
+    if ( loadType == bcType::HydrodynamicMorison ) {
+        computeHydrodynamicLoadMorison( answer, loadInputData, tStep );
+    } else if ( loadType == bcType::HydrodynamicWaveStokes2 ) {
+        computeHydrodynamicLoadFromWavesStokes2( answer, loadInputData, tStep );
+    }
+    else
+        OOFEM_ERROR( "The following hydrodynamic loads are implemented at the moment: current loads according to the Morison's equation, wave loads according to the Stokes 2nd-order wave theory." );
 }
 
 void

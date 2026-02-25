@@ -58,6 +58,8 @@ ConsistentNetElement :: ConsistentNetElement(int n, Domain *aDomain) : Truss3dnl
 {
     l0 = -1;
     gf = -1;
+    knotted = false;
+    speedUp = false;
     viscousForce.resize( 0 );
 }
 
@@ -112,7 +114,6 @@ double ConsistentNetElement::giveCharacteristicHydrodynamicDimension()
 {
     DecoupledCrossSection *cs = this->giveDecoupledCrossSectionOfType( DecoupledMaterial::DecoupledMaterialType::DecoupledFluidMaterial );
     return gf * cs->giveCharacteristicDimension();
-
 }
 
 double ConsistentNetElement::giveCharacteristicWeightDimension() {
@@ -120,15 +121,53 @@ double ConsistentNetElement::giveCharacteristicWeightDimension() {
     return cs->giveCharacteristicDimension() * sqrt( gf );
 }
 
+void ConsistentNetElement::computeDragForceOnKnots( FloatArray &answer, double density, FloatArray relativeVelocity )
+{
+    FloatArray dragForceOn1Knot;
+    dragForceOn1Knot.resize( 3 );
+    // This expression assumes that the knot is a sphere
+    dragForceOn1Knot.beScaled( 0.5 * density * knotCd * pow( knotD, 2 ) * 3.14 / 4 * relativeVelocity.computeNorm(), relativeVelocity );
+
+    // Calculate undeformed length of the element
+    FloatArray elemVector;
+    elemVector.beDifferenceOf( this->giveNode( 2 )->giveCoordinates(), this->giveNode( 1 )->giveCoordinates() );
+    double elemLength = elemVector.computeNorm();
+    
+    // Calculate drag force on a half of the knots associated with the current element
+    answer.resize( 3 );
+    answer.beScaled( elemLength / l0 * gf / 2, dragForceOn1Knot );
+}
+
+void ConsistentNetElement::computeHydrodynamicLoadVector( FloatArray &answer, FloatArray loadInputData, bcType loadType, TimeStep *tStep )
+{
+    FloatArray currentLoadsMorison, waveLoadsStokes2;
+
+    if ( loadType == bcType::HydrodynamicMorison ) {
+        computeHydrodynamicLoadMorison( answer, loadInputData, tStep, knotted );
+    } else if ( loadType == bcType::HydrodynamicWaveStokes2 ) {
+        computeHydrodynamicLoadFromWavesStokes2( answer, loadInputData, tStep, knotted );
+    } else
+        OOFEM_ERROR( "The following hydrodynamic loads are implemented at the moment: current loads according to the Morison's equation, wave loads according to the Stokes 2nd-order wave theory." );
+}
 
 void
 ConsistentNetElement :: initializeFrom(InputRecord &ir)
 {
   Truss3dnl :: initializeFrom(ir);
   IR_GIVE_OPTIONAL_FIELD( ir, gf, _IFT_ConsistentNetElement_gf );
+  
   IR_GIVE_OPTIONAL_FIELD( ir, l0, _IFT_ConsistentNetElement_l0 );
   if ( ( l0 > 0 && gf < 0 ) || ( gf > 0 && l0 == -1 ) )
       OOFEM_ERROR( "Both the globalization factor(s) and the undeformed twine lenght must be defined for element %d.", this->giveNumber() );
+
+  FloatArray knotData;
+  knotData.resize( 2 );
+  IR_GIVE_OPTIONAL_FIELD( ir, knotData, _IFT_ConsistentNetElement_knot );
+  if ( knotData.at( 1 ) > 0 ) {
+      knotted = true;
+      knotD   = knotData.at( 1 );
+      knotCd  = knotData.at( 2 );
+  }
 }
 
 } // end namespace oofem
