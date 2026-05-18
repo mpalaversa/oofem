@@ -65,7 +65,7 @@ class NetQd4TrLaLin : public NetElement, public NodalAveragingRecoveryModelInter
             int mask;
             // Mesh half length (for square meshes)
             double L0;
-            // Number of twines along side 1-2 and 2-3 respectively
+            // Number of twines parallel to edge 1-2 and 2-3 respectively
             double Ntu, Ntv;
             // True if the modelled net is knotted
             bool knotted;

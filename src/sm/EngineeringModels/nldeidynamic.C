@@ -644,8 +644,6 @@ NlDEIDynamic :: computeMassMtrx(FloatArray &massMatrix, double &maxOm, TimeStep 
                     if ( charMtrx.at(j, j) > maxElmass * ZERO_REL_MASS ) {
                         double maxOmi =  charMtrx2.at(j, j) / charMtrx.at(j, j);
                         maxOmEl = ( maxOmEl > maxOmi ) ? ( maxOmEl ) : ( maxOmi );
-                        OOFEM_LOG_RELEVANT( "\n k (%d, %d): %15e", j, j, charMtrx2.at( j, j ) );
-                        OOFEM_LOG_RELEVANT( "\n m (%d, %d): %15e", j, j, charMtrx.at( j, j ) );
                     }
                 }
 
